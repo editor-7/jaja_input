@@ -24,7 +24,7 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
             <div className="shop-header-user">
               {user ? (
                 <>
-                  <span className="user-name">{user.name}님</span>
+                  <span className="user-name">{user.name}님 환영합니다</span>
                   <button type="button" className="logout-btn" onClick={onLogout}>
                     로그아웃
                   </button>

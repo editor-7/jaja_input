@@ -1,0 +1,9 @@
+name: order-bread-api
+app: node@18
+options:
+  env:
+    - name: NODE_ENV
+      value: production
+  install: npm ci --production
+  ports: 3000
+  start: npm start
