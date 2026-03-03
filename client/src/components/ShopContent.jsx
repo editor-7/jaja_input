@@ -1,16 +1,14 @@
 import { useState, useMemo, useEffect } from 'react'
 import { productApi } from '@/services/api'
 import { staticProducts, getCategory } from '@/data/products'
+import { ORDER_STORAGE_KEY } from '@/utils/constants'
 import ShopNavbar from './ShopNavbar'
 import ShopBody from './ShopBody'
 import ShopFooter from './ShopFooter'
 
-const ORDER_STORAGE_KEY = 'shop_order_list'
-
 function ShopContent({ user, onLogout }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
-  const [activeTab, setActiveTab] = useState('category')
   const [cart, setCart] = useState([])
   const [wishlist, setWishlist] = useState(new Set())
   const [addedMsg, setAddedMsg] = useState('')
@@ -130,11 +128,6 @@ function ShopContent({ user, onLogout }) {
     if (window.confirm('장바구니를 모두 비우시겠습니까?')) setCart([])
   }
 
-  const clearSearch = () => {
-    setSearchTerm('')
-    setCategoryFilter('all')
-  }
-
   return (
     <div className="shop-page">
       <ShopNavbar user={user} onLogout={onLogout} cartCount={cart.length} />
@@ -144,8 +137,6 @@ function ShopContent({ user, onLogout }) {
         onSearchChange={setSearchTerm}
         categoryFilter={categoryFilter}
         onCategoryChange={setCategoryFilter}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
         categories={categories}
         showOrderList={showOrderList}
         onShowOrderList={() => setShowOrderList(true)}
@@ -191,15 +182,6 @@ function ShopContent({ user, onLogout }) {
       />
 
       <ShopFooter />
-
-      <style>{`
-        .shop-page {
-          min-height: 100vh;
-          background: var(--color-cream);
-          display: flex;
-          flex-direction: column;
-        }
-      `}</style>
     </div>
   )
 }

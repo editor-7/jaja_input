@@ -1,0 +1,207 @@
+.shop-header {
+  background: #f0ebe4;
+  border-bottom: 1px solid rgba(92, 74, 74, 0.25);
+  padding: 0.5rem 1rem 0.5rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.shop-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shop-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-img-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: block;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.shop-logo-text {
+  text-decoration: none;
+  color: #3d3232;
+}
+
+.logo-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: pointer;
+}
+
+.logo-modal-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  cursor: default;
+}
+
+.logo-img {
+  width: 120px;
+  height: 120px;
+  min-width: 48px;
+  min-height: 48px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: transparent;
+  display: block;
+}
+
+.shop-header h1 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #3d3232;
+}
+
+.shop-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.nav-cart {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #463c3c;
+  padding: 0.35rem 0.5rem;
+  position: relative;
+}
+
+.nav-cart:hover {
+  color: var(--color-rose-gold);
+}
+
+.cart-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: var(--color-rose-gold);
+  color: #fff;
+  font-size: 0.65rem;
+  min-width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-admin {
+  padding: 0.35rem 0.75rem;
+  background: #3d3232;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.nav-admin:hover {
+  opacity: 0.9;
+  color: #fff;
+}
+
+.nav-user {
+  color: #5a4e4e;
+  font-size: 0.85rem;
+}
+
+.nav-logout {
+  background: none;
+  border: none;
+  color: #5a4e4e;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.nav-logout:hover {
+  color: #3d3232;
+}
+
+.nav-login {
+  color: var(--color-rose-gold);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.nav-signup {
+  color: #5a4e4e;
+  text-decoration: none;
+}
+
+.nav-signup:hover {
+  color: #3d3232;
+}
+
+@media (max-width: 768px) {
+  .shop-header {
+    padding: 0.5rem 0.75rem 0.5rem 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+  .shop-header-inner {
+    padding-left: 0;
+  }
+  .shop-logo {
+    flex-shrink: 0;
+    min-width: 56px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .logo-img-btn {
+    width: 56px;
+    height: 56px;
+  }
+  .logo-img {
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
+    background: rgba(255,255,255,0.5);
+    border-radius: 10px;
+  }
+  .shop-header h1 {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+  }
+  .nav-user {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .shop-header h1 {
+    display: none;
+  }
+  .shop-logo {
+    min-width: 56px;
+  }
+}

@@ -44,6 +44,13 @@ body {
   min-height: 100vh;
 }
 
+.shop-page {
+  min-height: 100vh;
+  background: var(--color-cream);
+  display: flex;
+  flex-direction: column;
+}
+
 /* 모바일 터치 최적화 */
 @media (max-width: 768px) {
   html {
