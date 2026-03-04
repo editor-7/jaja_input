@@ -1,5 +1,18 @@
 # 클라우드타입 배포 가이드 (order_bread 서버)
 
+## 배포 체크리스트
+
+- [ ] 1단계: MongoDB Atlas 클러스터 생성
+- [ ] 2단계: Atlas Database Access (사용자 추가)
+- [ ] 3단계: Atlas Network Access (0.0.0.0/0 추가)
+- [ ] 4단계: 클라우드타입 서비스 추가 (저장소: order_bread, 서브디렉토리: server)
+- [ ] 5단계: 클라우드타입 환경 변수 설정 (NODE_ENV, MONGODB_URI, JWT_SECRET)
+- [ ] 6단계: 클라우드타입 배포 완료 후 URL 확인
+- [ ] 7단계: Vercel → Settings → Environment Variables → VITE_API_URL 추가
+- [ ] 8단계: Vercel Redeploy
+
+---
+
 ## 1. 사전 준비
 
 - [클라우드타입](https://cloudtype.io/) 가입
@@ -57,13 +70,13 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 배포된 API URL을 Vercel에 환경 변수로 설정:
 
-1. Vercel 프로젝트 → Settings → Environment Variables
-2. 추가:
+1. [Vercel](https://vercel.com) → order_bread 프로젝트 → **Settings** → **Environment Variables**
+2. **Add** 클릭:
    - **Name**: `VITE_API_URL`
-   - **Value**: `https://xxx.cloudtype.app` (클라우드타입에서 발급된 URL, 끝에 `/` 없이)
-3. **Redeploy** 실행
+   - **Value**: `https://order-bread-api-xxx.cloudtype.app` (클라우드타입 URL, 끝에 `/` 없이)
+3. **Save** 후 **Deployments** → 최신 배포 → **Redeploy** 실행
 
-이후 프론트엔드가 `/api` 요청을 클라우드타입 서버로 보냅니다.
+이후 프론트엔드가 API 요청을 클라우드타입 서버로 보냅니다.
 
 ## 6. CLI 배포 (선택)
 
