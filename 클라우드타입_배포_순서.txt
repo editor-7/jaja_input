@@ -1,0 +1,39 @@
+========================================
+클라우드타입 order_bread 배포 - 따라하기
+========================================
+
+■ 1단계: 클라우드타입 order-bread 서비스 설정 화면으로 이동
+   → "설정" 탭 클릭
+
+■ 2단계: "서브 디렉토리" 확인
+   - 비어 있으면: 아래 3단계 A안 사용
+   - "server"로 되어 있으면: 아래 3단계 B안 사용
+
+■ 3단계: 명령어 입력 (둘 중 하나만!)
+
+   [A안 - 서브 디렉토리가 비어 있을 때]
+   Install command:  cd server && npm install
+   Build command:    (비워두기)
+   Start command:    cd server && npm start
+
+   [B안 - 서브 디렉토리가 "server"일 때]
+   Install command:  npm install
+   Build command:    (비워두기)
+   Start command:    npm start
+
+■ 4단계: 포트
+   Port: 3000
+
+■ 5단계: Node 버전
+   → node@18 선택 (node@24 말고!)
+
+■ 6단계: 환경 변수 3개 확인
+   NODE_ENV = production
+   MONGODB_URI = mongodb+srv://gas004444_db_user:비밀번호@cluster0.wsuv9mb.mongodb.net/order_bread
+   JWT_SECRET = (터미널에서 생성한 64자)
+
+■ 7단계: 저장 후 "재배포" 또는 "배포" 버튼 클릭
+
+========================================
+에러가 나면: 배포 내역 → 오류 항목 클릭 → 로그 확인
+========================================

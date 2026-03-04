@@ -4,6 +4,6 @@ options:
   env:
     - name: NODE_ENV
       value: production
-  install: cd server && npm ci --production
+  install: cd server && npm install
   ports: 3000
   start: cd server && npm start
