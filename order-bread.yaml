@@ -1,0 +1,22 @@
+# 클라우드타입 CLI 배포용 (참고)
+# 대시보드 배포 시 이 파일은 참고만. 실제로는 대시보드에서 직접 입력.
+
+name: order-bread
+app: node@18
+options:
+  ports: "3000"
+  install: cd server && npm install
+  start: cd server && npm start
+  healthz: /
+  env:
+    - name: NODE_ENV
+      value: production
+    - name: MONGODB_URI
+      value: mongodb+srv://gas004444_db_user:여기에비밀번호@cluster0.wsuv9mb.mongodb.net/order_bread
+    - name: JWT_SECRET
+      value: c937e2be2e7fe8c4619acc034bdd034ca9427280046c52bbc6cc4d13767e7214244e31bfbeff0d0df88e84a4ea369533c11a0984c2273c0005958cf567461a2f
+  buildenv: []
+context:
+  git:
+    url: https://github.com/editor-7/order_bread.git
+    branch: main

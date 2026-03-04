@@ -1,39 +1,38 @@
 ========================================
-클라우드타입 order_bread 배포 - 따라하기
+클라우드타입 order_bread 배포 - 복사해서 입력
 ========================================
 
-■ 1단계: 클라우드타입 order-bread 서비스 설정 화면으로 이동
-   → "설정" 탭 클릭
+▼ 1. 설정 탭 → Version(버전)
+   18
 
-■ 2단계: "서브 디렉토리" 확인
-   - 비어 있으면: 아래 3단계 A안 사용
-   - "server"로 되어 있으면: 아래 3단계 B안 사용
+▼ 2. Port
+   3000
 
-■ 3단계: 명령어 입력 (둘 중 하나만!)
+▼ 3. Install command
+   cd server && npm install
 
-   [A안 - 서브 디렉토리가 비어 있을 때]
-   Install command:  cd server && npm install
-   Build command:    (비워두기)
-   Start command:    cd server && npm start
+▼ 4. Build command
+   (비워두기 - 아무것도 입력 안 함)
 
-   [B안 - 서브 디렉토리가 "server"일 때]
-   Install command:  npm install
-   Build command:    (비워두기)
-   Start command:    npm start
+▼ 5. Start command
+   cd server && npm start
 
-■ 4단계: 포트
-   Port: 3000
+▼ 6. Health Check
+   (비워두기) 또는 /
 
-■ 5단계: Node 버전
-   → node@18 선택 (node@24 말고!)
+▼ 7. 환경 변수 (Environment variables) - + 버튼으로 3개 추가
 
-■ 6단계: 환경 변수 3개 확인
-   NODE_ENV = production
-   MONGODB_URI = mongodb+srv://gas004444_db_user:비밀번호@cluster0.wsuv9mb.mongodb.net/order_bread
-   JWT_SECRET = (터미널에서 생성한 64자)
+   [1] Name: NODE_ENV
+       Value: production
 
-■ 7단계: 저장 후 "재배포" 또는 "배포" 버튼 클릭
+   [2] Name: MONGODB_URI
+       Value: mongodb+srv://gas004444_db_user:여기에MongoDB비밀번호@cluster0.wsuv9mb.mongodb.net/order_bread
+
+   [3] Name: JWT_SECRET
+       Value: c937e2be2e7fe8c4619acc034bdd034ca9427280046c52bbc6cc4d13767e7214244e31bfbeff0d0df88e84a4ea369533c11a0984c2273c0005958cf567461a2f
+
+▼ 8. 저장 → 재배포 클릭
 
 ========================================
-에러가 나면: 배포 내역 → 오류 항목 클릭 → 로그 확인
+※ MONGODB_URI의 "여기에MongoDB비밀번호"를 Atlas 비밀번호로 바꾸세요!
 ========================================
