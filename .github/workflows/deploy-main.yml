@@ -1,0 +1,44 @@
+name: Deploy to cloudtype
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Connect deploy key
+        uses: cloudtype-github-actions/connect@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          ghtoken: ${{ secrets.GHP_TOKEN }}
+      - name: Deploy
+        uses: cloudtype-github-actions/deploy@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          project: gas0044/todo-backend
+          stage: main
+          yaml: >
+            name: order-bread
+
+            app: node@24
+
+            options:
+              ports: "3000"
+              install: cd server&& npm install
+              start: cd server&&npm start
+              healthz: /
+              env:
+                - name: NODE_ENV
+                  value: production
+                - name: MONGODB_URI
+                  value: mongodb+srv://gas004444_db_user:code5472@cluster0.wsuv9mb.mongodb.net/order_bread
+                - name: JWT_SECRET
+                  value: c937e2be2e7fe8c4619acc034bdd034ca9427280046c52bbc6cc4d13767e7214244e31bfbeff0d0df88e84a4ea369533c11a0984c2273c0005958cf567461a2f
+              buildenv: []
+            context:
+              git:
+                url: git@github.com:${{ github.repository }}.git
+                ref: ${{ github.ref }}
