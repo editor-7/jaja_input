@@ -19,14 +19,14 @@ jobs:
         uses: cloudtype-github-actions/deploy@v1
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
-          project: gas0044/todo-backend
+          project: gas0044/order-bread
           stage: main
           yaml: |
             name: order-bread
             app: node@18
             options:
               ports: "3000"
-              install: cd server && npm install
+              install: cd server && npm ci --omit=dev
               start: cd server && npm start
               healthz: /
               env:
