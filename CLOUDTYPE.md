@@ -7,9 +7,10 @@
 - [ ] 3단계: Atlas Network Access (0.0.0.0/0 추가)
 - [ ] 4단계: 클라우드타입 서비스 추가 (저장소: order_bread, 서브디렉토리: server)
 - [ ] 5단계: 클라우드타입 환경 변수 설정 (NODE_ENV, MONGODB_URI, JWT_SECRET)
-- [ ] 6단계: 클라우드타입 배포 완료 후 URL 확인
-- [ ] 7단계: Vercel → Settings → Environment Variables → VITE_API_URL 추가
-- [ ] 8단계: Vercel Redeploy
+- [ ] 6단계: **GitHub Secrets 설정** (아래 4. GitHub Secrets 참고)
+- [ ] 7단계: 클라우드타입 배포 완료 후 URL 확인
+- [ ] 8단계: Vercel → Settings → Environment Variables → VITE_API_URL 추가
+- [ ] 9단계: Vercel Redeploy
 
 ---
 
@@ -78,7 +79,19 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 이후 프론트엔드가 API 요청을 클라우드타입 서버로 보냅니다.
 
-## 6. CLI 배포 (선택)
+## 6. GitHub Actions 자동 배포
+
+`main` 브랜치 push 시 자동 배포됩니다. **필수**: [GITHUB_SECRETS.md](./GITHUB_SECRETS.md) 참고하여 5개 시크릿 설정.
+
+- `CLOUDTYPE_TOKEN` - CloudType API Key
+- `GHP_TOKEN` - GitHub Personal Token
+- `CLOUDTYPE_PROJECT` - `스페이스명/프로젝트명` (CloudType CLI 탭에서 확인)
+- `MONGODB_URI` - MongoDB 연결 문자열
+- `JWT_SECRET` - JWT 서명용 64자 랜덤 문자열
+
+수동 배포: **Actions** → **Deploy to cloudtype** → **Run workflow**
+
+## 7. CLI 배포 (선택)
 
 ```bash
 # CLI 설치
@@ -99,3 +112,4 @@ ctype apply
 - **MongoDB 연결 실패**: Atlas Network Access에 `0.0.0.0/0` 추가 확인
 - **JWT 오류**: `JWT_SECRET` 환경 변수 설정 확인
 - **빌드 실패**: 서브 디렉토리를 `server`로 설정했는지 확인
+- **GitHub Actions 오류**: [GITHUB_SECRETS.md](./GITHUB_SECRETS.md) 시크릿 5개 모두 설정했는지 확인. `CLOUDTYPE_PROJECT`는 CloudType 대시보드 → 프로젝트 → CLI 탭에서 확인

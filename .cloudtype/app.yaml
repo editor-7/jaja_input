@@ -1,9 +1,12 @@
-name: vibe-todo-backend-02
+# GitHub Actions 배포 시 .github/workflows/deploy-main.yml 의 inline yaml 사용
+# CLI 배포 시: ctype apply (환경변수는 CloudType 대시보드에서 설정)
+name: order-bread
 app: node@18
 options:
+  ports: "3000"
+  install: cd server && npm install
+  start: cd server && npm start
+  healthz: /
   env:
     - name: NODE_ENV
       value: production
-  install: cd server && npm install
-  ports: 3000
-  start: cd server && npm start

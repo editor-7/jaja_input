@@ -1,7 +1,7 @@
 # 클라우드타입 CLI 배포용 (참고)
 # 대시보드 배포 시 이 파일은 참고만. 실제로는 대시보드에서 직접 입력.
 
-name: vibe-todo-backend-02
+name: order-bread
 app: node@18
 options:
   ports: "3000"
