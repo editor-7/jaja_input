@@ -1,6 +1,3 @@
-# 클라우드타입 CLI 배포용 (참고)
-# 대시보드 배포 시 이 파일은 참고만. 실제로는 대시보드에서 직접 입력.
-
 name: vibe-todo-backend-02
 app: node@18
 options:
@@ -12,9 +9,9 @@ options:
     - name: NODE_ENV
       value: production
     - name: MONGODB_URI
-      value: ${MONGODB_URI}
+      value: <YOUR_MONGODB_URI>
     - name: JWT_SECRET
-      value: ${JWT_SECRET}
+      value: <YOUR_JWT_SECRET>
   buildenv: []
 context:
   git:

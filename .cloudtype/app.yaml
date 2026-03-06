@@ -1,4 +1,4 @@
-name: order-bread-api
+name: vibe-todo-backend-02
 app: node@18
 options:
   env:

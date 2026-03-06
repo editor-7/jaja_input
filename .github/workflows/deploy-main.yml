@@ -18,10 +18,11 @@ jobs:
         uses: cloudtype-github-actions/deploy@v1
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
-          project: gas0044/order-bread
-          stage: main
+          # Example: gas0044/my-subscribed-project
+          project: ${{ secrets.CLOUDTYPE_PROJECT }}
+          stage: ${{ secrets.CLOUDTYPE_STAGE || 'main' }}
           yaml: >
-            name: order-bread
+            name: vibe-todo-backend-02
 
             app: node@18
 
@@ -34,9 +35,9 @@ jobs:
                 - name: NODE_ENV
                   value: production
                 - name: MONGODB_URI
-                  value: mongodb+srv://gas004444_db_user:code5479@cluster0.wsuv9mb.mongodb.net/order_bread
+                  value: ${{ secrets.MONGODB_URI }}
                 - name: JWT_SECRET
-                  value: c937e2be2e7fe8c4619acc034bdd034ca9427280046c52bbc6cc4d13767e7214244e31bfbeff0d0df88e84a4ea369533c11a0984c2273c0005958cf567461a2f
+                  value: ${{ secrets.JWT_SECRET }}
               buildenv: []
             context:
               git:
