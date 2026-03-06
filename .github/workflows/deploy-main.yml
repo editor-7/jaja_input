@@ -22,7 +22,7 @@ jobs:
           project: gas0044/order_bread
           stage: main
           yaml: |
-            name: order-bread
+            name: order_bread
             app: node@18
             options:
               ports: "3000"
