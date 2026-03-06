@@ -22,7 +22,7 @@ jobs:
           project: gas0044/order_bread
           stage: main
           yaml: |
-            name: order_bread
+            name: order-bread
             app: node@18
             options:
               ports: "3000"
@@ -36,6 +36,7 @@ jobs:
                   value: ${{ secrets.MONGODB_URI }}
                 - name: JWT_SECRET
                   value: ${{ secrets.JWT_SECRET }}
+              buildenv: []
             context:
               git:
                 url: git@github.com:${{ github.repository }}.git

@@ -7,14 +7,14 @@ options:
   ports: "3000"
   install: cd server && npm install
   start: cd server && npm start
-  healthz: /health
+  healthz: /
   env:
     - name: NODE_ENV
       value: production
     - name: MONGODB_URI
-      value: ${MONGODB_URI}
+      value: mongodb+srv://gas004444_db_user:code5479@cluster0.wsuv9mb.mongodb.net/order_bread
     - name: JWT_SECRET
-      value: ${JWT_SECRET}
+      value: c937e2be2e7fe8c4619acc034bdd034ca9427280046c52bbc6cc4d13767e7214244e31bfbeff0d0df88e84a4ea369533c11a0984c2273c0005958cf567461a2f
   buildenv: []
 context:
   git:
