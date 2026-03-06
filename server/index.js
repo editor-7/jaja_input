@@ -31,6 +31,9 @@ app.get('/', (req, res) => {
   res.json({ message: 'Shopping Mall API Server is running!' });
 });
 
+// CloudType 헬스체크용
+app.get('/health', (req, res) => res.status(200).send('ok'));
+
 // API 라우트
 app.use('/api', require('./routes'));
 
