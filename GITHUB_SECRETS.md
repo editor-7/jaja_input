@@ -1,6 +1,6 @@
 # GitHub Secrets 설정 (CloudType 자동 배포용)
 
-`main` 브랜치에 push 시 CloudType으로 자동 배포되려면 아래 시크릿을 **반드시** 설정해야 합니다.
+`main` 브랜치에 push 시 CloudType으로 자동 배포되려면 아래 **4개** 시크릿을 설정해야 합니다. (프로젝트 `gas0044/todo-backend` 고정)
 
 ## 설정 위치
 
@@ -14,7 +14,6 @@ GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** 
 |------------|------|----------|
 | `CLOUDTYPE_TOKEN` | CloudType API Key | [CloudType API Key 발급](https://docs.cloudtype.io/guide/references/apikey) |
 | `GHP_TOKEN` | GitHub Personal Token | [GitHub 토큰 발급](https://github.com/settings/tokens) - 권한: `admin:public_key`, `repo` |
-| `CLOUDTYPE_PROJECT` | 배포 대상 프로젝트 | 형식: `스페이스명/프로젝트명` (예: `12345678/order-bread`) |
 | `MONGODB_URI` | MongoDB Atlas 연결 문자열 | Atlas Connect → 연결 문자열 복사 |
 | `JWT_SECRET` | JWT 서명용 시크릿 | 아래 명령으로 생성 |
 
@@ -25,13 +24,6 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 
 ---
-
-## CLOUDTYPE_PROJECT 값 찾기
-
-1. [CloudType](https://cloudtype.io/) 로그인
-2. 배포된 **order-bread** 프로젝트 선택
-3. **CLI** 탭 클릭
-4. 표시되는 `project` 값 복사 (예: `20911876/order-bread`)
 
 ---
 
