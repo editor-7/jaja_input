@@ -20,3 +20,4 @@ context:
   git:
     url: https://github.com/editor-7/order_bread.git
     branch: main
+  subdir: server
