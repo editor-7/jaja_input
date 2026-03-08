@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { getCategory } from '@/data/products'
 import './ShopBody.css'
 
@@ -41,6 +42,10 @@ function ShopBody({
   onShowPayment,
   user,
 }) {
+  const [listQtys, setListQtys] = useState({})
+  const getListQty = (id) => listQtys[id] ?? 1
+  const setListQty = (id, n) => setListQtys((prev) => ({ ...prev, [id]: Math.max(1, Math.min(99, n)) }))
+
   return (
     <>
       {addedMsg && <div className="added-msg">{addedMsg}</div>}
@@ -51,7 +56,7 @@ function ShopBody({
             <div className="order-list-header">
               <h2>내 구매 리스트</h2>
               <button type="button" className="back-to-list-btn" onClick={onCloseOrderList}>
-                ← 빵 목록으로
+                ← 자재 목록으로
               </button>
             </div>
             {orderList.length === 0 ? (
@@ -209,8 +214,8 @@ function ShopBody({
                 {(paymentMethod === 'transfer' || paymentMethod === 'deposit') && (
                   <div className="bank-info">
                     <h3>입금하실 계좌</h3>
-                    <p><strong>하나은행</strong> 589-910014-42404</p>
-                    <p><strong>예금주</strong> (주)Mrs. Park Kambanew</p>
+                    <p><strong>입금 은행</strong> 000-000000-00000</p>
+                    <p><strong>예금주</strong> (주)도시가스자재몰</p>
                     <p><strong>입금금액</strong> {totalPrice.toLocaleString()}원</p>
                     <p className="bank-note">입금 후 아래 버튼을 눌러주세요.</p>
                   </div>
@@ -287,93 +292,48 @@ function ShopBody({
             </div>
             <section className="section-banner">
               <div className="section-banner-header">
-                <h2>오늘의 빵 {!productsLoading && !productsLoadError && allFilteredCount > 0 && `(${allFilteredCount}종)`}</h2>
+                <h2>자재 목록 {!productsLoading && !productsLoadError && allFilteredCount > 0 && `(${allFilteredCount}종)`}</h2>
                 {onRetryProducts && (
                   <button type="button" className="refresh-products-btn" onClick={onRetryProducts} title="상품 목록 새로고침">
                     새로고침
                   </button>
                 )}
               </div>
-              <div className="product-grid">
+              <div className="product-list-wrap">
+                <div className="product-list-header-row">
+                  <span className="col-name">품목</span>
+                  <span className="col-qty">수량</span>
+                  <span className="col-unit">단위</span>
+                  <span className="col-price">단가</span>
+                  <span className="col-remark">비고</span>
+                  <span className="col-cart" aria-hidden="true" />
+                </div>
                 {filteredProducts.map((p) => (
-                  <div key={p._id || p.name} className="product-card">
-                    <div className="product-img-wrap">
-                      <img
-                        src={p.img || '/jpg/01.jpg'}
-                        alt={p.name}
-                        onError={(e) => {
-                          e.target.onerror = null
-                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"%3E%3Crect fill="%23f5f5f5" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="14"%3E이미지%3C/text%3E%3C/svg%3E'
-                        }}
-                      />
+                  <div key={p._id || p.name} className="product-list-row">
+                    <span className="col-name">
+                      <span className="list-name">{p.name}</span>
+                    </span>
+                    <span className="col-qty">
+                      <span className="list-qty-stepper">
+                        <button type="button" className="list-qty-btn" onClick={() => setListQty(p._id || p.name, getListQty(p._id || p.name) - 1)} aria-label="수량 감소">−</button>
+                        <span className="list-qty-value">{getListQty(p._id || p.name)}</span>
+                        <button type="button" className="list-qty-btn" onClick={() => setListQty(p._id || p.name, getListQty(p._id || p.name) + 1)} aria-label="수량 증가">+</button>
+                      </span>
+                    </span>
+                    <span className="col-unit">{p.unit || p.size || '—'}</span>
+                    <span className="col-price">{p.price != null ? p.price.toLocaleString() : ''}원</span>
+                    <span className="col-remark">{getCategory(p) !== p.name ? getCategory(p) : '—'}</span>
+                    <span className="col-cart">
                       <button
                         type="button"
-                        className={`wish-btn ${wishlist.has(`${p.name}|${p.price}`) ? 'active' : ''}`}
-                        onClick={() => toggleWishlist(p)}
-                        aria-label="찜하기"
+                        className="product-cart-btn list-cart-btn"
+                        onClick={() => addToCart(p, getListQty(p._id || p.name))}
+                        title="장바구니 담기"
+                        aria-label="장바구니 담기"
                       >
-                        {wishlist.has(`${p.name}|${p.price}`) ? '♥' : '♡'}
+                        🛒
                       </button>
-                    </div>
-                    <div className="product-info">
-                      <div className="product-name-row">
-                        <h4>{p.name}</h4>
-                        {getCategory(p) !== p.name && (
-                          <span className="product-category">{getCategory(p)}</span>
-                        )}
-                      </div>
-                      <p className="product-price">{p.price.toLocaleString()}원</p>
-                      <div className="product-qty-row">
-                        <label>수량</label>
-                        <div className="qty-stepper">
-                          <button
-                            type="button"
-                            className="qty-btn qty-minus"
-                            onClick={(e) => {
-                              const card = e.currentTarget.closest('.product-card')
-                              const span = card?.querySelector('.qty-value')
-                              if (span) {
-                                const v = Math.max(1, parseInt(span.textContent, 10) - 1)
-                                span.textContent = v
-                              }
-                            }}
-                            aria-label="수량 감소"
-                          >
-                            −
-                          </button>
-                          <span className="qty-value">1</span>
-                          <button
-                            type="button"
-                            className="qty-btn qty-plus"
-                            onClick={(e) => {
-                              const card = e.currentTarget.closest('.product-card')
-                              const span = card?.querySelector('.qty-value')
-                              if (span) {
-                                const v = Math.min(99, parseInt(span.textContent, 10) + 1)
-                                span.textContent = v
-                              }
-                            }}
-                            aria-label="수량 증가"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        className="product-cart-btn"
-                        onClick={(e) => {
-                          const card = e.currentTarget.closest('.product-card')
-                          const span = card?.querySelector('.qty-value')
-                          const qty = span ? parseInt(span.textContent, 10) : 1
-                          const count = Math.min(99, Math.max(1, isNaN(qty) ? 1 : qty))
-                          addToCart(p, count)
-                        }}
-                      >
-                        장바구니 담기
-                      </button>
-                      <p className="product-shipping">배송비 6,000원</p>
-                    </div>
+                    </span>
                   </div>
                 ))}
               </div>

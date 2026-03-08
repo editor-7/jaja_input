@@ -36,7 +36,7 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const { sku, name, desc, category, price, img, size, unit } = req.body;
+    const { sku, name, desc, spec, category, price, img, size, unit } = req.body;
     if (!name || price == null) {
       return res.status(400).json({ message: '상품명과 가격을 입력해 주세요.' });
     }
@@ -44,9 +44,10 @@ const create = async (req, res) => {
     const doc = {
       name,
       desc: desc || `정성스럽게 구운 ${name}`,
+      spec: (typeof spec === 'string' ? spec : String(spec ?? '')).trim(),
       category: category || name,
       price: Number(price),
-      img: img || '/jpg/01.jpg',
+      img: img || '',
       size: size || '1개',
       unit: unit || 'EA',
     };
@@ -66,15 +67,16 @@ const update = async (req, res) => {
     if (!isValidId(req.params.id)) {
       return res.status(400).json({ message: '잘못된 상품 ID입니다.' });
     }
-    const { sku, name, desc, category, price, img, size, unit } = req.body;
+    const { sku, name, desc, spec, category, price, img, size, unit } = req.body;
     const skuVal = (typeof sku === 'string' ? sku : String(sku ?? '')).trim();
     const $set = {
       name: String(name ?? '').trim(),
       desc: String(desc ?? '').trim(),
       category: String(category ?? '').trim(),
       price: Number(price) || 0,
-      img: String(img ?? '').trim() || '/jpg/01.jpg',
+      img: String(img ?? '').trim() || '',
     };
+    if (spec !== undefined) $set.spec = String(spec ?? '').trim();
     if (size !== undefined) $set.size = size;
     if (unit !== undefined) $set.unit = unit;
     if (skuVal) $set.sku = skuVal;

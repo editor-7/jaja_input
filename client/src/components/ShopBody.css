@@ -196,12 +196,114 @@
   color: var(--color-soft-brown);
   font-weight: 500;
 }
-@media (max-width: 768px) {
-  .product-grid { gap: 1.25rem; }
+
+/* 단가 빠른 조회용 리스트 (한 페이지에 많이) */
+.product-list-wrap {
+  margin-top: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
 }
+.product-list-header-row,
+.product-list-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 72px 56px 90px 100px 32px;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0.6rem;
+  min-height: 28px;
+}
+.product-list-header-row {
+  background: var(--color-blush);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-charcoal);
+  border-bottom: 1px solid var(--color-border);
+}
+.product-list-row {
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.product-list-row:last-child { border-bottom: none; }
+.product-list-row:hover { background: rgba(243, 229, 231, 0.4); }
+/* 품목: 줄바꿈해서 전체 보이게 */
+.product-list-wrap .col-name {
+  min-width: 0;
+  word-break: break-word;
+  line-height: 1.35;
+}
+.product-list-wrap .list-name {
+  display: inline;
+  font-weight: 500;
+  color: var(--color-charcoal);
+}
+.product-list-wrap .col-qty { display: flex; justify-content: center; }
+.product-list-wrap .col-unit { text-align: center; color: var(--color-muted); font-size: 0.75rem; }
+.product-list-wrap .col-remark { font-size: 0.75rem; color: var(--color-rose-gold); }
+.product-list-wrap .list-qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.product-list-wrap .list-qty-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: var(--color-blush);
+  color: var(--color-charcoal);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+.product-list-wrap .list-qty-btn:hover { background: var(--color-rose-gold); color: #fff; }
+.product-list-wrap .list-qty-value {
+  min-width: 1.25rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-charcoal);
+}
+.product-list-wrap .col-price { text-align: right; font-weight: 600; color: var(--color-rose-gold); white-space: nowrap; }
+.product-list-wrap .col-cart { display: flex; justify-content: center; }
+.product-list-wrap .list-cart-btn {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  padding: 0;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-rose-gold);
+  background: linear-gradient(135deg, var(--color-rose-gold) 0%, var(--color-dusty-rose) 100%);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.product-list-wrap .list-cart-btn:hover { opacity: 0.9; }
 @media (max-width: 520px) {
-  .product-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .product-list-header-row,
+  .product-list-row {
+    grid-template-columns: minmax(80px, 1fr) 64px 44px 64px 70px 26px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  .product-list-wrap .col-unit { font-size: 0.7rem; }
+  .product-list-wrap .col-remark { font-size: 0.7rem; }
+  .product-list-wrap .list-qty-btn { width: 18px; height: 18px; font-size: 0.7rem; }
+  .product-list-wrap .list-qty-value { min-width: 1rem; font-size: 0.7rem; }
+  .product-list-wrap .list-cart-btn { width: 22px; height: 22px; min-width: 22px; font-size: 0.7rem; }
 }
+
 .product-card {
   display: flex;
   flex-direction: row;
@@ -237,11 +339,10 @@
   .product-img-wrap { width: 100%; aspect-ratio: 1.4; }
 }
 .wish-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+  flex-shrink: 0;
   width: 32px;
   height: 32px;
+  margin-left: auto;
   border: none;
   background: rgba(255,255,255,0.95);
   border-radius: 50%;
@@ -278,7 +379,7 @@
   .product-category { font-size: 0.75rem; }
   .product-info .product-price { font-size: 0.95rem; }
   .product-shipping { font-size: 0.75rem; }
-  .product-cart-btn { padding: 0.6rem 0.8rem; font-size: 0.85rem; }
+  .product-cart-btn { padding: 0.25rem 0.4rem; }
   .product-qty-row { margin-bottom: 0.4rem; }
   .product-qty-row label { font-size: 0.8rem; }
   .qty-btn { width: 36px; height: 36px; font-size: 1.2rem; }
@@ -289,10 +390,10 @@
   .product-category { font-size: 0.7rem; }
   .product-info .product-price { font-size: 0.9rem; }
   .product-shipping { font-size: 0.72rem; margin: 0.2rem 0; }
-  .product-cart-btn { padding: 0.55rem 0.75rem; font-size: 0.82rem; min-height: 42px; }
+  .product-cart-btn { padding: 0.25rem 0.4rem; min-height: auto; }
   .product-qty-row { margin-bottom: 0.35rem; }
   .qty-btn { min-width: 40px; min-height: 40px; }
-  .wish-btn { width: 32px; height: 32px; top: 8px; right: 8px; font-size: 0.9rem; }
+  .wish-btn { width: 32px; height: 32px; font-size: 0.9rem; }
 }
 .product-qty-row {
   display: flex;
@@ -331,22 +432,30 @@
   color: var(--color-charcoal);
 }
 .product-cart-btn {
-  width: 100%;
-  padding: 0.7rem 1rem;
-  margin-bottom: 0.8rem;
+  width: auto;
+  min-width: 28px;
+  padding: 0.25rem 0.4rem;
+  margin-bottom: 0.5rem;
   border: 1px solid var(--color-rose-gold);
   background: linear-gradient(135deg, var(--color-rose-gold) 0%, var(--color-dusty-rose) 100%);
   color: #fff;
   cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  border-radius: 10px;
-  transition: all 0.25s ease;
+  font-size: 0.7rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.product-cart-btn-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+  display: block;
 }
 .product-cart-btn:hover {
   opacity: 0.95;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(183, 110, 121, 0.3);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(183, 110, 121, 0.3);
 }
 .product-info h4 {
   font-family: var(--font-heading);
@@ -357,6 +466,7 @@
   color: var(--color-charcoal);
 }
 .product-brand { font-size: 0.8rem; color: var(--color-muted); margin: 0 0 0.5rem; }
+.product-spec { font-size: 0.8rem; color: var(--color-muted); margin: 0 0 0.25rem; }
 .product-price { font-size: 1rem; font-weight: 600; color: var(--color-rose-gold); margin: 0 0 0.3rem; }
 .product-shipping { font-size: 0.8rem; color: var(--color-muted); margin: 0 0 0.5rem; }
 .empty-result { text-align: center; padding: 3rem; color: var(--color-muted); }

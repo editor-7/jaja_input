@@ -3,8 +3,8 @@ const config = require('../config/env');
 const Product = require('../models/Product');
 
 const INITIAL_PRODUCTS = [
-  { name: '깜바뉴', desc: '정성스럽게 구운 깜바뉴', category: '클래식', price: 18000, img: '/jpg/08.jpg', size: '1개', unit: 'EA' },
-  { name: '바게트', desc: '정성스럽게 구운 바게트', category: '바게트', price: 15000, img: '/jpg/02.jpg', size: '1개', unit: 'EA' },
+  { name: 'PEM 관 63A (자재)', desc: '도시가스 자재비 - PEM 관 63A', category: '도시가스-자재', price: 3155, img: '', size: 'M', unit: 'M' },
+  { name: 'PEM 관 63A (인건)', desc: '도시가스 인건비 - PEM 관 63A', category: '도시가스-인건', price: 6769, img: '', size: 'M', unit: 'M' },
 ];
 
 async function seed() {
@@ -13,7 +13,7 @@ async function seed() {
     const count = await Product.countDocuments();
     if (count === 0) {
       await Product.insertMany(INITIAL_PRODUCTS);
-      console.log('초기 상품 2개 등록 완료');
+      console.log('초기 도시가스 자재 상품 2개 등록 완료');
     }
   } catch (err) {
     console.error('Seed 오류:', err.message);

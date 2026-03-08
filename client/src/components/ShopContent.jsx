@@ -36,7 +36,7 @@ function ShopContent({ user, onLogout }) {
   const [productsLoadError, setProductsLoadError] = useState(false)
   const [productPage, setProductPage] = useState(1)
 
-  const ITEMS_PER_PAGE = 2
+  const ITEMS_PER_PAGE = 50
 
   const toProductList = (data) => {
     if (Array.isArray(data)) return data

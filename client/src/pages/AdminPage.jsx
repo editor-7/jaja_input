@@ -5,7 +5,6 @@ import { userApi, productApi } from '@/services/api'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
 import { skuSort } from '@/utils/productUtils'
 import ShopNavbar from '@/components/ShopNavbar'
-import ImageUpload from '@/components/ImageUpload'
 import './AdminPage.css'
 
 function AdminPage() {
@@ -15,7 +14,7 @@ function AdminPage() {
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
-  const [productForm, setProductForm] = useState({ sku: '', name: '', desc: '', category: '', price: '', img: '/jpg/01.jpg' })
+  const [productForm, setProductForm] = useState({ sku: '', name: '', desc: '', category: '', price: '', img: '' })
   const [editingId, setEditingId] = useState(null)
   const [productMsg, setProductMsg] = useState('')
   const [productSearch, setProductSearch] = useState('')
@@ -89,7 +88,7 @@ function AdminPage() {
         desc: fresh.desc || '',
         category: fresh.category || '',
         price: fresh.price ?? '',
-        img: fresh.img || '/jpg/01.jpg',
+        img: fresh.img || '',
       })
     } catch {
       setProductForm({
@@ -98,7 +97,7 @@ function AdminPage() {
         desc: p.desc || '',
         category: p.category || '',
         price: p.price ?? '',
-        img: p.img || '/jpg/01.jpg',
+        img: p.img || '',
       })
     }
   }
@@ -113,7 +112,7 @@ function AdminPage() {
       desc: productForm.desc.trim() || `정성스럽게 구운 ${productForm.name.trim()}`,
       category: productForm.category.trim() || productForm.name.trim(),
       price: Number(productForm.price) || 0,
-      img: productForm.img.trim() || '/jpg/01.jpg',
+      img: productForm.img?.trim() || '',
     }
     try {
       if (editingId) {
@@ -126,12 +125,12 @@ function AdminPage() {
           desc: updated.desc || '',
           category: updated.category || '',
           price: updated.price ?? '',
-          img: updated.img || '/jpg/01.jpg',
+          img: updated.img || '',
         })
       } else {
         await productApi.create(payload)
         setProductMsg('상품이 등록되었습니다.')
-        setProductForm({ sku: '', name: '', desc: '', category: '', price: '', img: '/jpg/01.jpg' })
+        setProductForm({ sku: '', name: '', desc: '', category: '', price: '', img: '' })
       }
       if (!editingId) loadProducts()
     } catch (err) {
@@ -182,7 +181,7 @@ function AdminPage() {
       setProducts((prev) => prev.filter((p) => String(p._id) !== String(id)))
       if (editingId && String(editingId) === String(id)) {
         setEditingId(null)
-        setProductForm({ sku: '', name: '', desc: '', category: '', price: '', img: '/jpg/01.jpg' })
+        setProductForm({ sku: '', name: '', desc: '', category: '', price: '', img: '' })
       }
       setProductMsg('상품이 삭제되었습니다.')
       setTimeout(() => setProductMsg(''), 3000)
@@ -198,7 +197,7 @@ function AdminPage() {
         <div className="admin-header-inner">
           <h1>관리자 모드</h1>
           <Link to="/" className="admin-back-btn">
-            제과점으로 돌아가기
+            자재몰로 돌아가기
           </Link>
         </div>
       </header>
@@ -302,14 +301,6 @@ function AdminPage() {
                     required
                   />
                 </div>
-                <div className="form-row">
-                  <label>이미지</label>
-                  <ImageUpload
-                    value={productForm.img}
-                    onChange={(url) => setProductForm((p) => ({ ...p, img: url || '/jpg/01.jpg' }))}
-                    placeholder="/jpg/01.jpg"
-                  />
-                </div>
                 <div className="form-actions">
                   <button type="submit" className="submit-btn">
                     {editingId ? '수정완료' : '등록하기'}
@@ -320,7 +311,7 @@ function AdminPage() {
                       className="cancel-btn"
                       onClick={() => {
                         setEditingId(null)
-                        setProductForm({ sku: '', name: '', desc: '', category: '', price: '', img: '/jpg/01.jpg' })
+                        setProductForm({ sku: '', name: '', desc: '', category: '', price: '', img: '' })
                         setProductMsg('')
                       }}
                     >
@@ -396,7 +387,6 @@ function AdminPage() {
                   </div>
                   <div className="product-list-table">
                     <div className="product-list-header">
-                      <span>이미지</span>
                       <span>SKU</span>
                       <span>상품명</span>
                       <span>카테고리</span>
@@ -405,9 +395,6 @@ function AdminPage() {
                     </div>
                     {managedProducts.map((p) => (
                       <div key={p._id} className="product-list-row">
-                        <div className="product-list-img">
-                          <img src={p.img || '/jpg/01.jpg'} alt={p.name} onError={(e) => { e.target.style.display = 'none' }} />
-                        </div>
                         <span className="product-list-sku">{p.sku || '-'}</span>
                         <span className="product-list-name">{p.name}</span>
                         <span className="product-list-category">{p.category || '-'}</span>

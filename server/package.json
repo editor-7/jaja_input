@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "product-list": "node scripts/excelToProductList.js",
+    "seed-list": "node scripts/seedFromProductList.js",
+    "seed-list:replace": "node scripts/seedFromProductList.js --replace"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +19,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^8.8.0"
+    "mongoose": "^8.8.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
