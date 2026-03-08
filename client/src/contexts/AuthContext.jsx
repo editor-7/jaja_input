@@ -23,6 +23,7 @@ export function AuthProvider({ children }) {
   const login = (newToken, newUser) => {
     localStorage.setItem('token', newToken)
     localStorage.setItem('user', JSON.stringify(newUser))
+    sessionStorage.setItem('pendingWelcome', newUser?.name || '')
     setToken(newToken)
     setUser(newUser)
     setPendingWelcome(newUser?.name || null)

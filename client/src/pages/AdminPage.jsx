@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { userApi, productApi } from '@/services/api'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
+import { skuSort } from '@/utils/productUtils'
 import ShopNavbar from '@/components/ShopNavbar'
 import ImageUpload from '@/components/ImageUpload'
 import './AdminPage.css'
@@ -153,14 +154,6 @@ function AdminPage() {
     if (productCategoryFilter !== 'all') {
       list = list.filter((p) => (p.category || p.name) === productCategoryFilter)
     }
-    const skuSort = (a, b) => {
-      const skuA = (a.sku || '').trim()
-      const skuB = (b.sku || '').trim()
-      if (skuA && skuB) return skuA.localeCompare(skuB)
-      if (skuA) return -1
-      if (skuB) return 1
-      return String(a._id || '').localeCompare(String(b._id || ''))
-    }
     if (productSortBy === 'sku') list.sort(skuSort)
     else if (productSortBy === 'name') list.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
     else if (productSortBy === 'priceAsc') list.sort((a, b) => (a.price || 0) - (b.price || 0))
@@ -170,14 +163,7 @@ function AdminPage() {
   })()
 
   const productCategories = (() => {
-    const sorted = [...products].sort((a, b) => {
-      const skuA = (a.sku || '').trim()
-      const skuB = (b.sku || '').trim()
-      if (skuA && skuB) return skuA.localeCompare(skuB)
-      if (skuA) return -1
-      if (skuB) return 1
-      return String(a._id || '').localeCompare(String(b._id || ''))
-    })
+    const sorted = [...products].sort(skuSort)
     const seen = new Set()
     return sorted
       .map((p) => p.category || p.name)
@@ -418,22 +404,22 @@ function AdminPage() {
                       <span>관리</span>
                     </div>
                     {managedProducts.map((p) => (
-                    <div key={p._id} className="product-list-row">
-                      <div className="product-list-img">
-                        <img src={p.img || '/jpg/01.jpg'} alt={p.name} onError={(e) => { e.target.style.display = 'none' }} />
+                      <div key={p._id} className="product-list-row">
+                        <div className="product-list-img">
+                          <img src={p.img || '/jpg/01.jpg'} alt={p.name} onError={(e) => { e.target.style.display = 'none' }} />
+                        </div>
+                        <span className="product-list-sku">{p.sku || '-'}</span>
+                        <span className="product-list-name">{p.name}</span>
+                        <span className="product-list-category">{p.category || '-'}</span>
+                        <span className="product-list-price">{p.price?.toLocaleString()}원</span>
+                        <div className="product-list-actions">
+                          <button type="button" className="edit-btn" onClick={() => { handleProductEdit(p); setActiveMenu('product') }}>
+                            수정
+                          </button>
+                          <button type="button" className="delete-btn" onClick={() => handleProductDelete(p._id)}>삭제</button>
+                        </div>
                       </div>
-                      <span className="product-list-sku">{p.sku || '-'}</span>
-                      <span className="product-list-name">{p.name}</span>
-                      <span className="product-list-category">{p.category || '-'}</span>
-                      <span className="product-list-price">{p.price?.toLocaleString()}원</span>
-                      <div className="product-list-actions">
-                        <button type="button" className="edit-btn" onClick={() => { handleProductEdit(p); setActiveMenu('product') }}>
-                          수정
-                        </button>
-                        <button type="button" className="delete-btn" onClick={() => handleProductDelete(p._id)}>삭제</button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                   </div>
                   {managedProducts.length === 0 && products.length > 0 && (
                     <p className="empty-msg">검색 결과가 없습니다.</p>

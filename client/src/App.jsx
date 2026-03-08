@@ -8,6 +8,7 @@ import SignupPage from '@/pages/SignupPage'
 import LoginPage from '@/pages/LoginPage'
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import AdminPage from '@/pages/AdminPage'
+import MyProfilePage from '@/pages/MyProfilePage'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/my-profile" element={<MyProfilePage />} />
             <Route path="/cart" element={<CartPage />} />
           </Routes>
         </div>

@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { userApi } from '@/services/api'
+import { useAuth } from '@/contexts/AuthContext'
 
 function SignupPage() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -70,6 +72,11 @@ function SignupPage() {
         password: formData.password,
         user_type: 'customer',
       })
+      const { token, user } = await userApi.login({
+        email: formData.email,
+        password: formData.password,
+      })
+      login(token, user)
       setSuccess(true)
       setTimeout(() => {
         navigate('/')

@@ -43,8 +43,9 @@ function ShopBody({
 }) {
   return (
     <>
-    <div className="shop-layout">
-      <main className="shop-main">
+      {addedMsg && <div className="added-msg">{addedMsg}</div>}
+      <div className="shop-layout">
+        <main className="shop-main">
         {showOrderList ? (
           <div className="order-list-view">
             <div className="order-list-header">
@@ -54,7 +55,9 @@ function ShopBody({
               </button>
             </div>
             {orderList.length === 0 ? (
-              <p className="empty-orders">구매 내역이 없습니다.</p>
+              <p className="empty-orders">
+                {user ? '구매 내역이 없습니다.' : '로그인 후 구매 내역을 확인할 수 있습니다.'}
+              </p>
             ) : (
               <ul className="order-list">
                 {orderList.map((order) => (
@@ -417,7 +420,6 @@ function ShopBody({
               </div>
             )}
 
-            {addedMsg && <div className="added-msg">{addedMsg}</div>}
             <section id="cart-section" className="cart-section">
               <h2>장바구니</h2>
               <ul className="cart-list">
@@ -458,8 +460,8 @@ function ShopBody({
             </section>
           </>
         )}
-      </main>
-    </div>
+        </main>
+      </div>
     </>
   )
 }

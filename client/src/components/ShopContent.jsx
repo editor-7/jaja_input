@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import { productApi } from '@/services/api'
 import { getCategory } from '@/data/products'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
+import { skuSort } from '@/utils/productUtils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import ShopNavbar from './ShopNavbar'
@@ -14,7 +15,6 @@ function ShopContent({ user, onLogout }) {
   const [categoryFilter, setCategoryFilter] = useState('all')
   const {
     cart,
-    setCart,
     groupedCart,
     totalPrice,
     addToCart,
@@ -88,10 +88,15 @@ function ShopContent({ user, onLogout }) {
   }, [])
 
   useEffect(() => {
-    if (pendingWelcome && user) {
-      setAddedMsg(`${user.name}님 환영합니다`)
+    const nameFromStorage = sessionStorage.getItem('pendingWelcome')
+    const shouldShow = (pendingWelcome || nameFromStorage) && user
+    if (shouldShow) {
+      const name = user?.name || pendingWelcome || nameFromStorage || '회원'
+      sessionStorage.removeItem('pendingWelcome')
       clearWelcome()
-      setTimeout(() => setAddedMsg(''), 3000)
+      setAddedMsg(`${name}님 환영합니다`)
+      const t = setTimeout(() => setAddedMsg(''), 3000)
+      return () => clearTimeout(t)
     }
   }, [pendingWelcome, user, clearWelcome])
 
@@ -114,6 +119,11 @@ function ShopContent({ user, onLogout }) {
     } catch (e) {}
   }, [])
 
+  const myOrderList = useMemo(() => {
+    if (!user?._id) return []
+    return orderList.filter((o) => o.userId && String(o.userId) === String(user._id))
+  }, [orderList, user?._id])
+
   const saveOrder = (items, total, method, status) => {
     const order = {
       id: Date.now(),
@@ -129,15 +139,6 @@ function ShopContent({ user, onLogout }) {
     const next = [order, ...orderList]
     setOrderList(next)
     localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(next))
-  }
-
-  const skuSort = (a, b) => {
-    const skuA = (a.sku || '').trim()
-    const skuB = (b.sku || '').trim()
-    if (skuA && skuB) return skuA.localeCompare(skuB)
-    if (skuA) return -1
-    if (skuB) return 1
-    return String(a._id || '').localeCompare(String(b._id || ''))
   }
 
   const categories = useMemo(() => {
@@ -218,7 +219,7 @@ function ShopContent({ user, onLogout }) {
         showOrderList={showOrderList}
         onShowOrderList={() => setShowOrderList(true)}
         onCloseOrderList={() => setShowOrderList(false)}
-        orderList={orderList}
+        orderList={myOrderList}
         deliveryInfo={deliveryInfo}
         onDeliveryInfoChange={setDeliveryInfo}
         showPayment={showPayment}

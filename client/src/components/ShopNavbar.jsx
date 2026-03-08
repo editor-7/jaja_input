@@ -32,7 +32,7 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
             )}
             {user ? (
               <>
-                <span className="nav-user">{user.name}님</span>
+                <Link to="/my-profile" className="nav-user">{user.name}님</Link>
                 <button type="button" className="nav-logout" onClick={onLogout}>로그아웃</button>
               </>
             ) : (

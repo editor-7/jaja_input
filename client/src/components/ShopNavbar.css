@@ -149,6 +149,12 @@
 .nav-user {
   color: #5a4e4e;
   font-size: 0.85rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-user:hover {
+  color: var(--color-rose-gold);
 }
 
 .nav-logout {
