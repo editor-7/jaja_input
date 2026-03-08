@@ -8,7 +8,8 @@
     "dev": "nodemon index.js",
     "product-list": "node scripts/excelToProductList.js",
     "seed-list": "node scripts/seedFromProductList.js",
-    "seed-list:replace": "node scripts/seedFromProductList.js --replace"
+    "seed-list:replace": "node scripts/seedFromProductList.js --replace",
+    "export-excel": "node scripts/exportProductsToExcel.js"
   },
   "keywords": [],
   "author": "",

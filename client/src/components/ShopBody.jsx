@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getCategory } from '@/data/products'
+import { getCategory, getDisplayItemName, getRemarkDisplay, getSpecFromProduct } from '@/data/products'
 import './ShopBody.css'
 
 function ShopBody({
@@ -273,7 +273,7 @@ function ShopBody({
                     className={categoryFilter === c ? 'active' : ''}
                     onClick={() => onCategoryChange(c)}
                   >
-                    {c}
+                    {getRemarkDisplay({ category: c })}
                   </button>
                 ))}
               </div>
@@ -302,6 +302,7 @@ function ShopBody({
               <div className="product-list-wrap">
                 <div className="product-list-header-row">
                   <span className="col-name">품목</span>
+                  <span className="col-spec">규격</span>
                   <span className="col-qty">수량</span>
                   <span className="col-unit">단위</span>
                   <span className="col-price">단가</span>
@@ -311,8 +312,9 @@ function ShopBody({
                 {filteredProducts.map((p) => (
                   <div key={p._id || p.name} className="product-list-row">
                     <span className="col-name">
-                      <span className="list-name">{p.name}</span>
+                      <span className="list-name">{getDisplayItemName(p)}</span>
                     </span>
+                    <span className="col-spec">{getSpecFromProduct(p) || '—'}</span>
                     <span className="col-qty">
                       <span className="list-qty-stepper">
                         <button type="button" className="list-qty-btn" onClick={() => setListQty(p._id || p.name, getListQty(p._id || p.name) - 1)} aria-label="수량 감소">−</button>
@@ -322,7 +324,7 @@ function ShopBody({
                     </span>
                     <span className="col-unit">{p.unit || p.size || '—'}</span>
                     <span className="col-price">{p.price != null ? p.price.toLocaleString() : ''}원</span>
-                    <span className="col-remark">{getCategory(p) !== p.name ? getCategory(p) : '—'}</span>
+                    <span className="col-remark">{getRemarkDisplay(p)}</span>
                     <span className="col-cart">
                       <button
                         type="button"

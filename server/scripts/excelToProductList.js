@@ -41,8 +41,8 @@ function run() {
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
 
   const products = [];
-  let skuSeq = 1;
-  const seen = new Set(); // 품명+규격 중복 방지
+  let skuJ = 1;   // 자재: GAS-J-0001, GAS-J-0002, ...
+  let skuIN = 1;  // 인건: GAS-IN-0001, GAS-IN-0002, ...
 
   // 첫 3행은 헤더/소제목이므로 4행(인덱스 3)부터
   for (let i = 3; i < rows.length; i++) {
@@ -56,11 +56,10 @@ function run() {
     if (!품명) continue;
 
     const nameBase = 규격 ? `${품명} ${규격}` : 품명;
-    const key = nameBase;
 
-    // 자재비 단가가 있으면 상품 1개 (도시가스-자재)
+    // 자재비 단가가 있으면 상품 1개 → SKU GAS-J-0001 순서
     if (Number.isFinite(재료비단가) && 재료비단가 > 0) {
-      const sku = `GAS-${String(skuSeq++).padStart(4, '0')}`;
+      const sku = `GAS-J-${String(skuJ++).padStart(4, '0')}`;
       products.push({
         sku,
         name: `${nameBase} (자재)`,
@@ -74,9 +73,9 @@ function run() {
       });
     }
 
-    // 노무비 단가가 있으면 상품 1개 (도시가스-인건)
+    // 노무비 단가가 있으면 상품 1개 → SKU GAS-IN-0001 순서
     if (Number.isFinite(노무비단가) && 노무비단가 > 0) {
-      const sku = `GAS-${String(skuSeq++).padStart(4, '0')}`;
+      const sku = `GAS-IN-${String(skuIN++).padStart(4, '0')}`;
       products.push({
         sku,
         name: `${nameBase} (인건)`,

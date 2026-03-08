@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { userApi, productApi } from '@/services/api'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
 import { skuSort } from '@/utils/productUtils'
+import { getDisplayItemName, getSpecFromProduct, getRemarkDisplay } from '@/data/products'
 import ShopNavbar from '@/components/ShopNavbar'
 import './AdminPage.css'
 
@@ -14,7 +15,7 @@ function AdminPage() {
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
-  const [productForm, setProductForm] = useState({ sku: '', name: '', desc: '', category: '', price: '', img: '' })
+  const [productForm, setProductForm] = useState({ sku: '', name: '', desc: '', spec: '', category: '', price: '', img: '' })
   const [editingId, setEditingId] = useState(null)
   const [productMsg, setProductMsg] = useState('')
   const [productSearch, setProductSearch] = useState('')
@@ -86,6 +87,7 @@ function AdminPage() {
         sku: fresh.sku ?? '',
         name: fresh.name || '',
         desc: fresh.desc || '',
+        spec: fresh.spec || '',
         category: fresh.category || '',
         price: fresh.price ?? '',
         img: fresh.img || '',
@@ -95,6 +97,7 @@ function AdminPage() {
         sku: p.sku ?? '',
         name: p.name || '',
         desc: p.desc || '',
+        spec: p.spec || '',
         category: p.category || '',
         price: p.price ?? '',
         img: p.img || '',
@@ -110,6 +113,7 @@ function AdminPage() {
       sku: skuVal,
       name: productForm.name.trim(),
       desc: productForm.desc.trim() || `정성스럽게 구운 ${productForm.name.trim()}`,
+      spec: (productForm.spec ?? '').trim(),
       category: productForm.category.trim() || productForm.name.trim(),
       price: Number(productForm.price) || 0,
       img: productForm.img?.trim() || '',
@@ -130,7 +134,7 @@ function AdminPage() {
       } else {
         await productApi.create(payload)
         setProductMsg('상품이 등록되었습니다.')
-        setProductForm({ sku: '', name: '', desc: '', category: '', price: '', img: '' })
+        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', price: '', img: '' })
       }
       if (!editingId) loadProducts()
     } catch (err) {
@@ -181,7 +185,7 @@ function AdminPage() {
       setProducts((prev) => prev.filter((p) => String(p._id) !== String(id)))
       if (editingId && String(editingId) === String(id)) {
         setEditingId(null)
-        setProductForm({ sku: '', name: '', desc: '', category: '', price: '', img: '' })
+        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', price: '', img: '' })
       }
       setProductMsg('상품이 삭제되었습니다.')
       setTimeout(() => setProductMsg(''), 3000)
@@ -269,8 +273,17 @@ function AdminPage() {
                     type="text"
                     value={productForm.name}
                     onChange={(e) => setProductForm((p) => ({ ...p, name: e.target.value }))}
-                    placeholder="예: 깜바뉴"
+                    placeholder="예: PEM 관"
                     required
+                  />
+                </div>
+                <div className="form-row">
+                  <label>규격</label>
+                  <input
+                    type="text"
+                    value={productForm.spec ?? ''}
+                    onChange={(e) => setProductForm((p) => ({ ...p, spec: e.target.value }))}
+                    placeholder="예: 63A"
                   />
                 </div>
                 <div className="form-row">
@@ -311,7 +324,7 @@ function AdminPage() {
                       className="cancel-btn"
                       onClick={() => {
                         setEditingId(null)
-                        setProductForm({ sku: '', name: '', desc: '', category: '', price: '', img: '' })
+                        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', price: '', img: '' })
                         setProductMsg('')
                       }}
                     >
@@ -370,7 +383,7 @@ function AdminPage() {
                     >
                       <option value="all">전체 카테고리</option>
                       {productCategories.map((c) => (
-                        <option key={c} value={c}>{c}</option>
+                        <option key={c} value={c}>{getRemarkDisplay({ category: c }) || c}</option>
                       ))}
                     </select>
                     <select
@@ -389,6 +402,7 @@ function AdminPage() {
                     <div className="product-list-header">
                       <span>SKU</span>
                       <span>상품명</span>
+                      <span>규격</span>
                       <span>카테고리</span>
                       <span>가격</span>
                       <span>관리</span>
@@ -396,8 +410,9 @@ function AdminPage() {
                     {managedProducts.map((p) => (
                       <div key={p._id} className="product-list-row">
                         <span className="product-list-sku">{p.sku || '-'}</span>
-                        <span className="product-list-name">{p.name}</span>
-                        <span className="product-list-category">{p.category || '-'}</span>
+                        <span className="product-list-name">{getDisplayItemName(p)}</span>
+                        <span className="product-list-spec">{getSpecFromProduct(p) || '-'}</span>
+                        <span className="product-list-category">{getRemarkDisplay({ category: p.category }) || '-'}</span>
                         <span className="product-list-price">{p.price?.toLocaleString()}원</span>
                         <div className="product-list-actions">
                           <button type="button" className="edit-btn" onClick={() => { handleProductEdit(p); setActiveMenu('product') }}>
