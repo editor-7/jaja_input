@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import './ShopNavbar.css'
 
@@ -9,17 +10,18 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
     <header className="shop-header">
         <div className="shop-header-inner">
           <div className="shop-logo">
-            <button type="button" className="logo-img-btn" onClick={() => setShowLogoModal(true)} aria-label="로고 크게 보기">
-              <img src="/jpg/jpg_01.png" alt="Mrs. Park Kambanew" className="logo-img" loading="eager" decoding="async" />
+            <button type="button" className="logo-img-btn" onClick={(e) => { e.stopPropagation(); setShowLogoModal(true) }} aria-label="로고 크게 보기">
+              <img src="/jpg/jpg_01.png?v=2" alt="Mrs. Park Bakery" className="logo-img" loading="eager" decoding="async" />
             </button>
             <Link to="/" className="shop-logo-text">
-              <h1>Mrs. Park Kambanew</h1>
+              <h1>Mrs. Park Bakery</h1>
             </Link>
           </div>
-          {showLogoModal && (
-            <div className="logo-modal-overlay" onClick={() => setShowLogoModal(false)}>
-              <img src="/jpg/jpg_01.png" alt="Mrs. Park Kambanew" className="logo-modal-img" onClick={(e) => e.stopPropagation()} />
-            </div>
+          {showLogoModal && createPortal(
+            <div className="logo-modal-overlay" onClick={() => setShowLogoModal(false)} role="dialog" aria-modal="true">
+              <img src="/jpg/jpg_01.png?v=2" alt="Mrs. Park Bakery" className="logo-modal-img" onClick={(e) => e.stopPropagation()} />
+            </div>,
+            document.body
           )}
           <nav className="shop-nav-actions">
             <Link to="/greeting" className="nav-greeting">인사말</Link>
