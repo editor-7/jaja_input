@@ -285,6 +285,13 @@ function ShopBody({
                   onChange={(e) => onSearchChange(e.target.value)}
                   className="toolbar-search"
                 />
+                <button
+                  type="button"
+                  className="toolbar-search-btn"
+                  aria-label="검색"
+                >
+                  🔍
+                </button>
                 <button type="button" className="toolbar-order-btn" onClick={onShowOrderList}>
                   구매내역
                 </button>
@@ -317,9 +324,38 @@ function ShopBody({
                     <span className="col-spec">{getSpecFromProduct(p) || '—'}</span>
                     <span className="col-qty">
                       <span className="list-qty-stepper">
-                        <button type="button" className="list-qty-btn" onClick={() => setListQty(p._id || p.name, getListQty(p._id || p.name) - 1)} aria-label="수량 감소">−</button>
-                        <span className="list-qty-value">{getListQty(p._id || p.name)}</span>
-                        <button type="button" className="list-qty-btn" onClick={() => setListQty(p._id || p.name, getListQty(p._id || p.name) + 1)} aria-label="수량 증가">+</button>
+                        <button
+                          type="button"
+                          className="list-qty-btn"
+                          onClick={() =>
+                            setListQty(p._id || p.name, getListQty(p._id || p.name) - 1)
+                          }
+                          aria-label="수량 감소"
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min={1}
+                          max={99}
+                          className="list-qty-input"
+                          value={getListQty(p._id || p.name)}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => {
+                            const v = Number(String(e.target.value).replace(/[^0-9]/g, '')) || 0
+                            setListQty(p._id || p.name, v)
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="list-qty-btn"
+                          onClick={() =>
+                            setListQty(p._id || p.name, getListQty(p._id || p.name) + 1)
+                          }
+                          aria-label="수량 증가"
+                        >
+                          +
+                        </button>
                       </span>
                     </span>
                     <span className="col-unit">{p.unit || p.size || '—'}</span>

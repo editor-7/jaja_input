@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { productApi } from '@/services/api'
-import { getCategory } from '@/data/products'
+import { getCategory, getSpecFromProduct, getRemarkDisplay } from '@/data/products'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
 import { isDuplicateOrder, validatePayment } from '@/utils/orderUtils'
 import { skuSort } from '@/utils/productUtils'
@@ -166,14 +166,28 @@ function ShopContent({ user, onLogout }) {
 
   const filteredProducts = useMemo(() => {
     let result = products
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(term) ||
-          (p.desc || '').toLowerCase().includes(term) ||
-          (p.size || '').toLowerCase().includes(term)
-      )
+    const trimmed = searchTerm.trim()
+    if (trimmed) {
+      const tokens = trimmed.toLowerCase().split(/\s+/).filter(Boolean)
+      result = result.filter((p) => {
+        const spec = (getSpecFromProduct(p) || '').toLowerCase()
+        const cat = (getRemarkDisplay(p) || '').toLowerCase()
+        const sku = String(p.sku || '').toLowerCase()
+        const haystack = [
+          p.name || '',
+          p.desc || '',
+          p.size || '',
+          p.unit || '',
+          spec,
+          sku,
+          cat,
+        ]
+          .join(' ')
+          .toLowerCase()
+
+        // 입력한 단어들(예: "pem 400")이 모두 포함될 때만 매칭
+        return tokens.every((t) => haystack.includes(t))
+      })
     }
     if (categoryFilter !== 'all') {
       result = result.filter((p) => getCategory(p) === categoryFilter)
