@@ -23,45 +23,46 @@ function MyProfilePage() {
   }
 
   return (
-    <div className="my-profile-page">
-      <ShopNavbar
-        user={user}
-        onLogout={logout}
-        cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
-      />
-
-      <main className="my-profile-main">
-        <div className="my-profile-header">
-          <Link to="/" className="my-profile-back-btn">← 홈</Link>
-        </div>
-        <section className="my-profile-content">
-          <h1 className="my-profile-title">내 정보</h1>
-          <div className="my-profile-info">
-            <div className="info-row">
-              <span className="info-label">이름</span>
-              <span className="info-value">{user.name || '-'}</span>
-            </div>
-            <div className="info-row">
-              <span className="info-label">이메일</span>
-              <span className="info-value">{user.email || '-'}</span>
-            </div>
-            <div className="info-row">
-              <span className="info-label">연락처</span>
-              <span className="info-value">{user.phone || '미등록'}</span>
-            </div>
-            <div className="info-row">
-              <span className="info-label">주소</span>
-              <span className="info-value">{user.address || '미등록'}</span>
-            </div>
-            <div className="info-row">
-              <span className="info-label">회원 유형</span>
-              <span className="info-value">{user.user_type === 'admin' ? '관리자' : '고객'}</span>
-            </div>
+    <div className="shop-page my-profile-page">
+      <aside className="shop-sidebar">
+        <ShopNavbar
+          user={user}
+          onLogout={logout}
+          cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
+        />
+      </aside>
+      <div className="shop-main">
+        <main className="my-profile-main">
+          <div className="my-profile-header">
+            <Link to="/" className="my-profile-back-btn">← 홈</Link>
           </div>
-        </section>
-      </main>
-
-      <ShopFooter />
+          <section className="my-profile-content">
+            <h1 className="my-profile-title">내 정보</h1>
+            <div className="my-profile-info">
+              <div className="info-row">
+                <span className="info-label">이름</span>
+                <span className="info-value">{user.name || '-'}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">이메일</span>
+                <span className="info-value">{user.email || '-'}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">연락처</span>
+                <span className="info-value">{user.phone || '미등록'}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">주소</span>
+                <span className="info-value">{user.address || '미등록'}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">회원 유형</span>
+                <span className="info-value">{user.user_type === 'admin' ? '관리자' : '고객'}</span>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
     </div>
   )
 }

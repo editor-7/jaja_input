@@ -1,20 +1,26 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '@/contexts/CartContext'
 import './ShopNavbar.css'
 
 function ShopNavbar({ user, onLogout, cartCount = 0 }) {
   const [showLogoModal, setShowLogoModal] = useState(false)
+  const navigate = useNavigate()
   const { clearCart } = useCart()
 
   return (
-    <header className="shop-header">
+    <header className="shop-header" role="banner">
         <div className="shop-header-inner">
           <div className="shop-logo">
-            <button type="button" className="logo-img-btn" onClick={(e) => { e.stopPropagation(); setShowLogoModal(true) }} aria-label="로고 크게 보기">
-              <img src="/jpg/jpg_01.png?v=3" alt="도시가스 자재몰" className="logo-img" loading="eager" decoding="async" />
-            </button>
+            <div className="shop-logo-top">
+              <Link to="/" className="logo-img-btn" aria-label="메인으로">
+                <img src="/jpg/jpg_01.png?v=3" alt="도시가스 자재몰" className="logo-img" loading="eager" decoding="async" />
+              </Link>
+              <button type="button" className="logo-zoom-btn" onClick={(e) => { e.preventDefault(); setShowLogoModal(true) }} aria-label="로고 크게 보기" title="로고 크게 보기">
+                🔍
+              </button>
+            </div>
             <Link to="/" className="shop-logo-text">
               <h1>도시가스<br />자재몰</h1>
             </Link>
@@ -25,24 +31,22 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
             </div>,
             document.body
           )}
-          <nav className="shop-nav-actions">
+          <nav className="shop-nav-actions" aria-label="메인 메뉴">
+            <Link to="/" className="nav-home">홈</Link>
             <Link to="/greeting" className="nav-greeting">인사말</Link>
-            <Link to="/cart" className="nav-cart" aria-label="장바구니 보기">
+            <a
+              href="/cart"
+              className="nav-cart"
+              aria-label="장바구니 보기"
+              onClick={(e) => { e.preventDefault(); navigate('/cart') }}
+            >
               <span className="nav-cart-icon">🛒</span>
               {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-            </Link>
-            <button
-              type="button"
-              className="nav-cart-clear"
-              onClick={() => clearCart()}
-              disabled={cartCount === 0}
-              title="장바구니 비우기"
-            >
-              <span className="nav-cart-clear-full">장바구니 비우기</span>
-              <span className="nav-cart-clear-short">비우기</span>
-            </button>
+            </a>
             {user?.user_type === 'admin' && (
-              <Link to="/admin" className="nav-admin">관리</Link>
+              <Link to="/admin" className="nav-admin">
+                관리
+              </Link>
             )}
             {user ? (
               <>
@@ -55,6 +59,16 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
                 <Link to="/signup" className="nav-signup">회원가입</Link>
               </>
             )}
+            <button
+              type="button"
+              className="nav-cart-clear"
+              onClick={() => clearCart()}
+              title="장바구니 비우기"
+              aria-label="장바구니 비우기"
+            >
+              <span className="nav-cart-clear-full">장바구니 비우기</span>
+              <span className="nav-cart-clear-short">비우기</span>
+            </button>
           </nav>
         </div>
       </header>

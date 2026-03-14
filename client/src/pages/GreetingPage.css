@@ -4,6 +4,10 @@
   min-height: 100vh;
 }
 
+.shop-page.greeting-page {
+  flex-direction: row;
+}
+
 .greeting-main {
   flex: 1;
   width: 100%;

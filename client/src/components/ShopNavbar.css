@@ -1,25 +1,35 @@
+/* 왼쪽 사이드바 (데스크톱 기본) */
 .shop-header {
   background: #f0ebe4;
-  border-bottom: 1px solid rgba(92, 74, 74, 0.25);
-  padding: 0.5rem 1rem 0.5rem 0;
-  position: sticky;
-  top: 0;
+  border-right: 1px solid rgba(92, 74, 74, 0.25);
+  padding: 0.5rem 0;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
   z-index: 100;
 }
 
 .shop-header-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-left: 1rem;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  flex: 1;
 }
 
 .shop-logo {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
+}
+.shop-logo-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
 }
 
 .logo-img-btn {
@@ -30,7 +40,19 @@
   display: block;
   flex-shrink: 0;
   line-height: 0;
+  text-decoration: none;
+  color: inherit;
 }
+.logo-zoom-btn {
+  padding: 0.2rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  opacity: 0.7;
+  line-height: 1;
+}
+.logo-zoom-btn:hover { opacity: 1; }
 
 .shop-logo-text {
   text-decoration: none;
@@ -58,12 +80,12 @@
 }
 
 .logo-img {
-  width: 120px;
-  height: 120px;
-  min-width: 48px;
-  min-height: 48px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   object-fit: contain;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   display: block;
 }
@@ -71,23 +93,34 @@
 .shop-header h1 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 1.1rem;
+  font-size: 0.65rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: #3d3232;
-  line-height: 1.25;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .shop-nav-actions {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-  flex-shrink: 0;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  flex: 1;
 }
+
 .shop-nav-actions a,
 .shop-nav-actions button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0;
+  text-align: center;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nav-cart {
@@ -95,11 +128,14 @@
   border: none;
   cursor: pointer;
   color: #463c3c;
-  padding: 0.5rem 0.6rem;
   position: relative;
   text-decoration: none;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  font: inherit;
+  width: 100%;
 }
 
 .nav-cart:hover {
@@ -107,58 +143,64 @@
 }
 
 .nav-cart-icon {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   line-height: 1;
+  pointer-events: none;
 }
 
 .cart-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: -4px;
+  right: 50%;
+  transform: translate(50%, 0);
+  margin-right: -20px;
   background: var(--color-rose-gold);
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  padding: 0 0.25rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.2rem;
   border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
 }
 
 .nav-cart-clear {
-  font-size: 0.85rem;
-  padding: 0.4rem 0.6rem;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.4rem;
   border: 1px solid var(--color-border);
   background: #fff;
   color: var(--color-soft-brown);
   border-radius: 6px;
   cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
 }
+
 .nav-cart-clear:hover:not(:disabled) {
   background: var(--color-blush);
   color: var(--color-rose-gold);
   border-color: var(--color-rose-gold);
 }
+
 .nav-cart-clear:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   color: var(--color-muted);
 }
-.nav-cart-clear-short { display: none; }
-@media (max-width: 900px) {
-  .nav-cart-clear-full { display: none; }
-  .nav-cart-clear-short { display: inline; }
-}
+
+.nav-cart-clear-full { display: none; }
+.nav-cart-clear-short { display: inline; }
 
 .nav-greeting {
   color: #5a4e4e;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
 }
 
 .nav-greeting:hover {
@@ -166,12 +208,18 @@
 }
 
 .nav-admin {
-  padding: 0.35rem 0.75rem;
+  padding: 0.25rem 0.4rem;
   background: #3d3232;
   color: #fff;
   text-decoration: none;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-admin:hover {
@@ -181,7 +229,7 @@
 
 .nav-user {
   color: #5a4e4e;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   text-decoration: none;
   cursor: pointer;
 }
@@ -195,7 +243,7 @@
   border: none;
   color: #5a4e4e;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
 }
 
 .nav-logout:hover {
@@ -206,69 +254,109 @@
   color: var(--color-rose-gold);
   text-decoration: none;
   font-weight: 500;
+  font-size: 0.75rem;
 }
 
 .nav-signup {
   color: #5a4e4e;
   text-decoration: none;
+  font-size: 0.75rem;
 }
 
 .nav-signup:hover {
   color: #3d3232;
 }
 
-@media (max-width: 768px) {
+/* 작은 화면: 상단 가로 네비로 전환 */
+@media (max-width: 900px) {
   .shop-header {
+    min-height: 0;
+    border-right: none;
+    border-bottom: 1px solid rgba(92, 74, 74, 0.25);
     padding: 0.5rem 0.75rem 0.5rem 1rem;
     padding-left: max(1rem, env(safe-area-inset-left));
   }
+
   .shop-header-inner {
+    flex-direction: row;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
     padding-left: 0;
   }
+
   .shop-logo {
-    flex-shrink: 0;
-    min-width: 72px;
-    display: flex;
-    align-items: center;
+    flex-direction: row;
     gap: 0.5rem;
   }
-  .logo-img-btn {
-    width: 72px;
-    height: 72px;
-  }
+
   .logo-img {
-    width: 72px !important;
-    height: 72px !important;
-    min-width: 72px !important;
-    min-height: 72px !important;
-    background: rgba(255,255,255,0.5);
-    border-radius: 10px;
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
   }
+
   .shop-header h1 {
     font-size: 0.9rem;
+    text-align: left;
   }
+
+  .shop-nav-actions {
+    flex-direction: row;
+    flex: 0;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .shop-nav-actions a,
+  .shop-nav-actions button {
+    width: auto;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .nav-cart-clear-full { display: inline; }
+  .nav-cart-clear-short { display: none; }
+
+  .cart-badge {
+    top: -2px;
+    right: -2px;
+    margin-right: 0;
+    transform: none;
+  }
+
+  .nav-greeting { font-size: 0.9rem; }
+  .nav-admin { font-size: 0.85rem; padding: 0.35rem 0.75rem; }
+  .nav-user { font-size: 0.85rem; }
+  .nav-logout { font-size: 0.85rem; }
+  .nav-login { font-size: inherit; }
+  .nav-signup { font-size: inherit; }
+  .nav-cart-clear { font-size: 0.85rem; padding: 0.4rem 0.6rem; margin-top: 0; }
+}
+
+@media (max-width: 768px) {
+  .shop-header {
+    padding: 0.5rem 0.75rem 0.5rem 1rem;
+  }
+
+  .logo-img {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+  }
+
+  .shop-header h1 {
+    font-size: 0.85rem;
+  }
+
   .nav-user {
     display: none;
   }
 }
 
 @media (max-width: 480px) {
-  .shop-logo {
-    min-width: 72px;
-    gap: 0.4rem;
-  }
-  .logo-img-btn {
-    width: 72px;
-    height: 72px;
-  }
-  .logo-img {
-    width: 72px !important;
-    height: 72px !important;
-    min-width: 72px !important;
-    min-height: 72px !important;
-  }
   .shop-header h1 {
-    font-size: 0.85rem;
-    display: block;
+    font-size: 0.8rem;
   }
 }

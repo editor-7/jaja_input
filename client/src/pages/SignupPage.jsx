@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { userApi } from '@/services/api'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -92,12 +92,15 @@ function SignupPage() {
   return (
     <div className="signup-page">
       <div className="signup-container">
-        <button type="button" onClick={() => navigate(-1)} className="back-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          뒤로가기
-        </button>
+        <div className="signup-back-row">
+          <button type="button" onClick={() => navigate(-1)} className="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            뒤로가기
+          </button>
+          <Link to="/" className="back-btn home-btn">홈</Link>
+        </div>
         <h1 className="signup-title">회원가입</h1>
         <p className="signup-subtitle">새로운 계정을 만들어 쇼핑을 시작하세요</p>
 

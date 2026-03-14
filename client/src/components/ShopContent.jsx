@@ -13,7 +13,8 @@ import ShopFooter from './ShopFooter'
 function ShopContent({ user, onLogout }) {
   const { pendingWelcome, clearWelcome } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('all')
+  const categories = [...MAIN_CATEGORIES, '인건만']
+  const [categoryFilter, setCategoryFilter] = useState(categories[0])
   const {
     cart,
     groupedCart,
@@ -37,7 +38,7 @@ function ShopContent({ user, onLogout }) {
   const [productsLoadError, setProductsLoadError] = useState(false)
   const [productPage, setProductPage] = useState(1)
 
-  const ITEMS_PER_PAGE = 50
+  const ITEMS_PER_PAGE = 60
 
   const toProductList = (data) => {
     if (Array.isArray(data)) return data
@@ -151,7 +152,63 @@ function ShopContent({ user, onLogout }) {
     return { ok: true }
   }
 
-  const categories = [...MAIN_CATEGORIES, '인건만']
+  const deleteOrder = useCallback((orderId) => {
+    setOrderList((prev) => {
+      const next = prev.filter((o) => o.id !== orderId)
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  const updateOrder = useCallback((orderId, updated) => {
+    setOrderList((prev) => {
+      const next = prev.map((o) => (o.id === orderId ? { ...o, ...updated } : o))
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  const addOrder = useCallback(() => {
+    if (!user?._id) return null
+    const order = {
+      id: Date.now(),
+      userId: user._id,
+      userName: user.name || '',
+      items: [],
+      totalPrice: 0,
+      paymentMethod: '',
+      status: '입금대기',
+      createdAt: new Date().toISOString(),
+      delivery: { name: '', phone: '', address: '' },
+    }
+    setOrderList((prev) => {
+      const next = [order, ...prev]
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(next))
+      return next
+    })
+    return order.id
+  }, [user?._id, user?.name])
+
+  /** 현재 장바구니를 구매내역(주문 목록)에 추가 */
+  const addCartAsOrder = useCallback(() => {
+    if (!user?._id || !groupedCart?.length) return
+    const order = {
+      id: Date.now(),
+      userId: user._id,
+      userName: user.name || '',
+      items: groupedCart.map((g) => ({ name: g.name, count: g.count, price: g.price })),
+      totalPrice: totalPrice || 0,
+      paymentMethod: '',
+      status: '입금대기',
+      createdAt: new Date().toISOString(),
+      delivery: { ...deliveryInfo },
+    }
+    setOrderList((prev) => {
+      const next = [order, ...prev]
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(next))
+      return next
+    })
+  }, [user?._id, user?.name, groupedCart, totalPrice, deliveryInfo])
 
   const filteredProducts = useMemo(() => {
     let result = Array.isArray(products) ? products : []
@@ -242,12 +299,14 @@ function ShopContent({ user, onLogout }) {
 
   return (
     <div className="shop-page">
-      <ShopNavbar
-        user={user}
-        onLogout={onLogout}
-        cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
-      />
-
+      <aside className="shop-sidebar">
+        <ShopNavbar
+          user={user}
+          onLogout={onLogout}
+          cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
+        />
+      </aside>
+      <div className="shop-main">
       <ShopBody
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -258,6 +317,10 @@ function ShopContent({ user, onLogout }) {
         onShowOrderList={() => setShowOrderList(true)}
         onCloseOrderList={() => setShowOrderList(false)}
         orderList={myOrderList}
+        onDeleteOrder={deleteOrder}
+        onUpdateOrder={updateOrder}
+        onAddOrder={addOrder}
+        onAddCartAsOrder={addCartAsOrder}
         deliveryInfo={deliveryInfo}
         onDeliveryInfoChange={setDeliveryInfo}
         showPayment={showPayment}
@@ -276,6 +339,7 @@ function ShopContent({ user, onLogout }) {
           setPaymentStep(1)
           setPaymentMethod('')
         }}
+        products={products}
         filteredProducts={paginatedProducts}
         allFilteredCount={filteredProducts.length}
         productPage={productPage}
@@ -309,6 +373,7 @@ function ShopContent({ user, onLogout }) {
       />
 
       <ShopFooter />
+      </div>
     </div>
   )
 }

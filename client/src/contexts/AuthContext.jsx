@@ -3,21 +3,28 @@ import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext(null)
 
-export function AuthProvider({ children }) {
-  const navigate = useNavigate()
-  const [user, setUser] = useState(null)
-  const [token, setToken] = useState(null)
-  const [isReady, setIsReady] = useState(false)
-  const [pendingWelcome, setPendingWelcome] = useState(null)
-
-  useEffect(() => {
+function readStoredAuth() {
+  try {
     const storedToken = localStorage.getItem('token')
     const storedUser = localStorage.getItem('user')
     if (storedToken && storedUser) {
-      setToken(storedToken)
-      setUser(JSON.parse(storedUser))
+      return { token: storedToken, user: JSON.parse(storedUser) }
     }
-    setIsReady(true)
+  } catch (e) {}
+  return { token: null, user: null }
+}
+
+export function AuthProvider({ children }) {
+  const navigate = useNavigate()
+  const [user, setUser] = useState(() => readStoredAuth().user)
+  const [token, setToken] = useState(() => readStoredAuth().token)
+  const [isReady, setIsReady] = useState(true)
+  const [pendingWelcome, setPendingWelcome] = useState(null)
+
+  useEffect(() => {
+    const { token: t, user: u } = readStoredAuth()
+    if (t) setToken(t)
+    if (u) setUser(u)
   }, [])
 
   const login = (newToken, newUser) => {

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useMemo, useEffect, useRef } from 'react'
 import { useAuth } from './AuthContext'
-import { getCartStorageKey } from '@/utils/constants'
+import { getCartStorageKey, getListQtysStorageKey } from '@/utils/constants'
 
 const CartContext = createContext(null)
 
@@ -8,6 +8,8 @@ export function CartProvider({ children }) {
   const { user } = useAuth()
   const [cart, setCart] = useState([])
   const prevUserIdRef = useRef(null)
+  const cartRef = useRef(cart)
+  cartRef.current = cart
 
   useEffect(() => {
     const currentId = user?._id ?? null
@@ -92,8 +94,14 @@ export function CartProvider({ children }) {
   }
 
   const clearCart = (silent = false) => {
-    if (cart.length === 0) return
-    if (silent || window.confirm('장바구니를 모두 비우시겠습니까?')) setCart([])
+    if (cartRef.current.length === 0) return
+    if (silent || window.confirm('장바구니를 모두 비우시겠습니까?')) {
+      setCart([])
+      try {
+        if (user?._id) localStorage.setItem(getListQtysStorageKey(user._id), '{}')
+        window.dispatchEvent(new CustomEvent('clearListQtys'))
+      } catch (e) {}
+    }
   }
 
   const value = useMemo(

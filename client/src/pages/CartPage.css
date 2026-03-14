@@ -6,6 +6,11 @@
   min-height: 100vh;
 }
 
+/* 장바구니도 홈과 동일하게 좌측 네비 + 메인 (shop-page 레이아웃) */
+.shop-page.cart-page {
+  flex-direction: row;
+}
+
 .cart-page-main {
   flex: 1;
   width: 100%;
@@ -114,6 +119,11 @@
 .order-list-actions .back-to-list-btn {
   text-decoration: none;
   color: inherit;
+}
+
+.order-list-actions .back-to-list-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .payment-header-actions {

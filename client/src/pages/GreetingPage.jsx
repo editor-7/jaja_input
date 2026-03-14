@@ -11,13 +11,15 @@ function GreetingPage() {
   const { groupedCart } = useCart()
 
   return (
-    <div className="greeting-page">
-      <ShopNavbar
-        user={isLoggedIn ? user : null}
-        onLogout={logout}
-        cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
-      />
-
+    <div className="shop-page greeting-page">
+      <aside className="shop-sidebar">
+        <ShopNavbar
+          user={isLoggedIn ? user : null}
+          onLogout={logout}
+          cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
+        />
+      </aside>
+      <div className="shop-main">
       <main className="greeting-main">
         <div className="greeting-header">
           <Link to="/" className="greeting-back-btn">← 홈</Link>
@@ -34,6 +36,7 @@ function GreetingPage() {
       </main>
 
       <ShopFooter />
+      </div>
     </div>
   )
 }

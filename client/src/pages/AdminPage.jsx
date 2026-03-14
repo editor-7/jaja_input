@@ -10,7 +10,7 @@ import ShopNavbar from '@/components/ShopNavbar'
 import './AdminPage.css'
 
 function AdminPage() {
-  const { user, isLoggedIn, logout } = useAuth()
+  const { user, isLoggedIn, logout, isReady } = useAuth()
   const navigate = useNavigate()
   const [activeMenu, setActiveMenu] = useState('orders')
   const [users, setUsers] = useState([])
@@ -25,6 +25,7 @@ function AdminPage() {
   const [productSortBy, setProductSortBy] = useState('sku')
 
   useEffect(() => {
+    if (!isReady) return
     if (!isLoggedIn || !user) {
       navigate('/login')
       return
@@ -36,7 +37,7 @@ function AdminPage() {
     loadUsers()
     loadOrders()
     loadProducts()
-  }, [isLoggedIn, user, navigate])
+  }, [isReady, isLoggedIn, user, navigate])
 
   const loadProducts = async () => {
     try {
@@ -66,8 +67,30 @@ function AdminPage() {
     } catch (e) {}
   }
 
+  if (!isReady) {
+    return (
+      <div className="shop-page admin-page">
+        <aside className="shop-sidebar">
+          <ShopNavbar user={user} onLogout={logout} cartCount={0} />
+        </aside>
+        <div className="shop-main admin-main-standalone">
+          <div className="admin-loading-msg">로딩 중...</div>
+        </div>
+      </div>
+    )
+  }
   if (!isLoggedIn || user?.user_type !== 'admin') {
-    return null
+    return (
+      <div className="shop-page admin-page">
+        <aside className="shop-sidebar">
+          <ShopNavbar user={user} onLogout={logout} cartCount={0} />
+        </aside>
+        <div className="shop-main admin-main-standalone">
+          <div className="admin-loading-msg">접근 권한이 없습니다. 로그인 후 다시 시도해 주세요.</div>
+          <Link to="/login" className="admin-back-btn" style={{ marginTop: '1rem', display: 'inline-block' }}>로그인</Link>
+        </div>
+      </div>
+    )
   }
 
   const statusColors = {
@@ -204,8 +227,11 @@ function AdminPage() {
   }
 
   return (
-    <div className="admin-page">
-      <ShopNavbar user={user} onLogout={logout} cartCount={0} />
+    <div className="shop-page admin-page">
+      <aside className="shop-sidebar">
+        <ShopNavbar user={user} onLogout={logout} cartCount={0} />
+      </aside>
+      <div className="shop-main">
       <header className="admin-header">
         <div className="admin-header-inner">
           <h1>관리자 모드</h1>
@@ -604,6 +630,7 @@ function AdminPage() {
             </section>
           )}
         </main>
+      </div>
       </div>
     </div>
   )

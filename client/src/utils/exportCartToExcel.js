@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx-js-style'
 import { getDisplayItemName, getSpecFromProduct, getCategory, getMainCategory } from '@/data/products'
+import { getExcelItemSortIndex } from '@/data/excelItemOrder'
 
 const CENTER = { horizontal: 'center', vertical: 'center' }
 const LEFT = { horizontal: 'left', vertical: 'center' }
@@ -52,7 +53,7 @@ export function downloadCartAsExcel(groupedCart, totalPrice = 0) {
       row.인건비금액 = amount
     }
   }
-  const dataRows = Array.from(keyToRow.values()).map((r) => {
+  let dataRows = Array.from(keyToRow.values()).map((r) => {
     const 합계 = r.자재비금액 + r.인건비금액
     const has자재 = r.자재비단가 > 0 || r.자재비금액 > 0
     const has인건 = r.인건비단가 > 0 || r.인건비금액 > 0
@@ -60,6 +61,7 @@ export function downloadCartAsExcel(groupedCart, totalPrice = 0) {
     const 비고2 = has자재 && has인건 ? '자재·인건' : has자재 ? '자재' : has인건 ? '인건' : ''
     return [r.품목, r.규격, r.수량, r.단위, r.자재비단가, r.자재비금액, r.인건비단가, r.인건비금액, 합계, 비고1, 비고2]
   })
+  dataRows = dataRows.sort((a, b) => getExcelItemSortIndex(a[0], a[1]) - getExcelItemSortIndex(b[0], b[1]))
   let sum자재비금액 = 0
   let sum인건비금액 = 0
   let sum합계 = 0

@@ -1,6 +1,8 @@
-import { useState, useRef } from 'react'
-import { getCategory, getDisplayItemName, getRemarkDisplay, getSpecFromProduct } from '@/data/products'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { getCategory, getDisplayItemName, getMainCategory, getRemarkDisplay, getSpecFromProduct } from '@/data/products'
 import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
+import { downloadOrderListAsExcel } from '@/utils/exportOrderListToExcel'
+import { getListQtysStorageKey } from '@/utils/constants'
 import './ShopBody.css'
 
 function ShopBody({
@@ -13,6 +15,10 @@ function ShopBody({
   onShowOrderList,
   onCloseOrderList,
   orderList,
+  onDeleteOrder,
+  onUpdateOrder,
+  onAddOrder,
+  onAddCartAsOrder,
   deliveryInfo,
   onDeliveryInfoChange,
   showPayment,
@@ -22,6 +28,7 @@ function ShopBody({
   onPaymentMethodChange,
   onPaymentClose,
   onPaymentComplete,
+  products = [],
   filteredProducts = [],
   allFilteredCount = (filteredProducts && filteredProducts.length) ?? 0,
   productPage = 1,
@@ -47,9 +54,73 @@ function ShopBody({
   const [listQtys, setListQtys] = useState({})
   const [lastSpaceAddedId, setLastSpaceAddedId] = useState(null)
   const qtyInputRefs = useRef([])
+  const [gridCols, setGridCols] = useState(5)
   const ROWS_PER_PAGE = 10
+  const [editingOrderId, setEditingOrderId] = useState(null)
+  const [editOrderForm, setEditOrderForm] = useState(null)
+  const [orderEditProductSearch, setOrderEditProductSearch] = useState('')
+
+  const userId = user?._id ?? null
+
+  useEffect(() => {
+    if (!userId) return
+    try {
+      const key = getListQtysStorageKey(userId)
+      const saved = localStorage.getItem(key)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed && typeof parsed === 'object') setListQtys(parsed)
+      }
+    } catch (e) {}
+  }, [userId])
+
+  useEffect(() => {
+    if (!userId || Object.keys(listQtys).length === 0) return
+    try {
+      localStorage.setItem(getListQtysStorageKey(userId), JSON.stringify(listQtys))
+    } catch (e) {}
+  }, [userId, listQtys])
+
+  useEffect(() => {
+    const handler = () => {
+      setListQtys({})
+      if (userId) try { localStorage.setItem(getListQtysStorageKey(userId), '{}') } catch (e) {}
+    }
+    window.addEventListener('clearListQtys', handler)
+    return () => window.removeEventListener('clearListQtys', handler)
+  }, [userId])
+
+  useEffect(() => {
+    const updateCols = () => {
+      const w = window.innerWidth
+      if (w >= 1920) setGridCols(12)
+      else if (w >= 1600) setGridCols(10)
+      else if (w >= 1281) setGridCols(8)
+      else if (w >= 901) setGridCols(7)
+      else if (w >= 521) setGridCols(5)
+      else setGridCols(1)
+    }
+    updateCols()
+    window.addEventListener('resize', updateCols)
+    return () => window.removeEventListener('resize', updateCols)
+  }, [])
   const getListQty = (id) => listQtys[id] ?? 0
   const setListQty = (id, n) => setListQtys((prev) => ({ ...prev, [id]: Math.max(0, Math.min(99, n)) }))
+
+  /* 품명(표시 이름)이 바뀔 때마다 새 그룹 → 검정/파랑/초록 순서 */
+  const groupColorIndices = useMemo(() => {
+    const list = Array.isArray(filteredProducts) ? filteredProducts : []
+    const arr = []
+    let g = 0
+    list.forEach((p, i) => {
+      const prev = i > 0 ? list[i - 1] : null
+      const namePrev = prev ? getDisplayItemName(prev) : ''
+      const nameCur = getDisplayItemName(p)
+      if (!prev || namePrev !== nameCur) g++
+      arr[i] = (g - 1) % 5
+    })
+    return arr
+  }, [filteredProducts])
 
   const cartKey = (p) => `${p.name}|${p.desc}|${p.size}|${p.unit}|${p.price}`
   const syncCartForProduct = (p, newQty) => {
@@ -72,15 +143,229 @@ function ShopBody({
           <div className="order-list-view">
             <div className="order-list-header">
               <h2>내 구매 리스트</h2>
-              <button type="button" className="back-to-list-btn" onClick={onCloseOrderList}>
-                ← 자재 목록으로
-              </button>
+              <div className="order-list-header-actions">
+                {user && onAddCartAsOrder && groupedCart?.length > 0 && (
+                  <button
+                    type="button"
+                    className="back-to-list-btn order-list-cart-add-btn"
+                    onClick={() => onAddCartAsOrder()}
+                    title="현재 장바구니를 구매내역에 추가"
+                  >
+                    장바구니 → 구매내역 추가
+                  </button>
+                )}
+                {user && onAddOrder && (
+                  <button
+                    type="button"
+                    className="back-to-list-btn order-list-add-btn"
+                    onClick={() => {
+                      const newId = onAddOrder()
+                      if (newId != null) {
+                        setEditingOrderId(newId)
+                        setEditOrderForm({
+                          id: newId,
+                          items: [],
+                          totalPrice: 0,
+                          status: '입금대기',
+                          paymentMethod: '',
+                          delivery: { name: '', phone: '', address: '' },
+                          createdAt: new Date().toISOString(),
+                        })
+                      }
+                    }}
+                  >
+                    + 주문 추가
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="back-to-list-btn"
+                  onClick={() => downloadOrderListAsExcel(orderList)}
+                  disabled={orderList.length === 0}
+                  title="구매 내역 엑셀 다운로드"
+                >
+                  엑셀 다운로드
+                </button>
+                <button type="button" className="back-to-list-btn" onClick={onCloseOrderList}>
+                  ← 자재 목록으로
+                </button>
+              </div>
             </div>
-            {orderList.length === 0 ? (
+            {editingOrderId != null && editOrderForm && (() => {
+              const recalcTotal = (items) => items.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.count) || 0), 0)
+              const updateItems = (fn) => setEditOrderForm((f) => {
+                const nextItems = fn(f.items || [])
+                return { ...f, items: nextItems, totalPrice: recalcTotal(nextItems) }
+              })
+              return (
+                <div className="order-edit-panel">
+                  <h3>{editOrderForm.id ? '주문 수정' : '새 주문'}</h3>
+                  <div className="order-edit-section">
+                    <label>수령인</label>
+                    <input
+                      type="text"
+                      value={editOrderForm.delivery?.name ?? ''}
+                      onChange={(e) => setEditOrderForm((f) => ({ ...f, delivery: { ...f.delivery, name: e.target.value } }))}
+                      placeholder="이름"
+                    />
+                  </div>
+                  <div className="order-edit-section">
+                    <label>연락처</label>
+                    <input
+                      type="text"
+                      value={editOrderForm.delivery?.phone ?? ''}
+                      onChange={(e) => setEditOrderForm((f) => ({ ...f, delivery: { ...f.delivery, phone: e.target.value } }))}
+                      placeholder="010-0000-0000"
+                    />
+                  </div>
+                  <div className="order-edit-section">
+                    <label>주소</label>
+                    <input
+                      type="text"
+                      value={editOrderForm.delivery?.address ?? ''}
+                      onChange={(e) => setEditOrderForm((f) => ({ ...f, delivery: { ...f.delivery, address: e.target.value } }))}
+                      placeholder="주소"
+                    />
+                  </div>
+                  <div className="order-edit-section">
+                    <label>상태</label>
+                    <select
+                      value={editOrderForm.status ?? ''}
+                      onChange={(e) => setEditOrderForm((f) => ({ ...f, status: e.target.value }))}
+                    >
+                      <option value="입금대기">입금대기</option>
+                      <option value="결제완료">결제완료</option>
+                      <option value="처리중">처리중</option>
+                      <option value="배송중">배송중</option>
+                      <option value="배송완료">배송완료</option>
+                    </select>
+                  </div>
+                  <div className="order-edit-section">
+                    <label>결제수단</label>
+                    <select
+                      value={editOrderForm.paymentMethod ?? ''}
+                      onChange={(e) => setEditOrderForm((f) => ({ ...f, paymentMethod: e.target.value }))}
+                    >
+                      <option value="">선택</option>
+                      <option value="card">카드결제</option>
+                      <option value="transfer">계좌이체</option>
+                      <option value="deposit">무통장입금</option>
+                    </select>
+                  </div>
+                  <div className="order-edit-section order-edit-product-picker">
+                    <label>상품에서 선택하여 추가</label>
+                    <input
+                      type="text"
+                      className="order-edit-product-search"
+                      placeholder="품목명·규격 검색"
+                      value={orderEditProductSearch}
+                      onChange={(e) => setOrderEditProductSearch(e.target.value)}
+                    />
+                    <ul className="order-edit-product-list">
+                      {(products || [])
+                        .filter((p) => {
+                          const q = (orderEditProductSearch || '').trim().toLowerCase()
+                          if (!q) return true
+                          const name = (p.name || '').toLowerCase()
+                          const spec = (getSpecFromProduct(p) || '').toLowerCase()
+                          const sku = (p.sku || '').toLowerCase()
+                          return name.includes(q) || spec.includes(q) || sku.includes(q)
+                        })
+                        .slice(0, 80)
+                        .map((p) => {
+                          const displayName = getDisplayItemName(p)
+                          const spec = getSpecFromProduct(p) || ''
+                          const itemName = spec ? `${displayName} ${spec}` : displayName
+                          const price = p.price != null ? p.price : 0
+                          return (
+                            <li key={p._id || p.sku || itemName} className="order-edit-product-item">
+                              <span className="order-edit-product-name">{itemName}</span>
+                              <span className="order-edit-product-price">{price.toLocaleString()}원</span>
+                              <button
+                                type="button"
+                                className="order-edit-product-add-btn"
+                                onClick={() => updateItems((list) => [...list, { name: itemName, count: 1, price }])}
+                              >
+                                추가
+                              </button>
+                            </li>
+                          )
+                        })}
+                    </ul>
+                  </div>
+                  <div className="order-edit-section order-edit-items">
+                    <label>품목 (수량 변경·삭제)</label>
+                    {(editOrderForm.items || []).map((item, i) => (
+                      <div key={i} className="order-edit-item-row">
+                        <input
+                          type="text"
+                          value={item.name ?? ''}
+                          onChange={(e) => updateItems((list) => list.map((x, j) => j === i ? { ...x, name: e.target.value } : x))}
+                          placeholder="품목명"
+                        />
+                        <input
+                          type="number"
+                          min={0}
+                          value={item.count ?? 0}
+                          onChange={(e) => updateItems((list) => list.map((x, j) => j === i ? { ...x, count: Number(e.target.value) || 0 } : x))}
+                          placeholder="수량"
+                        />
+                        <input
+                          type="number"
+                          min={0}
+                          value={item.price ?? 0}
+                          onChange={(e) => updateItems((list) => list.map((x, j) => j === i ? { ...x, price: Number(e.target.value) || 0 } : x))}
+                          placeholder="단가"
+                        />
+                        <button type="button" className="order-edit-item-remove" onClick={() => updateItems((list) => list.filter((_, j) => j !== i))}>삭제</button>
+                      </div>
+                    ))}
+                    <button type="button" className="order-edit-add-item" onClick={() => updateItems((list) => [...list, { name: '', count: 0, price: 0 }])}>
+                      + 직접 입력 (품목명·수량·단가)
+                    </button>
+                  </div>
+                  <div className="order-edit-total">
+                    총액: {(editOrderForm.totalPrice ?? 0).toLocaleString()}원
+                  </div>
+                  <div className="order-edit-actions">
+                    <button
+                      type="button"
+                      className="order-edit-save-btn"
+                      onClick={() => {
+                        onUpdateOrder(editingOrderId, {
+                          items: editOrderForm.items,
+                          delivery: editOrderForm.delivery,
+                          status: editOrderForm.status,
+                          paymentMethod: editOrderForm.paymentMethod,
+                          totalPrice: editOrderForm.totalPrice,
+                        })
+                        setEditingOrderId(null)
+                        setEditOrderForm(null)
+                      }}
+                    >
+                      저장
+                    </button>
+                    <button
+                      type="button"
+                      className="order-edit-cancel-btn"
+                      onClick={() => {
+                        const isEmpty = !editOrderForm.items?.length && !(editOrderForm.totalPrice > 0)
+                        if (isEmpty && onDeleteOrder) onDeleteOrder(editingOrderId)
+                        setEditingOrderId(null)
+                        setEditOrderForm(null)
+                      }}
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              )
+            })()}
+            {orderList.length === 0 && !editingOrderId ? (
               <p className="empty-orders">
                 {user ? '구매 내역이 없습니다.' : '로그인 후 구매 내역을 확인할 수 있습니다.'}
               </p>
-            ) : (
+            ) : editingOrderId ? null : (
               <ul className="order-list">
                 {orderList.map((order) => (
                   <li key={order.id} className="order-item">
@@ -91,16 +376,22 @@ function ShopBody({
                       <span className={`order-status status-${order.status === '결제완료' ? 'done' : 'wait'}`}>
                         {order.status}
                       </span>
+                      {onUpdateOrder && onDeleteOrder && (
+                        <div className="order-item-actions">
+                          <button type="button" className="order-edit-btn" onClick={() => { setEditingOrderId(order.id); setEditOrderForm({ ...order, items: (order.items || []).map((i) => ({ ...i })), delivery: { ...(order.delivery || {}) } }) }}>수정</button>
+                          <button type="button" className="order-delete-btn" onClick={() => { if (window.confirm('이 주문을 삭제하시겠습니까?')) onDeleteOrder(order.id) }}>삭제</button>
+                        </div>
+                      )}
                     </div>
                     <ul className="order-items">
-                      {order.items.map((g, i) => (
+                      {(order.items || []).map((g, i) => (
                         <li key={i}>
                           {g.name} × {g.count}개 — {(g.price * g.count).toLocaleString()}원
                         </li>
                       ))}
                     </ul>
                     <div className="order-total">
-                      총 {order.totalPrice.toLocaleString()}원 ({order.paymentMethod === 'card' ? '카드결제' : order.paymentMethod === 'transfer' ? '계좌이체' : '무통장입금'})
+                      총 {order.totalPrice.toLocaleString()}원 ({order.paymentMethod === 'card' ? '카드결제' : order.paymentMethod === 'transfer' ? '계좌이체' : order.paymentMethod === 'deposit' ? '무통장입금' : '-'})
                     </div>
                   </li>
                 ))}
@@ -276,13 +567,6 @@ function ShopBody({
           <>
             <div className="shop-toolbar">
               <div className="filter-row">
-                <button
-                  type="button"
-                  className={categoryFilter === 'all' ? 'active' : ''}
-                  onClick={() => onCategoryChange('all')}
-                >
-                  전체
-                </button>
                 {Array.isArray(categories) && categories.map((c) => (
                   <button
                     key={c}
@@ -333,8 +617,10 @@ function ShopBody({
                   <span className="col-remark">비고</span>
                   <span className="col-space-arrow" aria-label="스페이스 담기 표시" />
                 </div>
-                {(Array.isArray(filteredProducts) ? filteredProducts : []).map((p, rowIndex) => (
-                  <div key={p._id || p.name} className="product-list-row">
+                {(Array.isArray(filteredProducts) ? filteredProducts : []).map((p, rowIndex) => {
+                  const colorIndex = groupColorIndices[rowIndex] ?? 0
+                  return (
+                  <div key={p._id || p.name} className={`product-list-row group-color-${colorIndex}`}>
                     <span className="col-name">
                       <span className="list-name">{getDisplayItemName(p)}</span>
                     </span>
@@ -367,6 +653,12 @@ function ShopBody({
                             setListQty(p._id || p.name, clamped)
                             syncCartForProduct(p, clamped)
                           }}
+                          onChange={(e) => {
+                            const v = Number(String(e.target.value).replace(/[^0-9]/g, '')) || 0
+                            const clamped = Math.max(0, Math.min(99, v))
+                            setListQty(p._id || p.name, clamped)
+                            syncCartForProduct(p, clamped)
+                          }}
                           onKeyDown={(e) => {
                             const total = (Array.isArray(filteredProducts) ? filteredProducts : []).length
                             if (e.key === ' ') {
@@ -377,13 +669,29 @@ function ShopBody({
                               setLastSpaceAddedId(p._id || p.name)
                               setTimeout(() => setLastSpaceAddedId(null), 1500)
                             }
-                            if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                            if (e.key === 'ArrowRight') {
                               e.preventDefault()
-                              if (rowIndex + 1 < total) qtyInputRefs.current[rowIndex + 1]?.focus()
+                              const next = Math.min(total - 1, rowIndex + 1)
+                              qtyInputRefs.current[next]?.focus()
+                            }
+                            if (e.key === 'ArrowLeft') {
+                              e.preventDefault()
+                              const next = Math.max(0, rowIndex - 1)
+                              qtyInputRefs.current[next]?.focus()
+                            }
+                            if (e.key === 'ArrowDown') {
+                              e.preventDefault()
+                              const next = Math.min(total - 1, rowIndex + gridCols)
+                              qtyInputRefs.current[next]?.focus()
                             }
                             if (e.key === 'ArrowUp') {
                               e.preventDefault()
-                              if (rowIndex > 0) qtyInputRefs.current[rowIndex - 1]?.focus()
+                              const next = Math.max(0, rowIndex - gridCols)
+                              qtyInputRefs.current[next]?.focus()
+                            }
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              if (rowIndex + 1 < total) qtyInputRefs.current[rowIndex + 1]?.focus()
                             }
                             if (e.key === 'PageDown') {
                               e.preventDefault()
@@ -395,12 +703,6 @@ function ShopBody({
                               const next = Math.max(0, rowIndex - ROWS_PER_PAGE)
                               qtyInputRefs.current[next]?.focus()
                             }
-                          }}
-                          onChange={(e) => {
-                            const v = Number(String(e.target.value).replace(/[^0-9]/g, '')) || 0
-                            const clamped = Math.max(0, Math.min(99, v))
-                            setListQty(p._id || p.name, clamped)
-                            syncCartForProduct(p, clamped)
                           }}
                         />
                         <button
@@ -415,6 +717,18 @@ function ShopBody({
                         >
                           +
                         </button>
+                        <button
+                          type="button"
+                          className="list-qty-add-btn"
+                          onClick={() => {
+                            const qty = getListQty(p._id || p.name) || 1
+                            setListQty(p._id || p.name, qty)
+                            syncCartForProduct(p, qty)
+                          }}
+                          title="수량만큼 장바구니에 담기"
+                        >
+                          담기
+                        </button>
                       </span>
                       {getListQty(p._id || p.name) > 0 && (
                         <span className="qty-cell-arrow" title="수량 입력됨">→</span>
@@ -427,7 +741,7 @@ function ShopBody({
                       {lastSpaceAddedId === (p._id || p.name) && <span className="space-arrow" title="스페이스로 담음">→</span>}
                     </span>
                   </div>
-                ))}
+                  ); })}
               </div>
               {allFilteredCount > 0 && totalPages > 1 && onProductPageChange && (
                 <nav className="product-pagination" aria-label="상품 페이지">
