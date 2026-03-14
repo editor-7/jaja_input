@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import { useCart } from '@/contexts/CartContext'
 import './ShopNavbar.css'
 
 function ShopNavbar({ user, onLogout, cartCount = 0 }) {
   const [showLogoModal, setShowLogoModal] = useState(false)
+  const { clearCart } = useCart()
 
   return (
     <header className="shop-header">
@@ -29,6 +31,16 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
               <span className="nav-cart-icon">🛒</span>
               {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </Link>
+            <button
+              type="button"
+              className="nav-cart-clear"
+              onClick={() => clearCart()}
+              disabled={cartCount === 0}
+              title="장바구니 비우기"
+            >
+              <span className="nav-cart-clear-full">장바구니 비우기</span>
+              <span className="nav-cart-clear-short">비우기</span>
+            </button>
             {user?.user_type === 'admin' && (
               <Link to="/admin" className="nav-admin">관리</Link>
             )}

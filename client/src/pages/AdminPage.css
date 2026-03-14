@@ -95,6 +95,26 @@
   border-color: var(--color-rose-gold);
 }
 
+.task-btn.secondary {
+  background: #f8f6f4;
+  border-color: var(--color-rose-gold);
+  color: var(--color-rose-gold);
+}
+.task-btn.secondary:hover:not(:disabled) {
+  background: var(--color-blush);
+  color: var(--color-charcoal);
+}
+.task-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.section-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .task-icon {
   font-size: 1.1rem;
   opacity: 0.8;
@@ -490,7 +510,7 @@
 
 .product-list-header {
   display: grid;
-  grid-template-columns: 60px 1fr 72px 100px 100px 120px;
+  grid-template-columns: 60px 1fr 72px 80px 100px 100px 120px;
   gap: 1rem;
   padding: 0.75rem 1rem;
   background: var(--color-blush);
@@ -501,7 +521,7 @@
 
 .product-list-row {
   display: grid;
-  grid-template-columns: 60px 1fr 72px 100px 100px 120px;
+  grid-template-columns: 60px 1fr 72px 80px 100px 100px 120px;
   gap: 1rem;
   align-items: center;
   padding: 0.75rem 1rem;

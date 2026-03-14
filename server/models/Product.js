@@ -7,6 +7,8 @@ const productSchema = new mongoose.Schema(
     desc: { type: String, default: '' },
     spec: { type: String, default: '' },
     category: { type: String, default: '' },
+    mainCategory: { type: String, default: '' }, // 지하관PLP | 지하관PEM | 노출관 | 공통
+    laborOnly: { type: Boolean, default: false }, // 비고2=인건만 이면 true (자재 쌍 없음)
     price: { type: Number, required: true },
     img: { type: String, default: '' },
     size: { type: String, default: '1개' },

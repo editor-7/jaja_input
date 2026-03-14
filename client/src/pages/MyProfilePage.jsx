@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
+import { getCategory } from '@/data/products'
 import ShopNavbar from '@/components/ShopNavbar'
 import ShopFooter from '@/components/ShopFooter'
 import './MyProfilePage.css'
@@ -26,7 +27,7 @@ function MyProfilePage() {
       <ShopNavbar
         user={user}
         onLogout={logout}
-        cartCount={groupedCart.reduce((sum, g) => sum + g.count, 0)}
+        cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
       />
 
       <main className="my-profile-main">

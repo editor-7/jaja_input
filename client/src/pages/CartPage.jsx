@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
+import { getCategory } from '@/data/products'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
 import { isDuplicateOrder, validatePayment } from '@/utils/orderUtils'
+import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
 import ShopNavbar from '@/components/ShopNavbar'
 import ShopFooter from '@/components/ShopFooter'
 import './CartPage.css'
@@ -81,7 +83,7 @@ function CartPage() {
       <ShopNavbar
         user={isLoggedIn ? user : null}
         onLogout={logout}
-        cartCount={groupedCart.reduce((sum, g) => sum + g.count, 0)}
+        cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
       />
 
       {toastMsg && <div className="cart-toast-msg">{toastMsg}</div>}
@@ -347,6 +349,9 @@ function CartPage() {
                     총 합계: {totalPrice.toLocaleString()}원
                   </strong>
                   <div>
+                    <button type="button" onClick={() => downloadCartAsExcel(groupedCart, totalPrice)}>
+                      엑셀 다운로드
+                    </button>
                     <button type="button" onClick={clearCart}>
                       장바구니 비우기
                     </button>

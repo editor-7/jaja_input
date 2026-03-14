@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { productApi } from '@/services/api'
-import { getCategory, getSpecFromProduct, getRemarkDisplay } from '@/data/products'
+import { getCategory, getSpecFromProduct, getRemarkDisplay, findLaborPair, findMaterialPair, getMainCategory, MAIN_CATEGORIES } from '@/data/products'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
 import { isDuplicateOrder, validatePayment } from '@/utils/orderUtils'
 import { skuSort } from '@/utils/productUtils'
@@ -19,6 +19,7 @@ function ShopContent({ user, onLogout }) {
     groupedCart,
     totalPrice,
     addToCart,
+    setProductQty,
     changeCartQty,
     removeFromCart,
     clearCart,
@@ -150,28 +151,17 @@ function ShopContent({ user, onLogout }) {
     return { ok: true }
   }
 
-  const categories = useMemo(() => {
-    const sorted = [...products].sort(skuSort)
-    const seen = new Set()
-    const result = []
-    sorted.forEach((p) => {
-      const cat = getCategory(p)
-      if (cat && !seen.has(cat)) {
-        seen.add(cat)
-        result.push(cat)
-      }
-    })
-    return result
-  }, [products])
+  const categories = [...MAIN_CATEGORIES, '인건만']
 
   const filteredProducts = useMemo(() => {
-    let result = products
+    let result = Array.isArray(products) ? products : []
     const trimmed = searchTerm.trim()
     if (trimmed) {
       const tokens = trimmed.toLowerCase().split(/\s+/).filter(Boolean)
       result = result.filter((p) => {
         const spec = (getSpecFromProduct(p) || '').toLowerCase()
         const cat = (getRemarkDisplay(p) || '').toLowerCase()
+        const mainCat = (getMainCategory(p) || '').toLowerCase()
         const sku = String(p.sku || '').toLowerCase()
         const haystack = [
           p.name || '',
@@ -181,6 +171,7 @@ function ShopContent({ user, onLogout }) {
           spec,
           sku,
           cat,
+          mainCat,
         ]
           .join(' ')
           .toLowerCase()
@@ -190,9 +181,23 @@ function ShopContent({ user, onLogout }) {
       })
     }
     if (categoryFilter !== 'all') {
-      result = result.filter((p) => getCategory(p) === categoryFilter)
+      if (categoryFilter === '인건만') {
+        result = result.filter(
+          (p) =>
+            getCategory(p) === '도시가스-인건' &&
+            (p.laborOnly === true || !findMaterialPair(p, products))
+        )
+      } else {
+        result = result.filter((p) => getMainCategory(p) === categoryFilter)
+      }
     }
-    return [...result].sort(skuSort)
+    // 자재 품목 먼저, 그 다음 인건 (자재 선택 시 인건이 따라오는 설계)
+    return [...result].sort((a, b) => {
+      const is자재A = getCategory(a) === '도시가스-자재' ? 0 : 1
+      const is자재B = getCategory(b) === '도시가스-자재' ? 0 : 1
+      if (is자재A !== is자재B) return is자재A - is자재B
+      return skuSort(a, b)
+    })
   }, [products, searchTerm, categoryFilter])
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE))
@@ -210,7 +215,17 @@ function ShopContent({ user, onLogout }) {
   }, [productPage, totalPages])
 
   const handleAddToCart = (product, qty = 1) => {
-    addToCart(product, qty)
+    const n = Math.max(0, parseInt(qty) || 0)
+    const addMode = categoryFilter === '공통' || categoryFilter === '인건만'
+    if (addMode) {
+      addToCart(product, n)
+      const laborPair = findLaborPair(product, products)
+      if (laborPair) addToCart(laborPair, n)
+    } else {
+      setProductQty(product, n)
+      const laborPair = findLaborPair(product, products)
+      if (laborPair) setProductQty(laborPair, n)
+    }
     setAddedMsg('장바구니에 담았습니다')
     setTimeout(() => setAddedMsg(''), 2500)
   }
@@ -230,7 +245,7 @@ function ShopContent({ user, onLogout }) {
       <ShopNavbar
         user={user}
         onLogout={onLogout}
-        cartCount={cart.length}
+        cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
       />
 
       <ShopBody
@@ -272,6 +287,7 @@ function ShopContent({ user, onLogout }) {
         wishlist={wishlist}
         toggleWishlist={toggleWishlist}
         addToCart={handleAddToCart}
+        cartAddMode={categoryFilter === '공통' || categoryFilter === '인건만'}
         groupedCart={groupedCart}
         changeCartQty={changeCartQty}
         removeFromCart={removeFromCart}

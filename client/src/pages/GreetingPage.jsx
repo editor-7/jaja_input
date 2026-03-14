@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
+import { getCategory } from '@/data/products'
 import ShopNavbar from '@/components/ShopNavbar'
 import ShopFooter from '@/components/ShopFooter'
 import './GreetingPage.css'
@@ -14,7 +15,7 @@ function GreetingPage() {
       <ShopNavbar
         user={isLoggedIn ? user : null}
         onLogout={logout}
-        cartCount={groupedCart.reduce((sum, g) => sum + g.count, 0)}
+        cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
       />
 
       <main className="greeting-main">

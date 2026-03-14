@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { getCategory, getDisplayItemName, getRemarkDisplay, getSpecFromProduct } from '@/data/products'
+import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
 import './ShopBody.css'
 
 function ShopBody({
@@ -7,7 +8,7 @@ function ShopBody({
   onSearchChange,
   categoryFilter,
   onCategoryChange,
-  categories,
+  categories = [],
   showOrderList,
   onShowOrderList,
   onCloseOrderList,
@@ -21,8 +22,8 @@ function ShopBody({
   onPaymentMethodChange,
   onPaymentClose,
   onPaymentComplete,
-  filteredProducts,
-  allFilteredCount = filteredProducts?.length ?? 0,
+  filteredProducts = [],
+  allFilteredCount = (filteredProducts && filteredProducts.length) ?? 0,
   productPage = 1,
   totalPages = 1,
   onProductPageChange,
@@ -32,7 +33,8 @@ function ShopBody({
   wishlist,
   toggleWishlist,
   addToCart,
-  groupedCart,
+  cartAddMode = false,
+  groupedCart = [],
   changeCartQty,
   removeFromCart,
   clearCart,
@@ -43,8 +45,23 @@ function ShopBody({
   user,
 }) {
   const [listQtys, setListQtys] = useState({})
-  const getListQty = (id) => listQtys[id] ?? 1
-  const setListQty = (id, n) => setListQtys((prev) => ({ ...prev, [id]: Math.max(1, Math.min(99, n)) }))
+  const [lastSpaceAddedId, setLastSpaceAddedId] = useState(null)
+  const qtyInputRefs = useRef([])
+  const ROWS_PER_PAGE = 10
+  const getListQty = (id) => listQtys[id] ?? 0
+  const setListQty = (id, n) => setListQtys((prev) => ({ ...prev, [id]: Math.max(0, Math.min(99, n)) }))
+
+  const cartKey = (p) => `${p.name}|${p.desc}|${p.size}|${p.unit}|${p.price}`
+  const syncCartForProduct = (p, newQty) => {
+    const idx = (groupedCart || []).findIndex((g) => cartKey(g) === cartKey(p))
+    if (cartAddMode) {
+      if (newQty >= 1) addToCart(p, newQty)
+      else if (idx >= 0) removeFromCart(idx)
+    } else {
+      if (idx >= 0) removeFromCart(idx)
+      if (newQty >= 1) addToCart(p, newQty)
+    }
+  }
 
   return (
     <>
@@ -266,14 +283,14 @@ function ShopBody({
                 >
                   전체
                 </button>
-                {categories.map((c) => (
+                {Array.isArray(categories) && categories.map((c) => (
                   <button
                     key={c}
                     type="button"
                     className={categoryFilter === c ? 'active' : ''}
                     onClick={() => onCategoryChange(c)}
                   >
-                    {getRemarkDisplay({ category: c })}
+                    {c}
                   </button>
                 ))}
               </div>
@@ -314,9 +331,9 @@ function ShopBody({
                   <span className="col-unit">단위</span>
                   <span className="col-price">단가</span>
                   <span className="col-remark">비고</span>
-                  <span className="col-cart" aria-hidden="true" />
+                  <span className="col-space-arrow" aria-label="스페이스 담기 표시" />
                 </div>
-                {filteredProducts.map((p) => (
+                {(Array.isArray(filteredProducts) ? filteredProducts : []).map((p, rowIndex) => (
                   <div key={p._id || p.name} className="product-list-row">
                     <span className="col-name">
                       <span className="list-name">{getDisplayItemName(p)}</span>
@@ -327,50 +344,87 @@ function ShopBody({
                         <button
                           type="button"
                           className="list-qty-btn"
-                          onClick={() =>
-                            setListQty(p._id || p.name, getListQty(p._id || p.name) - 1)
-                          }
+                          onClick={() => {
+                            const next = Math.max(0, getListQty(p._id || p.name) - 1)
+                            setListQty(p._id || p.name, next)
+                            syncCartForProduct(p, next)
+                          }}
                           aria-label="수량 감소"
                         >
                           −
                         </button>
                         <input
+                          ref={(el) => { qtyInputRefs.current[rowIndex] = el }}
                           type="number"
-                          min={1}
+                          min={0}
                           max={99}
                           className="list-qty-input"
                           value={getListQty(p._id || p.name)}
                           onFocus={(e) => e.target.select()}
+                          onBlur={(e) => {
+                            const v = Number(String(e.target.value).replace(/[^0-9]/g, '')) || 0
+                            const clamped = Math.max(0, Math.min(99, v))
+                            setListQty(p._id || p.name, clamped)
+                            syncCartForProduct(p, clamped)
+                          }}
+                          onKeyDown={(e) => {
+                            const total = (Array.isArray(filteredProducts) ? filteredProducts : []).length
+                            if (e.key === ' ') {
+                              e.preventDefault()
+                              const qty = getListQty(p._id || p.name)
+                              syncCartForProduct(p, qty > 0 ? qty : 1)
+                              if (qty <= 0) setListQty(p._id || p.name, 1)
+                              setLastSpaceAddedId(p._id || p.name)
+                              setTimeout(() => setLastSpaceAddedId(null), 1500)
+                            }
+                            if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                              e.preventDefault()
+                              if (rowIndex + 1 < total) qtyInputRefs.current[rowIndex + 1]?.focus()
+                            }
+                            if (e.key === 'ArrowUp') {
+                              e.preventDefault()
+                              if (rowIndex > 0) qtyInputRefs.current[rowIndex - 1]?.focus()
+                            }
+                            if (e.key === 'PageDown') {
+                              e.preventDefault()
+                              const next = Math.min(total - 1, rowIndex + ROWS_PER_PAGE)
+                              qtyInputRefs.current[next]?.focus()
+                            }
+                            if (e.key === 'PageUp') {
+                              e.preventDefault()
+                              const next = Math.max(0, rowIndex - ROWS_PER_PAGE)
+                              qtyInputRefs.current[next]?.focus()
+                            }
+                          }}
                           onChange={(e) => {
                             const v = Number(String(e.target.value).replace(/[^0-9]/g, '')) || 0
-                            setListQty(p._id || p.name, v)
+                            const clamped = Math.max(0, Math.min(99, v))
+                            setListQty(p._id || p.name, clamped)
+                            syncCartForProduct(p, clamped)
                           }}
                         />
                         <button
                           type="button"
                           className="list-qty-btn"
-                          onClick={() =>
-                            setListQty(p._id || p.name, getListQty(p._id || p.name) + 1)
-                          }
+                          onClick={() => {
+                            const next = Math.min(99, getListQty(p._id || p.name) + 1)
+                            setListQty(p._id || p.name, next)
+                            syncCartForProduct(p, next)
+                          }}
                           aria-label="수량 증가"
                         >
                           +
                         </button>
                       </span>
+                      {getListQty(p._id || p.name) > 0 && (
+                        <span className="qty-cell-arrow" title="수량 입력됨">→</span>
+                      )}
                     </span>
                     <span className="col-unit">{p.unit || p.size || '—'}</span>
                     <span className="col-price">{p.price != null ? p.price.toLocaleString() : ''}원</span>
                     <span className="col-remark">{getRemarkDisplay(p)}</span>
-                    <span className="col-cart">
-                      <button
-                        type="button"
-                        className="product-cart-btn list-cart-btn"
-                        onClick={() => addToCart(p, getListQty(p._id || p.name))}
-                        title="장바구니 담기"
-                        aria-label="장바구니 담기"
-                      >
-                        🛒
-                      </button>
+                    <span className="col-space-arrow">
+                      {lastSpaceAddedId === (p._id || p.name) && <span className="space-arrow" title="스페이스로 담음">→</span>}
                     </span>
                   </div>
                 ))}
@@ -444,6 +498,9 @@ function ShopBody({
               <div className="cart-footer">
                 <strong className="cart-total">{totalPrice > 0 ? `총 합계: ${totalPrice.toLocaleString()}원` : ''}</strong>
                 <div>
+                  <button type="button" onClick={() => downloadCartAsExcel(groupedCart, totalPrice)} disabled={groupedCart.length === 0}>
+                    엑셀 다운로드
+                  </button>
                   <button type="button" onClick={clearCart} disabled={groupedCart.length === 0}>
                     장바구니 비우기
                   </button>

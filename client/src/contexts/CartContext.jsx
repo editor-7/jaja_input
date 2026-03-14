@@ -61,6 +61,17 @@ export function CartProvider({ children }) {
     })
   }
 
+  /** 해당 상품 수량을 정확히 qty로 맞춤 (기존 수량 제거 후 qty개 추가) */
+  const setProductQty = (product, qty) => {
+    const count = Math.max(0, parseInt(qty) || 0)
+    const key = `${product.name}|${product.desc}|${product.size}|${product.unit}|${product.price}`
+    setCart((prev) => {
+      const next = prev.filter((i) => `${i.name}|${i.desc}|${i.size}|${i.unit}|${i.price}` !== key)
+      for (let i = 0; i < count; i++) next.push(product)
+      return next
+    })
+  }
+
   const changeCartQty = (group, diff) => {
     const g = groupedCart[group]
     const newCount = Math.max(0, g.count + diff)
@@ -92,6 +103,7 @@ export function CartProvider({ children }) {
       groupedCart,
       totalPrice,
       addToCart,
+      setProductQty,
       changeCartQty,
       removeFromCart,
       clearCart,

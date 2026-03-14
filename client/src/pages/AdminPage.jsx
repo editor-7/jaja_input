@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { userApi, productApi } from '@/services/api'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
 import { skuSort } from '@/utils/productUtils'
-import { getDisplayItemName, getSpecFromProduct, getRemarkDisplay } from '@/data/products'
+import { getDisplayItemName, getSpecFromProduct, getRemarkDisplay, getMainCategory, MAIN_CATEGORIES } from '@/data/products'
+import { downloadProductsAsExcel } from '@/utils/exportProductsToExcel'
 import ShopNavbar from '@/components/ShopNavbar'
 import './AdminPage.css'
 
@@ -15,11 +16,12 @@ function AdminPage() {
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
-  const [productForm, setProductForm] = useState({ sku: '', name: '', desc: '', spec: '', category: '', price: '', img: '' })
+  const [productForm, setProductForm] = useState({ sku: '', name: '', desc: '', spec: '', category: '', mainCategory: '', price: '', img: '' })
   const [editingId, setEditingId] = useState(null)
   const [productMsg, setProductMsg] = useState('')
   const [productSearch, setProductSearch] = useState('')
   const [productCategoryFilter, setProductCategoryFilter] = useState('all')
+  const [productMainCategoryFilter, setProductMainCategoryFilter] = useState('all')
   const [productSortBy, setProductSortBy] = useState('sku')
 
   useEffect(() => {
@@ -89,6 +91,7 @@ function AdminPage() {
         desc: fresh.desc || '',
         spec: fresh.spec || '',
         category: fresh.category || '',
+        mainCategory: fresh.mainCategory || '',
         price: fresh.price ?? '',
         img: fresh.img || '',
       })
@@ -99,6 +102,7 @@ function AdminPage() {
         desc: p.desc || '',
         spec: p.spec || '',
         category: p.category || '',
+        mainCategory: p.mainCategory || '',
         price: p.price ?? '',
         img: p.img || '',
       })
@@ -115,6 +119,7 @@ function AdminPage() {
       desc: productForm.desc.trim() || `정성스럽게 구운 ${productForm.name.trim()}`,
       spec: (productForm.spec ?? '').trim(),
       category: productForm.category.trim() || productForm.name.trim(),
+      mainCategory: (productForm.mainCategory ?? '').trim(),
       price: Number(productForm.price) || 0,
       img: productForm.img?.trim() || '',
     }
@@ -128,13 +133,14 @@ function AdminPage() {
           name: updated.name || '',
           desc: updated.desc || '',
           category: updated.category || '',
+          mainCategory: updated.mainCategory || '',
           price: updated.price ?? '',
           img: updated.img || '',
         })
       } else {
         await productApi.create(payload)
         setProductMsg('상품이 등록되었습니다.')
-        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', price: '', img: '' })
+        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', mainCategory: '', price: '', img: '' })
       }
       if (!editingId) loadProducts()
     } catch (err) {
@@ -156,6 +162,9 @@ function AdminPage() {
     }
     if (productCategoryFilter !== 'all') {
       list = list.filter((p) => (p.category || p.name) === productCategoryFilter)
+    }
+    if (productMainCategoryFilter !== 'all') {
+      list = list.filter((p) => getMainCategory(p) === productMainCategoryFilter)
     }
     if (productSortBy === 'sku') list.sort(skuSort)
     else if (productSortBy === 'name') list.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
@@ -185,7 +194,7 @@ function AdminPage() {
       setProducts((prev) => prev.filter((p) => String(p._id) !== String(id)))
       if (editingId && String(editingId) === String(id)) {
         setEditingId(null)
-        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', price: '', img: '' })
+        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', mainCategory: '', price: '', img: '' })
       }
       setProductMsg('상품이 삭제되었습니다.')
       setTimeout(() => setProductMsg(''), 3000)
@@ -296,13 +305,25 @@ function AdminPage() {
                   />
                 </div>
                 <div className="form-row">
-                  <label>카테고리</label>
+                  <label>카테고리(자재/인건)</label>
                   <input
                     type="text"
                     value={productForm.category}
                     onChange={(e) => setProductForm((p) => ({ ...p, category: e.target.value }))}
-                    placeholder="예: 클래식"
+                    placeholder="예: 도시가스-자재"
                   />
+                </div>
+                <div className="form-row">
+                  <label>큰 카테고리</label>
+                  <select
+                    value={productForm.mainCategory}
+                    onChange={(e) => setProductForm((p) => ({ ...p, mainCategory: e.target.value }))}
+                  >
+                    <option value="">자동(이름/SKU 기준)</option>
+                    {MAIN_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-row">
                   <label>가격(원) *</label>
@@ -324,7 +345,7 @@ function AdminPage() {
                       className="cancel-btn"
                       onClick={() => {
                         setEditingId(null)
-                        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', price: '', img: '' })
+                        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', mainCategory: '', price: '', img: '' })
                         setProductMsg('')
                       }}
                     >
@@ -359,9 +380,14 @@ function AdminPage() {
             <section className="admin-section">
               <div className="section-header">
                 <h2>상품관리 ({managedProducts.length}{managedProducts.length !== products.length ? ` / ${products.length}` : ''})</h2>
-                <button type="button" className="task-btn" onClick={() => { setProductMsg(''); setActiveMenu('product') }}>
-                  + 새상품 등록
-                </button>
+                <div className="section-header-actions">
+                  <button type="button" className="task-btn secondary" onClick={() => downloadProductsAsExcel(products)} disabled={products.length === 0}>
+                    전체 물량 엑셀 다운로드
+                  </button>
+                  <button type="button" className="task-btn" onClick={() => { setProductMsg(''); setActiveMenu('product') }}>
+                    + 새상품 등록
+                  </button>
+                </div>
               </div>
               {productMsg && <p className="product-msg">{productMsg}</p>}
               {products.length === 0 ? (
@@ -377,11 +403,21 @@ function AdminPage() {
                       className="product-search-input"
                     />
                     <select
+                      value={productMainCategoryFilter}
+                      onChange={(e) => setProductMainCategoryFilter(e.target.value)}
+                      className="product-filter-select"
+                    >
+                      <option value="all">전체 구분</option>
+                      {MAIN_CATEGORIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <select
                       value={productCategoryFilter}
                       onChange={(e) => setProductCategoryFilter(e.target.value)}
                       className="product-filter-select"
                     >
-                      <option value="all">전체 카테고리</option>
+                      <option value="all">자재/인건</option>
                       {productCategories.map((c) => (
                         <option key={c} value={c}>{getRemarkDisplay({ category: c }) || c}</option>
                       ))}
@@ -403,6 +439,7 @@ function AdminPage() {
                       <span>SKU</span>
                       <span>상품명</span>
                       <span>규격</span>
+                      <span>구분</span>
                       <span>카테고리</span>
                       <span>가격</span>
                       <span>관리</span>
@@ -412,6 +449,7 @@ function AdminPage() {
                         <span className="product-list-sku">{p.sku || '-'}</span>
                         <span className="product-list-name">{getDisplayItemName(p)}</span>
                         <span className="product-list-spec">{getSpecFromProduct(p) || '-'}</span>
+                        <span className="product-list-category">{getMainCategory(p)}</span>
                         <span className="product-list-category">{getRemarkDisplay({ category: p.category }) || '-'}</span>
                         <span className="product-list-price">{p.price?.toLocaleString()}원</span>
                         <div className="product-list-actions">
