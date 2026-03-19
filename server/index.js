@@ -6,8 +6,25 @@ const connectDB = require('./config/db');
 
 const app = express();
 
-// Middleware - CORS (Vercel 등 모든 origin 허용)
-app.use(cors({ origin: true, credentials: true }));
+const defaultDevOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+const allowedOrigins =
+  config.CORS_ORIGINS.length > 0
+    ? config.CORS_ORIGINS
+    : (config.NODE_ENV === 'production' ? [] : defaultDevOrigins);
+
+if (config.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+  console.warn('⚠️ CORS_ORIGINS가 비어 있습니다. 허용할 프론트 도메인을 환경 변수에 설정하세요.');
+}
+
+app.use(cors({
+  origin(origin, callback) {
+    // 서버-서버 호출이나 동일 출처 요청(origin 없음)은 허용
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

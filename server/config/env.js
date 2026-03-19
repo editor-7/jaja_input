@@ -9,6 +9,10 @@ const config = {
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/order_bread',
   JWT_SECRET: process.env.JWT_SECRET,
   NODE_ENV: process.env.NODE_ENV || 'development',
+  CORS_ORIGINS: (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean),
 };
 
 // 프로덕션 배포 시 JWT_SECRET 필수

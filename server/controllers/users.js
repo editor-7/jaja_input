@@ -3,10 +3,16 @@ const jwt = require('jsonwebtoken');
 const config = require('../config/env');
 const User = require('../models/User');
 
+const canAccessUser = (requestUser, targetUserId) => {
+  if (!requestUser) return false;
+  if (requestUser.user_type === 'admin') return true;
+  return String(requestUser._id) === String(targetUserId);
+};
+
 // Create - 유저 생성
 const createUser = async (req, res) => {
   try {
-    const { email, name, password, user_type } = req.body;
+    const { email, name, password } = req.body;
 
     if (!email || !name || !password) {
       return res.status(400).json({ message: '이메일, 이름, 비밀번호를 모두 입력해 주세요.' });
@@ -20,7 +26,8 @@ const createUser = async (req, res) => {
       email,
       name,
       password: hashedPassword,
-      user_type: user_type || 'customer',
+      // 회원가입 요청에서는 role 승격 입력을 무시하고 customer로 고정한다.
+      user_type: 'customer',
     });
     
     const userWithoutPassword = user.toObject();
@@ -86,6 +93,9 @@ const getAllUsers = async (req, res) => {
 // Read One - 유저 단일 조회
 const getUserById = async (req, res) => {
   try {
+    if (!canAccessUser(req.user, req.params.id)) {
+      return res.status(403).json({ message: '접근 권한이 없습니다.' });
+    }
     const user = await User.findById(req.params.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: '유저를 찾을 수 없습니다.' });
@@ -99,7 +109,15 @@ const getUserById = async (req, res) => {
 // Update - 유저 수정
 const updateUser = async (req, res) => {
   try {
+    if (!canAccessUser(req.user, req.params.id)) {
+      return res.status(403).json({ message: '수정 권한이 없습니다.' });
+    }
     const { password, ...updateData } = req.body;
+
+    // 일반 사용자는 user_type을 변경할 수 없다.
+    if (req.user?.user_type !== 'admin') {
+      delete updateData.user_type;
+    }
     
     // 비밀번호가 포함된 경우 암호화
     if (password) {
