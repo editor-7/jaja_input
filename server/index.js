@@ -9,7 +9,9 @@ const app = express();
 function getAllowedOrigins() {
   const defaultDevOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
   if (config.CORS_ORIGINS.length > 0) return config.CORS_ORIGINS;
-  if (config.NODE_ENV === 'production') return [];
+  // 배포 환경변수 주입이 누락된 경우에도 서비스가 바로 동작하도록,
+  // production에서는 Vercel 도메인 1개만 기본 허용한다.
+  if (config.NODE_ENV === 'production') return ['https://jaja-input.vercel.app'];
   return defaultDevOrigins;
 }
 
