@@ -30,7 +30,11 @@ if (config.NODE_ENV === 'production' && allowedOrigins.length === 0) {
   console.warn('⚠️ CORS_ORIGINS가 비어 있습니다. 허용할 프론트 도메인을 환경 변수에 설정하세요.');
 }
 
-app.use(cors(createCorsOptions(allowedOrigins)));
+// Express 라우터는 OPTIONS에 대해 405를 줄 수 있으므로,
+// CORS middleware를 OPTIONS에도 명시적으로 적용한다.
+const corsMiddleware = cors(createCorsOptions(allowedOrigins));
+app.use(corsMiddleware);
+app.options('*', corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
