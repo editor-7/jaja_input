@@ -11,14 +11,18 @@ const app = express();
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin) {
-    // allowedOrigins가 null이면(배포환경 변수가 비어있는 경우) allow-all로 동작
-    if (!allowedOrigins || allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Vary', 'Origin');
-    }
+    // production에서도 브라우저 CORS가 완전히 풀리도록 origin을 그대로 echo back한다.
+    // (배포환경 변수가 누락/불일치해도 즉시 복구 가능)
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // preflight에서 요청한 헤더를 그대로 허용
+  const reqHeaders = req.headers['access-control-request-headers'];
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    reqHeaders ? String(reqHeaders) : 'Content-Type, Authorization'
+  );
   res.setHeader('Access-Control-Max-Age', '86400');
 
   if (req.method === 'OPTIONS') {
@@ -39,6 +43,12 @@ function getAllowedOrigins() {
 
 function createCorsOptions(allowedOrigins) {
   if (allowedOrigins === null) {
+    return {
+      origin: true,
+      credentials: false,
+    };
+  }
+  if (config.NODE_ENV === 'production') {
     return {
       origin: true,
       credentials: false,
