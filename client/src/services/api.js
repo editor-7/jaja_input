@@ -11,16 +11,20 @@ function getAuthHeaders() {
 
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`
+
+  const includeAuth = options.auth !== false
   const config = {
     cache: 'no-store',
     headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
+      ...(includeAuth ? getAuthHeaders() : {}),
       ...options.headers,
     },
     ...options,
   }
+
+  // JSON body가 있는 경우에만 Content-Type을 설정
   if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+    config.headers['Content-Type'] = 'application/json'
     config.body = JSON.stringify(options.body)
   }
   let res, text
@@ -59,8 +63,9 @@ export const userApi = {
 }
 
 export const productApi = {
-  getAll: () => request('/products', { method: 'GET' }),
-  getById: (id) => request(`/products/${id}`, { method: 'GET' }),
+  // products 조회(GET)는 public 라우트이므로 preflight를 줄이기 위해 Authorization/Content-Type을 보내지 않음
+  getAll: () => request('/products', { method: 'GET', auth: false }),
+  getById: (id) => request(`/products/${id}`, { method: 'GET', auth: false }),
   create: (data) => request('/products', { method: 'POST', body: data }),
   update: (id, data) => request(`/products/${id}`, { method: 'PUT', body: data }),
   delete: (id) => request(`/products/${id}`, { method: 'DELETE' }),
