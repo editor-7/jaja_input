@@ -9,13 +9,20 @@ const app = express();
 function getAllowedOrigins() {
   const defaultDevOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
   if (config.CORS_ORIGINS.length > 0) return config.CORS_ORIGINS;
-  // 배포 환경변수 주입이 누락된 경우에도 서비스가 바로 동작하도록,
-  // production에서는 Vercel 도메인 1개만 기본 허용한다.
-  if (config.NODE_ENV === 'production') return ['https://jaja-input.vercel.app'];
+  // 배포 환경변수 주입이 누락된 경우에도 서비스가 바로 동작하도록:
+  // - credentials는 필요 없으므로 false로 두고
+  // - origin은 allow-all로 둔다(검증 단계용).
+  if (config.NODE_ENV === 'production') return null;
   return defaultDevOrigins;
 }
 
 function createCorsOptions(allowedOrigins) {
+  if (allowedOrigins === null) {
+    return {
+      origin: true,
+      credentials: false,
+    };
+  }
   return {
     origin(origin, callback) {
       // 서버-서버 호출이나 동일 출처 요청(origin 없음)은 허용
