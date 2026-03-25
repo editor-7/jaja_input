@@ -6,6 +6,27 @@ const connectDB = require('./config/db');
 
 const app = express();
 
+// 프리플라이트(OPTIONS)에서 CORS 헤더가 누락되면 브라우저가 계속 막힙니다.
+// cors() 미들웨어와 별개로, OPTIONS 요청은 여기서 확실히 처리합니다.
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    // allowedOrigins가 null이면(배포환경 변수가 비어있는 경우) allow-all로 동작
+    if (!allowedOrigins || allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+    }
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  return next();
+});
+
 function getAllowedOrigins() {
   const defaultDevOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
   if (config.CORS_ORIGINS.length > 0) return config.CORS_ORIGINS;
