@@ -5,7 +5,9 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const isProduction = process.env.NODE_ENV === 'production';
 
 const config = {
-  PORT: process.env.PORT || 5000,
+  // Cloudtype 쪽 설정이 3000 포트를 기대하는 경우가 많아,
+  // production에서는 기본값을 3000으로 두고, 로컬 개발은 5000 유지합니다.
+  PORT: process.env.PORT || (isProduction ? 3000 : 5000),
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/order_bread',
   JWT_SECRET: process.env.JWT_SECRET,
   NODE_ENV: process.env.NODE_ENV || 'development',

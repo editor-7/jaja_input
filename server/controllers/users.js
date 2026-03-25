@@ -2,11 +2,18 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config/env');
 const User = require('../models/User');
+const SALT_ROUNDS = 10;
 
 const canAccessUser = (requestUser, targetUserId) => {
   if (!requestUser) return false;
   if (requestUser.user_type === 'admin') return true;
   return String(requestUser._id) === String(targetUserId);
+};
+
+const sanitizeUser = (userDoc) => {
+  const user = userDoc.toObject ? userDoc.toObject() : { ...userDoc };
+  delete user.password;
+  return user;
 };
 
 // Create - 유저 생성
@@ -18,9 +25,7 @@ const createUser = async (req, res) => {
       return res.status(400).json({ message: '이메일, 이름, 비밀번호를 모두 입력해 주세요.' });
     }
     
-    // 비밀번호 암호화
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     
     const user = await User.create({
       email,
@@ -30,9 +35,7 @@ const createUser = async (req, res) => {
       user_type: 'customer',
     });
     
-    const userWithoutPassword = user.toObject();
-    delete userWithoutPassword.password;
-    res.status(201).json(userWithoutPassword);
+    res.status(201).json(sanitizeUser(user));
   } catch (error) {
     if (error.code === 11000) {
       return res.status(400).json({ message: '이미 존재하는 이메일입니다.' });
@@ -61,9 +64,6 @@ const login = async (req, res) => {
       return res.status(401).json({ message: '비밀번호가 올바르지 않습니다.' });
     }
 
-    const userWithoutPassword = user.toObject();
-    delete userWithoutPassword.password;
-
     const token = jwt.sign(
       { userId: user._id, email: user.email },
       config.JWT_SECRET,
@@ -73,9 +73,10 @@ const login = async (req, res) => {
     res.status(200).json({
       message: '로그인 성공',
       token,
-      user: userWithoutPassword,
+      user: sanitizeUser(user),
     });
   } catch (error) {
+    console.error('로그인 오류:', error);
     res.status(500).json({ message: '로그인 처리 중 오류가 발생했습니다.' });
   }
 };
@@ -120,10 +121,7 @@ const updateUser = async (req, res) => {
     }
     
     // 비밀번호가 포함된 경우 암호화
-    if (password) {
-      const saltRounds = 10;
-      updateData.password = await bcrypt.hash(password, saltRounds);
-    }
+    if (password) updateData.password = await bcrypt.hash(password, SALT_ROUNDS);
     
     const user = await User.findByIdAndUpdate(
       req.params.id,
