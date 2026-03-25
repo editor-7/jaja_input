@@ -10,3 +10,5 @@ options:
   env:
     - name: NODE_ENV
       value: production
+    - name: CORS_ORIGINS
+      value: https://jaja-input.vercel.app

@@ -32,6 +32,8 @@ jobs:
               env:
                 - name: NODE_ENV
                   value: production
+                - name: CORS_ORIGINS
+                  value: https://jaja-input.vercel.app
                 - name: MONGODB_URI
                   value: ${{ secrets.MONGODB_URI }}
                 - name: JWT_SECRET

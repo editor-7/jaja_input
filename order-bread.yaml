@@ -11,6 +11,8 @@ options:
   env:
     - name: NODE_ENV
       value: production
+    - name: CORS_ORIGINS
+      value: https://jaja-input.vercel.app
     - name: MONGODB_URI
       value: mongodb+srv://gas004444_db_user:code5479@cluster0.wsuv9mb.mongodb.net/order_bread
     - name: JWT_SECRET
