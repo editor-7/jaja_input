@@ -27,8 +27,8 @@ jobs:
             options:
               ports: "3000"
               install: npm ci --omit=dev
-              start: npm start
-              healthz: /
+              start: npm run seed-list && npm start
+              healthz: /health
               env:
                 - name: NODE_ENV
                   value: production

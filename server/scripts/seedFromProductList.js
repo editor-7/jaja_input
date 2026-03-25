@@ -29,16 +29,14 @@ async function seed() {
     const existing = await Product.countDocuments();
     if (existing > 0) {
       console.log('기존 상품 수:', existing);
-      console.log('로컬 실험용으로 기존 상품을 비우고 리스트로 채우려면:');
-      console.log('  node scripts/seedFromProductList.js --replace');
-      console.log('(--replace 없이 실행 시 추가만 합니다)');
+			console.log('이미 상품이 존재합니다. (기본값: 시딩 건너뜀)');
+			console.log('정말로 덮어쓰려면:');
+			console.log('  node scripts/seedFromProductList.js --replace');
       const doReplace = process.argv.includes('--replace');
-      if (!doReplace) {
-        await Product.insertMany(list);
-        console.log('추가 등록 완료:', list.length, '개');
-        await mongoose.disconnect();
-        return;
-      }
+			if (!doReplace) {
+				await mongoose.disconnect();
+				return;
+			}
       await Product.deleteMany({});
       console.log('기존 상품 삭제 후 재등록합니다.');
     }
