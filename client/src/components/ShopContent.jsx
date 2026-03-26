@@ -94,7 +94,11 @@ function ShopContent({ user, onLogout }) {
     const nameFromStorage = sessionStorage.getItem('pendingWelcome')
     const shouldShow = (pendingWelcome || nameFromStorage) && user
     if (shouldShow) {
-      const name = user?.name || pendingWelcome || nameFromStorage || '회원'
+      const rawName = String(user?.name || pendingWelcome || nameFromStorage || '').trim()
+      const emailId = String(user?.email || '').split('@')[0]?.trim()
+      const name = rawName.toLowerCase() === 'admin' && emailId
+        ? emailId
+        : (rawName || emailId || '회원')
       sessionStorage.removeItem('pendingWelcome')
       clearWelcome()
       setAddedMsg(`${name}님 환영합니다`)

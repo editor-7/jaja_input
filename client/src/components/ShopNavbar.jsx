@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useCart } from '@/contexts/CartContext'
 import './ShopNavbar.css'
 
 function ShopNavbar({ user, onLogout, cartCount = 0 }) {
   const [showLogoModal, setShowLogoModal] = useState(false)
-  const navigate = useNavigate()
   const { clearCart } = useCart()
   const displayName = (() => {
     const rawName = String(user?.name || '').trim()
@@ -41,15 +40,14 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
           <nav className="shop-nav-actions" aria-label="메인 메뉴">
             <Link to="/" className="nav-home">홈</Link>
             <Link to="/greeting" className="nav-greeting">인사말</Link>
-            <a
-              href="/cart"
+            <Link
+              to="/cart"
               className="nav-cart"
               aria-label="장바구니 보기"
-              onClick={(e) => { e.preventDefault(); navigate('/cart') }}
             >
               <span className="nav-cart-icon">🛒</span>
               {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-            </a>
+            </Link>
             {user?.user_type === 'admin' && (
               <Link to="/admin" className="nav-admin">
                 관리
