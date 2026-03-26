@@ -91,6 +91,24 @@
   cursor: pointer;
 }
 .toolbar-order-btn:hover { background: rgba(183, 110, 121, 0.08); color: var(--color-rose-gold); }
+.toolbar-cart-btn {
+  display: none;
+  padding: 0.45rem 0.8rem;
+  background: var(--color-rose-gold);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+@media (max-width: 900px) {
+  .toolbar-cart-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
 .order-list-view { padding: 0; width: 100%; }
 .order-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .order-list-header h2 { margin: 0; font-size: 1.3rem; font-family: var(--font-heading); color: var(--color-charcoal); }

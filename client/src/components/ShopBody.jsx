@@ -10,6 +10,7 @@ function ShopBody({
   onSearchChange,
   categoryFilter,
   onCategoryChange,
+  onGoCart,
   categories = [],
   showOrderList,
   onShowOrderList,
@@ -598,6 +599,13 @@ function ShopBody({
                 </button>
                 <button type="button" className="toolbar-order-btn" onClick={onShowOrderList}>
                   구매내역
+                </button>
+                <button
+                  type="button"
+                  className="toolbar-cart-btn"
+                  onClick={() => (onGoCart ? onGoCart() : window.location.assign('/cart'))}
+                >
+                  장바구니 보기
                 </button>
               </div>
             </div>

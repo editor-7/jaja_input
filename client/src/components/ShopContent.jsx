@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { productApi } from '@/services/api'
 import { getCategory, getSpecFromProduct, getRemarkDisplay, findLaborPair, findMaterialPair, getMainCategory, MAIN_CATEGORIES } from '@/data/products'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
@@ -11,6 +12,7 @@ import ShopBody from './ShopBody'
 import ShopFooter from './ShopFooter'
 
 function ShopContent({ user, onLogout }) {
+  const navigate = useNavigate()
   const { pendingWelcome, clearWelcome } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
   const categories = [...MAIN_CATEGORIES, '인건만']
@@ -316,6 +318,7 @@ function ShopContent({ user, onLogout }) {
         onSearchChange={setSearchTerm}
         categoryFilter={categoryFilter}
         onCategoryChange={setCategoryFilter}
+        onGoCart={() => navigate('/cart')}
         categories={categories}
         showOrderList={showOrderList}
         onShowOrderList={() => setShowOrderList(true)}
