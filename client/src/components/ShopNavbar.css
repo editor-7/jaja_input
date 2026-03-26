@@ -271,6 +271,31 @@
   display: none;
 }
 
+/* 터치 기기에서는 화면 폭과 무관하게 고정 장바구니 버튼 표시 */
+@media (hover: none), (pointer: coarse) {
+  .mobile-cart-fab {
+    position: fixed;
+    right: 12px;
+    /* 모바일 브라우저 하단 툴바 위에 오도록 충분한 여유를 둠 */
+    bottom: max(72px, calc(env(safe-area-inset-bottom) + 16px));
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 999px;
+    background: var(--color-rose-gold);
+    color: #fff;
+    border: none;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 8px 22px rgba(61, 50, 50, 0.28);
+    z-index: 99999;
+    cursor: pointer;
+    font-family: inherit;
+  }
+}
+
 /* 작은 화면: 상단 가로 네비로 전환 */
 @media (max-width: 900px) {
   .shop-header {
@@ -427,7 +452,7 @@
 
   .mobile-cart-fab {
     right: 10px;
-    bottom: max(10px, env(safe-area-inset-bottom));
+    bottom: max(74px, calc(env(safe-area-inset-bottom) + 14px));
     padding: 0.55rem 0.75rem;
     font-size: 0.8rem;
     min-height: 42px;
