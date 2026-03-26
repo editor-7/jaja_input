@@ -40,6 +40,7 @@ function ShopBody({
   wishlist,
   toggleWishlist,
   addToCart,
+  setProductQty,
   cartAddMode = false,
   groupedCart = [],
   changeCartQty,
@@ -122,16 +123,13 @@ function ShopBody({
     return arr
   }, [filteredProducts])
 
-  const cartKey = (p) => `${p.name}|${p.desc}|${p.size}|${p.unit}|${p.price}`
   const syncCartForProduct = (p, newQty) => {
-    const idx = (groupedCart || []).findIndex((g) => cartKey(g) === cartKey(p))
-    if (cartAddMode) {
-      if (newQty >= 1) addToCart(p, newQty)
-      else if (idx >= 0) removeFromCart(idx)
-    } else {
-      if (idx >= 0) removeFromCart(idx)
-      if (newQty >= 1) addToCart(p, newQty)
+    // 모바일에서 연속 탭 시에도 수량이 어긋나지 않도록 "정확한 수량"으로 동기화
+    if (typeof setProductQty === 'function') {
+      setProductQty(p, newQty)
+      return
     }
+    if (newQty >= 1) addToCart(p, newQty)
   }
 
   return (

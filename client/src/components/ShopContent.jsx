@@ -355,6 +355,7 @@ function ShopContent({ user, onLogout }) {
         wishlist={wishlist}
         toggleWishlist={toggleWishlist}
         addToCart={handleAddToCart}
+        setProductQty={setProductQty}
         cartAddMode={categoryFilter === '공통' || categoryFilter === '인건만'}
         groupedCart={groupedCart}
         changeCartQty={changeCartQty}
