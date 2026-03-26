@@ -124,7 +124,12 @@ function ShopBody({
   }, [filteredProducts])
 
   const syncCartForProduct = (p, newQty) => {
-    // 모바일에서 연속 탭 시에도 수량이 어긋나지 않도록 "정확한 수량"으로 동기화
+    // 일반 모드: 정확 수량 동기화 / 공통·인건만 모드: 기존 누적 담기 유지
+    if (cartAddMode) {
+      if (newQty >= 1) addToCart(p, newQty)
+      else if (typeof setProductQty === 'function') setProductQty(p, 0)
+      return
+    }
     if (typeof setProductQty === 'function') {
       setProductQty(p, newQty)
       return
