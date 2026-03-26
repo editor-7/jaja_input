@@ -303,7 +303,7 @@ function ShopContent({ user, onLogout }) {
         <ShopNavbar
           user={user}
           onLogout={onLogout}
-          cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
+          cartCount={groupedCart.length}
         />
       </aside>
       <div className="shop-main">

@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user')
     setToken(null)
     setUser(null)
-    navigate('/')
+    navigate('/login')
   }
 
   const isLoggedIn = !!token

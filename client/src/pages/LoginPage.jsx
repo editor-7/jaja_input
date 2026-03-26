@@ -7,7 +7,13 @@ function LoginPage() {
   const navigate = useNavigate()
   const { login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({ email: '', password: '' })
+  const [formData, setFormData] = useState(() => {
+    let email = ''
+    try {
+      email = localStorage.getItem('recentLoginEmail') || ''
+    } catch (e) {}
+    return { email, password: '' }
+  })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -31,6 +37,9 @@ function LoginPage() {
     try {
       const { token, user } = await userApi.login(formData)
       login(token, user)
+      try {
+        localStorage.setItem('recentLoginEmail', formData.email)
+      } catch (e) {}
       setSuccess(true)
       setTimeout(() => navigate('/'), 1500)
     } catch (err) {

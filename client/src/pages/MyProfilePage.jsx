@@ -11,6 +11,12 @@ function MyProfilePage() {
   const navigate = useNavigate()
   const { user, isLoggedIn, logout } = useAuth()
   const { groupedCart } = useCart()
+  const displayName = (() => {
+    const rawName = String(user?.name || '').trim()
+    const emailId = String(user?.email || '').split('@')[0]?.trim()
+    if (rawName.toLowerCase() === 'admin' && emailId) return emailId
+    return rawName || emailId || '-'
+  })()
 
   useEffect(() => {
     if (!isLoggedIn || !user) {
@@ -28,7 +34,7 @@ function MyProfilePage() {
         <ShopNavbar
           user={user}
           onLogout={logout}
-          cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
+          cartCount={groupedCart.length}
         />
       </aside>
       <div className="shop-main">
@@ -41,7 +47,7 @@ function MyProfilePage() {
             <div className="my-profile-info">
               <div className="info-row">
                 <span className="info-label">이름</span>
-                <span className="info-value">{user.name || '-'}</span>
+                <span className="info-value">{displayName}</span>
               </div>
               <div className="info-row">
                 <span className="info-label">이메일</span>

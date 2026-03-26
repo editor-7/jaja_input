@@ -307,6 +307,9 @@
     flex: 0;
     gap: 0.5rem;
     font-size: 0.85rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 0.35rem;
   }
 
   .shop-nav-actions a,
@@ -317,6 +320,12 @@
 
   .nav-cart-clear-full { display: inline; }
   .nav-cart-clear-short { display: none; }
+  .nav-cart-clear {
+    order: 99;
+    min-width: fit-content;
+    margin-left: auto;
+    white-space: nowrap;
+  }
 
   .cart-badge {
     top: -2px;
@@ -348,6 +357,17 @@
 
   .shop-header h1 {
     font-size: 0.85rem;
+  }
+
+  .shop-nav-actions a,
+  .shop-nav-actions button {
+    white-space: normal;
+  }
+
+  .nav-cart-clear-full { display: none; }
+  .nav-cart-clear-short { display: inline; }
+  .nav-cart-clear {
+    white-space: nowrap;
   }
 
   .nav-user {

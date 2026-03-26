@@ -162,7 +162,7 @@ function CartPage() {
         <ShopNavbar
           user={isLoggedIn ? user : null}
           onLogout={logout}
-          cartCount={groupedCart.filter((g) => getCategory(g) === '도시가스-자재').length}
+          cartCount={groupedCart.length}
         />
       </aside>
       <div className="shop-main">

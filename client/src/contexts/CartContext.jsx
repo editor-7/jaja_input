@@ -3,43 +3,41 @@ import { useAuth } from './AuthContext'
 import { getCartStorageKey, getListQtysStorageKey } from '@/utils/constants'
 
 const CartContext = createContext(null)
+const GUEST_OWNER_KEY = 'guest'
+
+const getOwnerKey = (user) => (user?._id ? String(user._id) : GUEST_OWNER_KEY)
 
 export function CartProvider({ children }) {
   const { user } = useAuth()
   const [cart, setCart] = useState([])
-  const prevUserIdRef = useRef(null)
+  const prevOwnerKeyRef = useRef(null)
   const cartRef = useRef(cart)
   cartRef.current = cart
 
   useEffect(() => {
-    const currentId = user?._id ?? null
-    if (prevUserIdRef.current !== currentId) {
-      const prevId = prevUserIdRef.current
-      if (prevId) {
+    const currentOwnerKey = getOwnerKey(user)
+    if (prevOwnerKeyRef.current !== currentOwnerKey) {
+      const prevOwnerKey = prevOwnerKeyRef.current
+      if (prevOwnerKey) {
         try {
-          localStorage.setItem(getCartStorageKey(prevId), JSON.stringify(cart))
+          localStorage.setItem(getCartStorageKey(prevOwnerKey), JSON.stringify(cart))
         } catch (e) {}
       }
-      if (currentId) {
-        try {
-          const saved = localStorage.getItem(getCartStorageKey(currentId))
-          setCart(saved ? JSON.parse(saved) : [])
-        } catch (e) {
-          setCart([])
-        }
-      } else {
+      try {
+        const saved = localStorage.getItem(getCartStorageKey(currentOwnerKey))
+        setCart(saved ? JSON.parse(saved) : [])
+      } catch (e) {
         setCart([])
       }
-      prevUserIdRef.current = currentId
+      prevOwnerKeyRef.current = currentOwnerKey
     }
   }, [user])
 
   useEffect(() => {
-    if (user?._id) {
-      try {
-        localStorage.setItem(getCartStorageKey(user._id), JSON.stringify(cart))
-      } catch (e) {}
-    }
+    const ownerKey = getOwnerKey(user)
+    try {
+      localStorage.setItem(getCartStorageKey(ownerKey), JSON.stringify(cart))
+    } catch (e) {}
   }, [user?._id, cart])
 
   const groupedCart = useMemo(() => {
@@ -98,7 +96,7 @@ export function CartProvider({ children }) {
     if (silent || window.confirm('장바구니를 모두 비우시겠습니까?')) {
       setCart([])
       try {
-        if (user?._id) localStorage.setItem(getListQtysStorageKey(user._id), '{}')
+        localStorage.setItem(getListQtysStorageKey(getOwnerKey(user)), '{}')
         window.dispatchEvent(new CustomEvent('clearListQtys'))
       } catch (e) {}
     }

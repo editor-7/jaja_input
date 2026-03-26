@@ -8,6 +8,13 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
   const [showLogoModal, setShowLogoModal] = useState(false)
   const navigate = useNavigate()
   const { clearCart } = useCart()
+  const displayName = (() => {
+    const rawName = String(user?.name || '').trim()
+    const emailId = String(user?.email || '').split('@')[0]?.trim()
+    // 관리자 계정명이 generic(admin)인 경우 이메일 아이디(admin_01)를 우선 표시
+    if (rawName.toLowerCase() === 'admin' && emailId) return emailId
+    return rawName || emailId || '회원'
+  })()
 
   return (
     <header className="shop-header" role="banner">
@@ -50,7 +57,7 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
             )}
             {user ? (
               <>
-                <Link to="/my-profile" className="nav-user">{user.name}님</Link>
+                <Link to="/my-profile" className="nav-user">{displayName}님</Link>
                 <button type="button" className="nav-logout" onClick={onLogout}>로그아웃</button>
               </>
             ) : (
