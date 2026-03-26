@@ -8,8 +8,15 @@ function readStoredAuth() {
     const storedToken = localStorage.getItem('token')
     const storedUser = localStorage.getItem('user')
     if (storedToken && storedUser) {
-      return { token: storedToken, user: JSON.parse(storedUser) }
+      const parsedUser = JSON.parse(storedUser)
+      if (parsedUser && parsedUser._id && parsedUser.email) {
+        return { token: storedToken, user: parsedUser }
+      }
     }
+  } catch (e) {}
+  try {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
   } catch (e) {}
   return { token: null, user: null }
 }
@@ -44,7 +51,7 @@ export function AuthProvider({ children }) {
     navigate('/login')
   }
 
-  const isLoggedIn = !!token
+  const isLoggedIn = !!(token && user?._id)
 
   const clearWelcome = useCallback(() => setPendingWelcome(null), [])
 

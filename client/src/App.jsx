@@ -12,14 +12,14 @@ import AdminPage from '@/pages/AdminPage'
 import MyProfilePage from '@/pages/MyProfilePage'
 
 function RequireAuth({ children }) {
-  const { isLoggedIn } = useAuth()
-  if (!isLoggedIn) return <Navigate to="/login" replace />
+  const { isLoggedIn, user } = useAuth()
+  if (!isLoggedIn || !user?._id) return <Navigate to="/login" replace />
   return children
 }
 
 function RedirectIfLoggedIn({ children }) {
-  const { isLoggedIn } = useAuth()
-  if (isLoggedIn) return <Navigate to="/" replace />
+  const { isLoggedIn, user } = useAuth()
+  if (isLoggedIn && user?._id) return <Navigate to="/" replace />
   return children
 }
 
@@ -86,7 +86,7 @@ function App() {
                 </RequireAuth>
               )}
             />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </div>
       </CartProvider>
