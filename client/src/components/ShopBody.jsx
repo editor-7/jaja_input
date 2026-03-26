@@ -61,6 +61,7 @@ function ShopBody({
   const [editingOrderId, setEditingOrderId] = useState(null)
   const [editOrderForm, setEditOrderForm] = useState(null)
   const [orderEditProductSearch, setOrderEditProductSearch] = useState('')
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false)
 
   const userId = user?._id ?? null
 
@@ -137,6 +138,15 @@ function ShopBody({
     }
     if (newQty >= 1) addToCart(p, newQty)
   }
+
+  useEffect(() => {
+    if (!isMobileCartOpen) return
+    const onEsc = (e) => {
+      if (e.key === 'Escape') setIsMobileCartOpen(false)
+    }
+    document.addEventListener('keydown', onEsc)
+    return () => document.removeEventListener('keydown', onEsc)
+  }, [isMobileCartOpen])
 
   return (
     <>
@@ -603,7 +613,14 @@ function ShopBody({
                 <button
                   type="button"
                   className="toolbar-cart-btn"
-                  onClick={() => (onGoCart ? onGoCart() : window.location.assign('/cart'))}
+                  onClick={() => {
+                    if (window.innerWidth <= 900) {
+                      setIsMobileCartOpen(true)
+                      return
+                    }
+                    if (onGoCart) onGoCart()
+                    else window.location.assign('/cart')
+                  }}
                 >
                   장바구니 보기
                 </button>
@@ -841,6 +858,49 @@ function ShopBody({
                 </div>
               </div>
             </section>
+
+            <div
+              className={`mobile-cart-overlay ${isMobileCartOpen ? 'open' : ''}`}
+              onClick={() => setIsMobileCartOpen(false)}
+              aria-hidden={!isMobileCartOpen}
+            />
+            <aside className={`mobile-cart-panel ${isMobileCartOpen ? 'open' : ''}`} aria-label="모바일 장바구니">
+              <div className="mobile-cart-panel-header">
+                <h3>장바구니</h3>
+                <button type="button" className="mobile-cart-close-btn" onClick={() => setIsMobileCartOpen(false)}>
+                  닫기
+                </button>
+              </div>
+              <ul className="cart-list">
+                {groupedCart.map((g, idx) => (
+                  <li key={idx} className="cart-item">
+                    <div className="cart-item-info">
+                      <strong>{g.name}</strong>
+                      <span>{g.size} / {g.unit}</span>
+                      <span className="cart-item-unit-price">단가 {g.price.toLocaleString()}원</span>
+                    </div>
+                    <div className="cart-item-actions">
+                      <button type="button" onClick={() => changeCartQty(idx, -1)}>-</button>
+                      <span className="cart-item-count">{g.count}개</span>
+                      <button type="button" onClick={() => changeCartQty(idx, 1)}>+</button>
+                      <span className="cart-item-price">{(g.price * g.count).toLocaleString()}원</span>
+                      <button type="button" className="cart-remove" onClick={() => removeFromCart(idx)}>×</button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="cart-footer">
+                <strong className="cart-total">{totalPrice > 0 ? `총 합계: ${totalPrice.toLocaleString()}원` : ''}</strong>
+                <div>
+                  <button type="button" onClick={() => downloadCartAsExcel(groupedCart, totalPrice)} disabled={groupedCart.length === 0}>
+                    엑셀 다운로드
+                  </button>
+                  <button type="button" onClick={clearCart} disabled={groupedCart.length === 0}>
+                    장바구니 비우기
+                  </button>
+                </div>
+              </div>
+            </aside>
           </>
         )}
         </main>
