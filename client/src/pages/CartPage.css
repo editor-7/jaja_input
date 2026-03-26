@@ -11,6 +11,12 @@
   flex-direction: row;
 }
 
+@media (max-width: 900px) {
+  .shop-page.cart-page {
+    flex-direction: column;
+  }
+}
+
 .cart-page-main {
   flex: 1;
   width: 100%;
