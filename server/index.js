@@ -92,6 +92,8 @@ app.get('/health', (req, res) => res.status(200).send('ok'));
 
 // API 라우트
 app.use('/api', require('./routes'));
+// Cloudtype 경로 프록시가 prefix를 유지해 전달하는 경우 대응
+app.use('/:org/:project/:stage/:service/api', require('./routes'));
 
 // 서버 시작
 start()
