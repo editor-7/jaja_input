@@ -381,7 +381,7 @@
   .mobile-cart-fab {
     position: fixed;
     right: 12px;
-    bottom: 14px;
+    bottom: max(14px, env(safe-area-inset-bottom));
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
@@ -423,5 +423,17 @@
 @media (max-width: 480px) {
   .shop-header h1 {
     font-size: 0.8rem;
+  }
+
+  .mobile-cart-fab {
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    padding: 0.55rem 0.75rem;
+    font-size: 0.8rem;
+    min-height: 42px;
+  }
+
+  .mobile-cart-fab-icon {
+    font-size: 0.95rem;
   }
 }
