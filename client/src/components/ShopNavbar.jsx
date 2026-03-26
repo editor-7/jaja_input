@@ -76,6 +76,11 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
             </button>
           </nav>
         </div>
+        <Link to="/cart" className="mobile-cart-fab" aria-label="장바구니 바로가기">
+          <span className="mobile-cart-fab-icon">🛒</span>
+          <span>장바구니</span>
+          {cartCount > 0 && <span className="mobile-cart-fab-badge">{cartCount}</span>}
+        </Link>
       </header>
   )
 }
