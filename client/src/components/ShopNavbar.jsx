@@ -86,11 +86,14 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
             </button>
           </nav>
         </div>
-        <button type="button" className="mobile-cart-fab" aria-label="장바구니 바로가기" onClick={goCart}>
-          <span className="mobile-cart-fab-icon">🛒</span>
-          <span>장바구니</span>
-          {cartCount > 0 && <span className="mobile-cart-fab-badge">{cartCount}</span>}
-        </button>
+        {createPortal(
+          <button type="button" className="mobile-cart-fab" aria-label="장바구니 바로가기" onClick={goCart}>
+            <span className="mobile-cart-fab-icon">🛒</span>
+            <span>장바구니</span>
+            {cartCount > 0 && <span className="mobile-cart-fab-badge">{cartCount}</span>}
+          </button>,
+          document.body
+        )}
       </header>
   )
 }
