@@ -389,11 +389,14 @@
     border-radius: 999px;
     background: var(--color-rose-gold);
     color: #fff;
+    border: none;
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 600;
     box-shadow: 0 8px 22px rgba(61, 50, 50, 0.28);
-    z-index: 1200;
+    z-index: 99999;
+    cursor: pointer;
+    font-family: inherit;
   }
 
   .mobile-cart-fab-icon {

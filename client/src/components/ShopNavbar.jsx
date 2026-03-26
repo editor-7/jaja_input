@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '@/contexts/CartContext'
 import './ShopNavbar.css'
 
 function ShopNavbar({ user, onLogout, cartCount = 0 }) {
   const [showLogoModal, setShowLogoModal] = useState(false)
+  const navigate = useNavigate()
   const { clearCart } = useCart()
   const displayName = (() => {
     const rawName = String(user?.name || '').trim()
@@ -14,6 +15,14 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
     if (rawName.toLowerCase() === 'admin' && emailId) return emailId
     return rawName || emailId || '회원'
   })()
+
+  const goCart = () => {
+    navigate('/cart')
+    // 일부 모바일 브라우저에서 라우터 클릭이 누락될 때를 위한 폴백
+    setTimeout(() => {
+      if (window.location.pathname !== '/cart') window.location.href = '/cart'
+    }, 60)
+  }
 
   return (
     <header className="shop-header" role="banner">
@@ -40,14 +49,15 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
           <nav className="shop-nav-actions" aria-label="메인 메뉴">
             <Link to="/" className="nav-home">홈</Link>
             <Link to="/greeting" className="nav-greeting">인사말</Link>
-            <Link
-              to="/cart"
+            <button
+              type="button"
               className="nav-cart"
               aria-label="장바구니 보기"
+              onClick={goCart}
             >
               <span className="nav-cart-icon">🛒</span>
               {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-            </Link>
+            </button>
             {user?.user_type === 'admin' && (
               <Link to="/admin" className="nav-admin">
                 관리
@@ -76,11 +86,11 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
             </button>
           </nav>
         </div>
-        <Link to="/cart" className="mobile-cart-fab" aria-label="장바구니 바로가기">
+        <button type="button" className="mobile-cart-fab" aria-label="장바구니 바로가기" onClick={goCart}>
           <span className="mobile-cart-fab-icon">🛒</span>
           <span>장바구니</span>
           {cartCount > 0 && <span className="mobile-cart-fab-badge">{cartCount}</span>}
-        </Link>
+        </button>
       </header>
   )
 }
