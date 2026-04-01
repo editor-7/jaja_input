@@ -3,6 +3,9 @@
 const API_BASE = import.meta.env.VITE_API_URL
   ? `${String(import.meta.env.VITE_API_URL).replace(/\/$/, '')}/api`
   : '/api'
+const API_BASE_RAW = import.meta.env.VITE_API_URL
+  ? String(import.meta.env.VITE_API_URL).replace(/\/$/, '')
+  : ''
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token')
@@ -41,6 +44,23 @@ async function request(endpoint, options = {}) {
   } catch {
     data = {}
   }
+  // Cloudtype 라우팅 환경에 따라 /api prefix가 없는 경우가 있어 products GET에 한해 1회 폴백
+  if (
+    res.status === 404 &&
+    options.method === 'GET' &&
+    options.auth === false &&
+    API_BASE_RAW &&
+    (endpoint === '/products' || endpoint.startsWith('/products/'))
+  ) {
+    try {
+      const fallbackRes = await fetch(`${API_BASE_RAW}${endpoint}`, config)
+      const fallbackText = await fallbackRes.text()
+      if (fallbackRes.ok) {
+        return fallbackText ? JSON.parse(fallbackText) : {}
+      }
+    } catch (e) {}
+  }
+
   if (!res.ok) {
     const serverMessage = data.message || data.error || data.msg || (typeof text === 'string' && text.length < 200 ? text : null)
     const defaultMessage =
