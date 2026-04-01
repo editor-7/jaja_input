@@ -29,7 +29,7 @@
        Value: mongodb+srv://gas004444_db_user:여기에MongoDB비밀번호@cluster0.wsuv9mb.mongodb.net/order_bread
 
    [3] Name: JWT_SECRET
-       Value: c937e2be2e7fe8c4619acc034bdd034ca9427280046c52bbc6cc4d13767e7214244e31bfbeff0d0df88e84a4ea369533c11a0984c2273c0005958cf567461a2f
+       Value: 64자_이상_랜덤_문자열(예: openssl rand -hex 32)
 
 ▼ 8. 저장 → 재배포 클릭
 

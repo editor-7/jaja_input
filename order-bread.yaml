@@ -14,9 +14,9 @@ options:
     - name: CORS_ORIGINS
       value: https://jaja-input.vercel.app
     - name: MONGODB_URI
-      value: mongodb+srv://gas004444_db_user:code5479@cluster0.wsuv9mb.mongodb.net/order_bread
+      value: ${MONGODB_URI}
     - name: JWT_SECRET
-      value: c937e2be2e7fe8c4619acc034bdd034ca9427280046c52bbc6cc4d13767e7214244e31bfbeff0d0df88e84a4ea369533c11a0984c2273c0005958cf567461a2f
+      value: ${JWT_SECRET}
   buildenv: []
 context:
   git:
