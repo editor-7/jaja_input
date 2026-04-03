@@ -1,3 +1,9 @@
 {
-  "rewrites": [{ "source": "/((?!api).*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://port-0-jaja-input-mloy1744e091d0a6.sel3.cloudtype.app/gas0044/jaja_input/main/jaja-input/api/:path*"
+    },
+    { "source": "/((?!api).*)", "destination": "/index.html" }
+  ]
 }

@@ -9,8 +9,8 @@
 - [ ] 5단계: 클라우드타입 환경 변수 설정 (NODE_ENV, MONGODB_URI, JWT_SECRET)
 - [ ] 6단계: **GitHub Secrets 설정** (4개: CLOUDTYPE_TOKEN, GHP_TOKEN, MONGODB_URI, JWT_SECRET)
 - [ ] 7단계: 클라우드타입 배포 완료 후 URL 확인
-- [ ] 8단계: Vercel → Environment Variables → `BACKEND_URL`(클라우드타입 **기본 URL 전체**, org/…/service 경로 포함) 추가, **`VITE_API_URL`은 비우거나 삭제**
-- [ ] 9단계: Vercel Redeploy (빌드 캐시 없이 재배포 권장)
+- [ ] 8단계: `vercel.json`·`client/vercel.json` 의 **rewrite** 목적지가 클라우드타입 기본 URL과 일치하는지 확인 (URL 바뀌면 두 파일 모두 수정). **`VITE_API_URL`은 비우거나 삭제**
+- [ ] 9단계: Vercel Redeploy
 
 ---
 
@@ -69,16 +69,14 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 ## 5. Vercel 프론트엔드 연동
 
-프론트는 **같은 도메인**의 `/api`만 호출하고, Vercel 서버리스(`api/[...path].js`)가 클라우드타입으로 프록시합니다.  
+프론트는 **같은 도메인**의 `/api`만 호출하고, **`vercel.json` / `client/vercel.json` 의 `rewrites`** 가 클라우드타입으로 **프록시**합니다 (서버리스 함수 없이 동작).  
 브라우저가 클라우드타입 URL로 **직접** 가면 CORS/OPTIONS 이슈가 나기 쉽습니다.
 
-1. [Vercel](https://vercel.com) → 프로젝트 → **Settings** → **Environment Variables**
-2. **`VITE_API_URL` 삭제** (또는 값 비움). 빌드에 남아 있으면 요청이 계속 클라우드타입으로 직행합니다.
-3. **Add** → **Name**: `BACKEND_URL`  
-   **Value**: 클라우드타입 대시보드에 보이는 **기본 URL 전체** (예: `https://port-0-xxx.sel3.cloudtype.app/gas0044/프로젝트/main/서비스명`) — 끝에 `/`·`/api` 없음.
-4. **Save** 후 **Deployments** → **Redeploy** (필요 시 **Clear build cache** 후 재배포).
+1. 저장소의 `vercel.json`·`client/vercel.json` 안 `destination` URL이 클라우드타입 **기본 URL**(org/…/service 포함) + `/api/:path*` 인지 확인하고, 배포 주소가 바뀌면 **두 파일 모두** 같은 값으로 수정합니다.
+2. [Vercel](https://vercel.com) → **Environment Variables** → **`VITE_API_URL` 삭제** (또는 값 비움). 빌드에 남아 있으면 요청이 클라우드타입으로 직행합니다.
+3. **Deployments** → **Redeploy**
 
-정상이면 브라우저 Network의 요청 URL은 `https://(vercel도메인)/api/users/login` 형태입니다.
+정상이면 브라우저 Network의 요청 URL은 `https://(vercel도메인)/api/users/login` 이고, Vercel이 백엔드로 넘깁니다.
 
 ## 6. GitHub Actions 자동 배포
 
