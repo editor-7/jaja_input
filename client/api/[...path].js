@@ -1,13 +1,8 @@
 /**
- * Vercel 전용 (저장소 루트 배포 시). Root Directory 가 `client` 이면 `client/api/[...path].js` 가 동작함 — 수정 시 둘 다 맞출 것.
+ * Vercel 전용 (Root Directory 가 `client` 일 때 이 파일이 배포됨).
+ * 루트의 `api/[...path].js` 와 동일 — 수정 시 둘 다 맞출 것.
  *
- * /api/* → BACKEND_URL (클라우드타입 등)으로 프록시.
- * 프론트는 VITE_API_URL 없이 /api 를 쓰면 동일 출처라 OPTIONS 프리플라이트가 사라지고,
- * catch-all 로 index.html 이 떨어지며 나는 preflight 404/CORS 오류를 피할 수 있습니다.
- *
- * Vercel → Environment Variables → BACKEND_URL (서버 전용, 끝 슬래시 없음):
- *   Cloudtype 대시보드에 보이는 기본 URL 전체 — 호스트만 넣지 말 것.
- *   예: https://port-0-xxx.sel3.cloudtype.app/gas0044/jaja_input/main/jaja-input
+ * /api/* → BACKEND_URL (클라우드타입 기본 URL 전체, org/…/service 포함)
  */
 const HOP_BY_HOP = new Set([
   'connection',
@@ -42,7 +37,6 @@ module.exports = async (req, res) => {
 
   const base = String(backend).replace(/\/$/, '');
   const raw = req.url || '/';
-  // Vercel 환경에 따라 req.url 이 /api/... 또는 /users/... 형태일 수 있음
   const path =
     raw.startsWith('/api')
       ? raw
