@@ -6,7 +6,8 @@
     "start": "cd server && node index.js",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
-    "dev:client": "cd client && npm run dev"
+    "dev:client": "cd client && npm run dev",
+    "seed:gas": "npm run seed-list:replace --prefix server"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
