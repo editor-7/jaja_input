@@ -3,8 +3,9 @@
  * 프론트는 VITE_API_URL 없이 /api 를 쓰면 동일 출처라 OPTIONS 프리플라이트가 사라지고,
  * catch-all 로 index.html 이 떨어지며 나는 preflight 404/CORS 오류를 피할 수 있습니다.
  *
- * Vercel → Settings → Environment Variables:
- *   BACKEND_URL = https://xxx.cloudtype.app  (끝 슬래시 없음)
+ * Vercel → Environment Variables → BACKEND_URL (서버 전용, 끝 슬래시 없음):
+ *   Cloudtype 대시보드에 보이는 기본 URL 전체 — 호스트만 넣지 말 것.
+ *   예: https://port-0-xxx.sel3.cloudtype.app/gas0044/jaja_input/main/jaja-input
  */
 const HOP_BY_HOP = new Set([
   'connection',

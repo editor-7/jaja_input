@@ -1,11 +1,21 @@
-// 로컬 개발: /api → Vite proxy → localhost:5000
-// 프로덕션: VITE_API_URL 필요 (예: https://xxx.cloudtype.app)
-const API_BASE = import.meta.env.VITE_API_URL
-  ? `${String(import.meta.env.VITE_API_URL).replace(/\/$/, '')}/api`
-  : '/api'
+// 로컬: /api → Vite proxy → localhost:5000
+// 프로덕션 직접 호출: VITE_API_URL — Cloudtype은 호스트만이 아니라
+//   .../조직/프로젝트/스테이지/서비스 까지 포함해야 함. 예:
+//   https://port-0-xxx.sel3.cloudtype.app/gas0044/jaja_input/main/jaja-input
+// (끝에 /api 를 넣지 않음. 아래에서 /api 를 붙임. 잘못 넣었으면 제거)
+function normalizeViteApiBaseUrl(raw) {
+  if (!raw) return ''
+  let s = String(raw).trim().replace(/\/+$/, '')
+  if (s.endsWith('/api')) {
+    s = s.slice(0, -4).replace(/\/+$/, '')
+  }
+  return s
+}
+
 const API_BASE_RAW = import.meta.env.VITE_API_URL
-  ? String(import.meta.env.VITE_API_URL).replace(/\/$/, '')
+  ? normalizeViteApiBaseUrl(import.meta.env.VITE_API_URL)
   : ''
+const API_BASE = API_BASE_RAW ? `${API_BASE_RAW}/api` : '/api'
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token')
