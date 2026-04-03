@@ -15,8 +15,9 @@ function ShopContent({ user, onLogout }) {
   const navigate = useNavigate()
   const { pendingWelcome, clearWelcome } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
-  const categories = [...MAIN_CATEGORIES, '인건만']
-  const [categoryFilter, setCategoryFilter] = useState(categories[0])
+  // 첫 탭을 '지하관PLP'로 두면 mainCategory가 다른 상품은 전부 걸러져 "등록된 상품 없음"처럼 보일 수 있음 → 기본은 전체
+  const categories = ['전체', ...MAIN_CATEGORIES, '인건만']
+  const [categoryFilter, setCategoryFilter] = useState('전체')
   const {
     cart,
     groupedCart,
@@ -243,7 +244,7 @@ function ShopContent({ user, onLogout }) {
         return tokens.every((t) => haystack.includes(t))
       })
     }
-    if (categoryFilter !== 'all') {
+    if (categoryFilter !== '전체' && categoryFilter !== 'all') {
       if (categoryFilter === '인건만') {
         result = result.filter(
           (p) =>
