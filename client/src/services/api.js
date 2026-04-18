@@ -1,5 +1,6 @@
 // 로컬: /api → Vite proxy → localhost:5000
-// 프로덕션 직접 호출: VITE_API_URL — Cloudtype은 호스트만이 아니라
+// 프로덕션(Vercel): VITE_API_URL 비우면 같은 도메인 /api → 루트·client 의 vercel.json routes 프록시
+// 프로덕션(직접 호출): VITE_API_URL — Cloudtype은 호스트만이 아니라
 //   .../조직/프로젝트/스테이지/서비스 까지 포함해야 함. 예:
 //   https://port-0-xxx.sel3.cloudtype.app/gas0044/jaja_input/main/jaja-input
 // (끝에 /api 를 넣지 않음. 아래에서 /api 를 붙임. 잘못 넣었으면 제거)

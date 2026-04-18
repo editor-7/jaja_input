@@ -12,7 +12,7 @@ options:
     - name: NODE_ENV
       value: production
     - name: CORS_ORIGINS
-      value: https://jaja-input.vercel.app
+      value: https://jaja-input-02.vercel.app,https://jaja-input.vercel.app
     - name: MONGODB_URI
       value: ${MONGODB_URI}
     - name: JWT_SECRET
