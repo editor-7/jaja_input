@@ -1,10 +1,9 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://port-0-jaja-input-mng2fuq197a1bafe.sel3.cloudtype.app/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://port-0-jaja-input-mng2fuq197a1bafe.sel3.cloudtype.app/api/:path*"
     },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
