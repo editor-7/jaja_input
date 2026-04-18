@@ -2,7 +2,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://port-0-jaja-input-mloy1744e091d0a6.sel3.cloudtype.app/gas0044/jaja_input/main/jaja-input/api/$1"
+      "dest": "https://port-0-jaja-input-mng2fuq197a1bafe.sel3.cloudtype.app/api/$1"
     },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
