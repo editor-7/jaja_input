@@ -111,6 +111,12 @@ export function getMainCategory(product) {
   const rawDesc = product.desc || ''
   const rawAll = rawName + rawSku + rawDesc
 
+  // PE 배관 본류가 아닌 부속(로켓팅·와이어·밸브박스·흄관 등) — PEM으로 저장돼 있어도 PE 탭에서 제외
+  const nonPeAuxiliaryHint =
+    /로켓팅|로케이팅|리켓팅/i.test(rawAll) ||
+    /와이어|locating\s*wire|\bwire\b/i.test(rawAll) ||
+    /밸브박스|흄관\s*d?\d{2,4}/i.test(rawAll)
+
   // 품명 등에 PEM(지하 PE)이 명시되면 노출 피팅·「백」 힌트보다 PE 구간 우선
   const pemCatalogHint = /\bPEM\b/i.test(rawAll)
 
@@ -182,6 +188,7 @@ export function getMainCategory(product) {
     pemBuriedHint &&
     !exposedStrictHint &&
     !exposedPipeVisualHint &&
+    !nonPeAuxiliaryHint &&
     (fromMain === '공통' || (!fromMain && fromCat === '공통'))
   ) {
     return '지하관PEM'
@@ -191,12 +198,15 @@ export function getMainCategory(product) {
   if (
     pemCatalogHint &&
     !exposedStrictHint &&
+    !nonPeAuxiliaryHint &&
     (fromMain === '공통' || (!fromMain && fromCat === '공통'))
   ) {
     return '지하관PEM'
   }
 
+  if (fromMain === '지하관PEM' && nonPeAuxiliaryHint) return '공통'
   if (fromMain) return fromMain
+  if (fromCat === '지하관PEM' && nonPeAuxiliaryHint) return '공통'
   if (fromCat) return fromCat
 
   if (exposedStrictHint) return '노출관'
@@ -206,19 +216,24 @@ export function getMainCategory(product) {
 
   if (plpPipeHint) return '지하관PLP'
 
-  if (pemCatalogHint && !exposedStrictHint) return '지하관PEM'
+  if (pemCatalogHint && !exposedStrictHint && !nonPeAuxiliaryHint) return '지하관PEM'
 
   if (combined.includes('plp') || combinedNoSpace.includes('plp')) return '지하관PLP'
-  if (combined.includes('pem') || combinedNoSpace.includes('pem')) return '지하관PEM'
+  if (!nonPeAuxiliaryHint && (combined.includes('pem') || combinedNoSpace.includes('pem'))) return '지하관PEM'
 
   const catStr = (product.category || '').trim()
   if (catStr.includes('plp') || catStr.includes('PLP')) return '지하관PLP'
-  if (catStr.includes('pem') || catStr.includes('PEM')) return '지하관PEM'
+  if (!nonPeAuxiliaryHint && (catStr.includes('pem') || catStr.includes('PEM'))) return '지하관PEM'
   if (catStr.includes('노출')) return '노출관'
 
   // PE 관/REDUCER 등 (노출 힌트 없을 때만 지하 PEM으로 간주) — 위에서 plpPipeHint로 이미 PLP 처리됨
-  if (/\bPE\s+REDUCER|PE\s*관|PE관\b|PE\s+배관/i.test(rawName) || /\bPE\s+REDUCER|PE\s*관|PE관/i.test(rawDesc)) return '지하관PEM'
-  if (pemBuriedHint && !exposedStrictHint && !exposedPipeVisualHint) return '지하관PEM'
+  if (
+    !nonPeAuxiliaryHint &&
+    (/\bPE\s+REDUCER|PE\s*관|PE관\b|PE\s+배관/i.test(rawName) || /\bPE\s+REDUCER|PE\s*관|PE관/i.test(rawDesc))
+  ) {
+    return '지하관PEM'
+  }
+  if (pemBuriedHint && !exposedStrictHint && !exposedPipeVisualHint && !nonPeAuxiliaryHint) return '지하관PEM'
   return '공통'
 }
 
