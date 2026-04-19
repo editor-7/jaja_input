@@ -93,6 +93,8 @@ function normalizeStoredCatalogMain(s) {
   if (!t) return ''
   if (MAIN_CATEGORIES.includes(t)) return t
   const collapsed = t.replace(/\s+/g, '')
+  // 엑셀에 "PEM"만 적힌 경우 → 쇼핑 PE(지하관PEM)
+  if (/^pem$/i.test(collapsed)) return '지하관PEM'
   const found = MAIN_CATEGORIES.find((m) => collapsed === m.replace(/\s+/g, ''))
   return found || ''
 }
@@ -116,8 +118,8 @@ export function getMainCategory(product) {
   const rawDesc = product.desc || ''
   const rawAll = rawName + rawSku + rawDesc
 
-  // 노출관: 한글·외기류·백강관·SPPG 키워드
-  const exposedHint =
+  // 노출 명시·백강·SPPG 등 (PLP·「백」글자 힌트보다 우선할 강한 노출 신호)
+  const exposedStrictHint =
     /노출관|노출|외노출|노출배관|노출용|외기관|외기배관|백강관|백강/i.test(rawAll) ||
     /sppg/i.test(rawAll) ||
     /노출관|노출/.test(combined) ||
@@ -128,20 +130,27 @@ export function getMainCategory(product) {
     /PE\s*매몰형|PE매몰형|매몰형\s*PE|매몰형PE/i.test(rawAll) ||
     /pe\s*매몰형|pe매몰형/i.test(combined)
 
-  // 코팅·용접매몰형·절연조인트 → 지하 PLP 구간
+  // 코팅·용접매몰형·절연조인트 → 지하 PLP 구간 (이게 있으면 아래 「백」·피팅 노출 힌트 무시)
   const plpPipeHint =
     /코팅/i.test(rawAll) ||
     /용접\s*매몰형|용접매몰형/i.test(rawAll) ||
     /절연\s*조인트|절연조인트/i.test(rawAll)
 
-  // 공통으로만 잡히는 노출 배관 피팅류 (백·엘보·정티·백티 등)
+  // 노출 배관: «백» 글자(비속어 제외)·엘보·정티·백티 등 — PEM/공통 DB값 보정·휴리스틱용
+  const exposedBaekHangul =
+    /백/.test(rawAll) &&
+    !/(?:인|드로|스웨|송)백|백(?:업|분율|엔드|데이터|지원|색|금|화|두|전|조류)/i.test(rawAll)
   const exposedCommonFittingHint =
     /엘보|정티|백티|백엘보|백관|백\s*엘보|백\s*티/i.test(rawAll) ||
     /(?:^|[\s,(\[/])백(?:$|[\s,)\]/×\-])/i.test(rawAll)
+  const exposedPipeVisualHint =
+    !plpPipeHint && (exposedBaekHangul || exposedCommonFittingHint)
 
-  // DB mainCategory가 먼저 적용되면 휴리스틱이 스킵됨 → PEM/공통이어도 품명 등에 노출 힌트면 노출관으로 보정
+  const exposedHintForOverride = exposedStrictHint || exposedPipeVisualHint
+
+  // DB mainCategory가 먼저 적용되면 휴리스틱이 스킵됨 → PEM/공통이어도 노출 신호면 노출관으로 보정
   if (
-    exposedHint &&
+    exposedHintForOverride &&
     (fromMain === '지하관PEM' ||
       fromMain === '공통' ||
       (!fromMain && (fromCat === '지하관PEM' || fromCat === '공통')))
@@ -151,24 +160,16 @@ export function getMainCategory(product) {
 
   if (
     plpPipeHint &&
-    !exposedHint &&
+    !exposedStrictHint &&
     (fromMain === '공통' || (!fromMain && fromCat === '공통'))
   ) {
     return '지하관PLP'
   }
 
   if (
-    exposedCommonFittingHint &&
-    !exposedHint &&
-    !plpPipeHint &&
-    (fromMain === '공통' || (!fromMain && fromCat === '공통'))
-  ) {
-    return '노출관'
-  }
-
-  if (
     pemBuriedHint &&
-    !exposedHint &&
+    !exposedStrictHint &&
+    !exposedPipeVisualHint &&
     (fromMain === '공통' || (!fromMain && fromCat === '공통'))
   ) {
     return '지하관PEM'
@@ -177,11 +178,11 @@ export function getMainCategory(product) {
   if (fromMain) return fromMain
   if (fromCat) return fromCat
 
-  if (exposedHint) return '노출관'
+  if (exposedStrictHint) return '노출관'
 
-  if (plpPipeHint && !exposedHint) return '지하관PLP'
+  if (plpPipeHint) return '지하관PLP'
 
-  if (exposedCommonFittingHint && !exposedHint && !plpPipeHint) return '노출관'
+  if (exposedPipeVisualHint) return '노출관'
 
   if (combined.includes('plp') || combinedNoSpace.includes('plp')) return '지하관PLP'
   if (combined.includes('pem') || combinedNoSpace.includes('pem')) return '지하관PEM'
@@ -193,8 +194,7 @@ export function getMainCategory(product) {
 
   // PE 관/REDUCER 등 (노출 힌트 없을 때만 지하 PEM으로 간주) — 위에서 plpPipeHint로 이미 PLP 처리됨
   if (/\bPE\s+REDUCER|PE\s*관|PE관\b|PE\s+배관/i.test(rawName) || /\bPE\s+REDUCER|PE\s*관|PE관/i.test(rawDesc)) return '지하관PEM'
-  if (pemBuriedHint && !exposedHint) return '지하관PEM'
-  if (exposedCommonFittingHint && !exposedHint && !plpPipeHint) return '노출관'
+  if (pemBuriedHint && !exposedStrictHint && !exposedPipeVisualHint) return '지하관PEM'
   return '공통'
 }
 
