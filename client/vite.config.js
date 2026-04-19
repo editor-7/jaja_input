@@ -13,9 +13,15 @@ export default defineConfig(({ mode }) => {
   const devApiProxy = (loaded.VITE_DEV_API_PROXY_TARGET || '').trim().replace(/\/+$/, '')
   const apiProxyTarget = devApiProxy || 'http://localhost:5000'
 
+  // Cloudinary: .env / .env.production + Vercel 대시보드 값이 있으면 우선. 없으면 저장소 기본(위젯이 빌드에 반드시 포함)
+  const cloudName = (loaded.VITE_CLOUDINARY_CLOUD_NAME || 'dajfvansm').trim()
+  const uploadPreset = (loaded.VITE_CLOUDINARY_UPLOAD_PRESET || 'order_bread').trim()
+
   return {
     define: {
       'import.meta.env.VITE_API_URL': JSON.stringify(viteApiUrl),
+      'import.meta.env.VITE_CLOUDINARY_CLOUD_NAME': JSON.stringify(cloudName),
+      'import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET': JSON.stringify(uploadPreset),
     },
     plugins: [react()],
     resolve: {
