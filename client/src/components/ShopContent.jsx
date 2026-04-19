@@ -26,7 +26,7 @@ function ShopContent({ user, onLogout }) {
   const navigate = useNavigate()
   const { pendingWelcome, clearWelcome } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
-  // 상단: PLP / PE / 노출관 / 인건비만 (DB 공통은 노출관에 포함)
+  // 상단: PLP / PE / 노출관 / 공통 / 인건비만
   const categories = ['전체', ...SHOP_SECTIONS, '인건비만']
   const [categoryFilter, setCategoryFilter] = useState('전체')
   const {
@@ -297,7 +297,7 @@ function ShopContent({ user, onLogout }) {
 
   const handleAddToCart = (product, qty = 1) => {
     const n = Math.max(0, parseInt(qty) || 0)
-    const addMode = categoryFilter === '인건비만'
+    const addMode = categoryFilter === '공통' || categoryFilter === '인건비만'
     if (addMode) {
       addToCart(product, n)
       const laborPair = findLaborPair(product, products)
@@ -377,7 +377,7 @@ function ShopContent({ user, onLogout }) {
         toggleWishlist={toggleWishlist}
         addToCart={handleAddToCart}
         setProductQty={setProductQty}
-        cartAddMode={categoryFilter === '인건비만'}
+        cartAddMode={categoryFilter === '공통' || categoryFilter === '인건비만'}
         groupedCart={groupedCart}
         changeCartQty={changeCartQty}
         removeFromCart={removeFromCart}

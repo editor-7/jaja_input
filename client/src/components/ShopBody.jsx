@@ -135,7 +135,7 @@ function ShopBody({
   }, [filteredProducts])
 
   const syncCartForProduct = (p, newQty) => {
-    // 일반 모드: 정확 수량 동기화 / 인건비만 모드: 기존 누적 담기 유지
+    // 일반 모드: 정확 수량 동기화 / 공통·인건비만 모드: 기존 누적 담기 유지
     if (cartAddMode) {
       if (newQty >= 1) addToCart(p, newQty)
       else if (typeof setProductQty === 'function') setProductQty(p, 0)

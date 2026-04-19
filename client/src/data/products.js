@@ -19,20 +19,21 @@ export const MAIN_CATEGORY_LABELS = {
   공통: '공통',
 }
 
-/** 쇼핑몰 상단 큰 구분 (탭 키) — PLP / PE / 노출관 (DB·엑셀 «공통»은 노출관 탭에서 함께 표시) */
-export const SHOP_SECTIONS = ['PLP', 'PE', '노출관']
+/** 쇼핑몰 상단 큰 구분 (탭 키) — PLP / PE / 노출관 / 공통 */
+export const SHOP_SECTIONS = ['PLP', 'PE', '노출관', '공통']
 
 export function getMainCategoryLabel(id) {
   if (!id || typeof id !== 'string') return ''
   return MAIN_CATEGORY_LABELS[id] || id
 }
 
-/** DB 대분류 → 쇼핑 상단 구간 (공통·미분류는 노출관 탭으로 묶음) */
+/** DB 대분류 → 쇼핑 상단 구간 */
 export function getShopSection(product) {
   const mc = getMainCategory(product)
   if (mc === '지하관PLP') return 'PLP'
   if (mc === '지하관PEM') return 'PE'
-  return '노출관'
+  if (mc === '노출관') return '노출관'
+  return '공통'
 }
 
 /** PE 구간만: SPPG vs 배관(PEM·PE관 등 그 외) */
@@ -126,6 +127,11 @@ export function getMainCategory(product) {
     /sppg/i.test(rawAll) ||
     /노출관|노출/.test(combined) ||
     combined.includes('exposed')
+
+  // 기술검토·시공감리·완공검사·잡자재비 등 L/S·행정비 — 노출관이 아닌 공통
+  const commonFeeCatalogHint =
+    /기술검토|시공감리|완공검사|잡자재비|준공검사/i.test(rawAll)
+  if (commonFeeCatalogHint && !exposedStrictHint) return '공통'
 
   // PE 매몰형(지하 매몰) → 공통으로만 저장된 품도 PE(지하관PEM) 구간으로
   const pemBuriedHint =
