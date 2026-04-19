@@ -50,12 +50,12 @@ export function getPePipeKind(product) {
   return '배관'
 }
 
-/** 노출관 구간만: SPPG / 백강관 / 배관(그 외) */
+/** 노출관 구간만: SPPG / 백강관 / 배관(그 외) — 품명·규격 등에 단어 포함 시 */
 export function getExposedPipeKind(product) {
   if (!product || getShopSection(product) !== '노출관') return ''
   const hay = `${product.name || ''} ${product.sku || ''} ${product.desc || ''} ${product.spec || ''}`
   if (/sppg/i.test(hay)) return 'SPPG'
-  if (/백강/i.test(hay)) return '백강관'
+  if (/백강관/i.test(hay) || /백강/i.test(hay)) return '백강관'
   return '배관'
 }
 
@@ -118,16 +118,16 @@ export function getMainCategory(product) {
   const rawDesc = product.desc || ''
   const rawAll = rawName + rawSku + rawDesc
 
-  // 노출관: 한글·외기류 힌트를 PLP/PEM/PE 휴리스틱보다 먼저 (엑셀 비고1=노출관인 품이 "PE 관"만 있는 경우 오분류 방지)
+  // 노출관: 한글·외기류·백강관·SPPG 키워드를 PLP/PEM 휴리스틱보다 먼저
   const exposedHint =
-    /노출관|노출|외노출|노출배관|노출용|외기관|외기배관/i.test(rawAll) ||
+    /노출관|노출|외노출|노출배관|노출용|외기관|외기배관|백강관|백강/i.test(rawAll) ||
+    /sppg/i.test(rawAll) ||
     /노출관|노출/.test(combined) ||
     combined.includes('exposed')
   if (exposedHint) return '노출관'
 
   if (combined.includes('plp') || combinedNoSpace.includes('plp')) return '지하관PLP'
   if (combined.includes('pem') || combinedNoSpace.includes('pem')) return '지하관PEM'
-  if (/sppg/i.test(rawAll)) return '지하관PEM'
 
   const catStr = (product.category || '').trim()
   if (catStr.includes('plp') || catStr.includes('PLP')) return '지하관PLP'
