@@ -608,3 +608,9 @@
   display: flex;
   gap: 0.5rem;
 }
+
+.form-row-follow {
+  margin-top: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}

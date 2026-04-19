@@ -1,6 +1,6 @@
 # GitHub Secrets 설정 (CloudType 자동 배포용)
 
-`main` 브랜치에 push 시 CloudType으로 자동 배포되려면 아래 **4개** 시크릿을 설정해야 합니다. (프로젝트 `gas0044/todo-backend` 고정)
+`main` 브랜치에 push 시 CloudType으로 자동 배포되려면 아래 **4개** 시크릿을 설정해야 합니다. (Cloudtype 프로젝트 `gas0044/jaja-input` 기준)
 
 ## 설정 위치
 

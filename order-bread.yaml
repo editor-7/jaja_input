@@ -1,7 +1,7 @@
 # 클라우드타입 CLI 배포용 (참고)
 # 대시보드 배포 시 이 파일은 참고만. 실제로는 대시보드에서 직접 입력.
 
-name: order-bread
+name: jaja-input
 app: node@18
 options:
   ports: "3000"
@@ -20,6 +20,6 @@ options:
   buildenv: []
 context:
   git:
-    url: https://github.com/editor-7/order_bread.git
+    url: https://github.com/editor-7/jaja_input.git
     branch: main
   subdir: server

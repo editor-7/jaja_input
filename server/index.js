@@ -31,14 +31,30 @@ app.use((req, res, next) => {
   return next();
 });
 
+/** 로컬 개발: Vite가 3000 대신 3001 등으로 뜨는 경우도 허용 */
+function isLocalDevOrigin(origin) {
+  if (!origin || typeof origin !== 'string') return false;
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin.trim());
+}
+
 function getAllowedOrigins() {
-  const defaultDevOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
-  if (config.CORS_ORIGINS.length > 0) return config.CORS_ORIGINS;
-  // 배포 환경변수 주입이 누락된 경우에도 서비스가 바로 동작하도록:
-  // - credentials는 필요 없으므로 false로 두고
-  // - origin은 allow-all로 둔다(검증 단계용).
-  if (config.NODE_ENV === 'production') return null;
-  return defaultDevOrigins;
+  const defaultDevOrigins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3001',
+  ];
+  if (config.NODE_ENV === 'production') {
+    if (config.CORS_ORIGINS.length > 0) return config.CORS_ORIGINS;
+    // 배포 환경변수 주입이 누락된 경우에도 서비스가 바로 동작하도록:
+    // - credentials는 필요 없으므로 false로 두고
+    // - origin은 allow-all로 둔다(검증 단계용).
+    return null;
+  }
+  // development: .env에 배포용 도메인만 있어도 로컬 Vite는 항상 허용
+  return [...new Set([...defaultDevOrigins, ...config.CORS_ORIGINS])];
 }
 
 function createCorsOptions(allowedOrigins) {
@@ -59,6 +75,7 @@ function createCorsOptions(allowedOrigins) {
       // 서버-서버 호출이나 동일 출처 요청(origin 없음)은 허용
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
+      if (config.NODE_ENV !== 'production' && isLocalDevOrigin(origin)) return callback(null, true);
       return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
@@ -66,7 +83,7 @@ function createCorsOptions(allowedOrigins) {
 }
 
 const allowedOrigins = getAllowedOrigins();
-if (config.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+if (config.NODE_ENV === 'production' && config.CORS_ORIGINS.length === 0) {
   console.warn('⚠️ CORS_ORIGINS가 비어 있습니다. 허용할 프론트 도메인을 환경 변수에 설정하세요.');
 }
 
@@ -98,12 +115,23 @@ app.use('/:org/:project/:stage/:service/api', require('./routes'));
 // 서버 시작
 start()
   .then(() => {
-    app.listen(config.PORT, () => {
+    const server = app.listen(config.PORT, () => {
       console.log(`Server running on http://localhost:${config.PORT}`);
       console.log(`MongoDB URI: ${config.MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//***:***@')}`);
       if (config.NODE_ENV === 'production') {
         console.log('NODE_ENV: production');
       }
+    });
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(
+          `❌ 포트 ${config.PORT}이(가) 이미 사용 중입니다. 이전에 띄운 node/nodemon(\`npm run dev\` 등)을 종료하거나, server/.env에서 PORT를 다른 값(예: 5001)으로 바꾸세요.`,
+        );
+        console.error(`   확인: netstat -ano | findstr :${config.PORT}`);
+        process.exit(1);
+        return;
+      }
+      throw err;
     });
   })
   .catch((err) => {

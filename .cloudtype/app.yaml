@@ -1,6 +1,6 @@
 # GitHub Actions 배포 시 .github/workflows/deploy-main.yml 의 inline yaml 사용
 # CLI 배포 시: ctype apply (환경변수는 CloudType 대시보드에서 설정)
-name: order-bread
+name: jaja-input
 app: node@18
 options:
   ports: "3000"

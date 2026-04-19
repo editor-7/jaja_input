@@ -1,7 +1,17 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { productApi } from '@/services/api'
-import { getCategory, getSpecFromProduct, getRemarkDisplay, findLaborPair, findMaterialPair, getMainCategory, MAIN_CATEGORIES } from '@/data/products'
+import {
+  getCategory,
+  getSpecFromProduct,
+  getRemarkDisplay,
+  findLaborPair,
+  findMaterialPair,
+  getMainCategory,
+  getShopSection,
+  getPePipeKind,
+  SHOP_SECTIONS,
+} from '@/data/products'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
 import { isDuplicateOrder, validatePayment } from '@/utils/orderUtils'
 import { skuSort } from '@/utils/productUtils'
@@ -15,9 +25,10 @@ function ShopContent({ user, onLogout }) {
   const navigate = useNavigate()
   const { pendingWelcome, clearWelcome } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
-  // 첫 탭을 '지하관PLP'로 두면 mainCategory가 다른 상품은 전부 걸러져 "등록된 상품 없음"처럼 보일 수 있음 → 기본은 전체
-  const categories = ['전체', ...MAIN_CATEGORIES, '인건만']
+  // 상단: PLP / PE / 노출관 / 공통 (PE 안에서 SPPG·배관)
+  const categories = ['전체', ...SHOP_SECTIONS, '인건만']
   const [categoryFilter, setCategoryFilter] = useState('전체')
+  const [pePipeFilter, setPePipeFilter] = useState('전체')
   const {
     cart,
     groupedCart,
@@ -226,6 +237,8 @@ function ShopContent({ user, onLogout }) {
         const spec = (getSpecFromProduct(p) || '').toLowerCase()
         const cat = (getRemarkDisplay(p) || '').toLowerCase()
         const mainCat = (getMainCategory(p) || '').toLowerCase()
+        const sec = (getShopSection(p) || '').toLowerCase()
+        const peKind = (getPePipeKind(p) || '').toLowerCase()
         const sku = String(p.sku || '').toLowerCase()
         const haystack = [
           p.name || '',
@@ -236,6 +249,8 @@ function ShopContent({ user, onLogout }) {
           sku,
           cat,
           mainCat,
+          sec,
+          peKind,
         ]
           .join(' ')
           .toLowerCase()
@@ -251,8 +266,11 @@ function ShopContent({ user, onLogout }) {
             getCategory(p) === '도시가스-인건' &&
             (p.laborOnly === true || !findMaterialPair(p, products))
         )
-      } else {
-        result = result.filter((p) => getMainCategory(p) === categoryFilter)
+      } else if (SHOP_SECTIONS.includes(categoryFilter)) {
+        result = result.filter((p) => getShopSection(p) === categoryFilter)
+        if (categoryFilter === 'PE' && pePipeFilter !== '전체') {
+          result = result.filter((p) => getPePipeKind(p) === pePipeFilter)
+        }
       }
     }
     // 자재 품목 먼저, 그 다음 인건 (자재 선택 시 인건이 따라오는 설계)
@@ -262,7 +280,7 @@ function ShopContent({ user, onLogout }) {
       if (is자재A !== is자재B) return is자재A - is자재B
       return skuSort(a, b)
     })
-  }, [products, searchTerm, categoryFilter])
+  }, [products, searchTerm, categoryFilter, pePipeFilter])
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE))
   const paginatedProducts = useMemo(() => {
@@ -272,7 +290,11 @@ function ShopContent({ user, onLogout }) {
 
   useEffect(() => {
     setProductPage(1)
-  }, [searchTerm, categoryFilter])
+  }, [searchTerm, categoryFilter, pePipeFilter])
+
+  useEffect(() => {
+    if (categoryFilter !== 'PE') setPePipeFilter('전체')
+  }, [categoryFilter])
 
   useEffect(() => {
     if (productPage > totalPages && totalPages > 0) setProductPage(totalPages)
@@ -319,6 +341,8 @@ function ShopContent({ user, onLogout }) {
         onSearchChange={setSearchTerm}
         categoryFilter={categoryFilter}
         onCategoryChange={setCategoryFilter}
+        pePipeFilter={pePipeFilter}
+        onPePipeFilterChange={setPePipeFilter}
         onGoCart={() => navigate('/cart')}
         categories={categories}
         showOrderList={showOrderList}

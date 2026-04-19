@@ -19,10 +19,10 @@ jobs:
         uses: cloudtype-github-actions/deploy@v1
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
-          project: gas0044/order_bread
+          project: gas0044/jaja-input
           stage: main
           yaml: |
-            name: order-bread
+            name: jaja-input
             app: node@18
             options:
               ports: "3000"

@@ -4,7 +4,16 @@ import { useAuth } from '@/contexts/AuthContext'
 import { userApi, productApi } from '@/services/api'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
 import { skuSort } from '@/utils/productUtils'
-import { getDisplayItemName, getSpecFromProduct, getRemarkDisplay, getMainCategory, MAIN_CATEGORIES } from '@/data/products'
+import {
+  getDisplayItemName,
+  getSpecFromProduct,
+  getMainCategory,
+  getMainCategoryLabel,
+  getMaterialKindSelectLabel,
+  MAIN_CATEGORIES,
+  MATERIAL_KIND_OPTIONS,
+  MATERIAL_KIND_VALUES,
+} from '@/data/products'
 import { downloadProductsAsExcel } from '@/utils/exportProductsToExcel'
 import ShopNavbar from '@/components/ShopNavbar'
 import './AdminPage.css'
@@ -16,7 +25,16 @@ function AdminPage() {
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
-  const [productForm, setProductForm] = useState({ sku: '', name: '', desc: '', spec: '', category: '', mainCategory: '', price: '', img: '' })
+  const [productForm, setProductForm] = useState({
+    sku: '',
+    name: '',
+    desc: '',
+    spec: '',
+    category: '도시가스-자재',
+    mainCategory: '',
+    price: '',
+    img: '',
+  })
   const [editingId, setEditingId] = useState(null)
   const [productMsg, setProductMsg] = useState('')
   const [productSearch, setProductSearch] = useState('')
@@ -141,7 +159,7 @@ function AdminPage() {
       name: productForm.name.trim(),
       desc: productForm.desc.trim() || `정성스럽게 구운 ${productForm.name.trim()}`,
       spec: (productForm.spec ?? '').trim(),
-      category: productForm.category.trim() || productForm.name.trim(),
+      category: productForm.category.trim() || '도시가스-자재',
       mainCategory: (productForm.mainCategory ?? '').trim(),
       price: Number(productForm.price) || 0,
       img: productForm.img?.trim() || '',
@@ -163,7 +181,7 @@ function AdminPage() {
       } else {
         await productApi.create(payload)
         setProductMsg('상품이 등록되었습니다.')
-        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', mainCategory: '', price: '', img: '' })
+        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '도시가스-자재', mainCategory: '', price: '', img: '' })
       }
       if (!editingId) loadProducts()
     } catch (err) {
@@ -210,6 +228,10 @@ function AdminPage() {
       })
   })()
 
+  const materialKindSelectValue = MATERIAL_KIND_VALUES.includes(productForm.category)
+    ? productForm.category
+    : '__custom__'
+
   const handleProductDelete = async (id) => {
     if (!window.confirm('이 상품을 삭제하시겠습니까?')) return
     try {
@@ -217,7 +239,7 @@ function AdminPage() {
       setProducts((prev) => prev.filter((p) => String(p._id) !== String(id)))
       if (editingId && String(editingId) === String(id)) {
         setEditingId(null)
-        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', mainCategory: '', price: '', img: '' })
+        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '도시가스-자재', mainCategory: '', price: '', img: '' })
       }
       setProductMsg('상품이 삭제되었습니다.')
       setTimeout(() => setProductMsg(''), 3000)
@@ -331,23 +353,45 @@ function AdminPage() {
                   />
                 </div>
                 <div className="form-row">
-                  <label>카테고리(자재/인건)</label>
-                  <input
-                    type="text"
-                    value={productForm.category}
-                    onChange={(e) => setProductForm((p) => ({ ...p, category: e.target.value }))}
-                    placeholder="예: 도시가스-자재"
-                  />
+                  <label>요금 구분</label>
+                  <select
+                    value={materialKindSelectValue}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      if (v === '__custom__') {
+                        setProductForm((p) => ({
+                          ...p,
+                          category: MATERIAL_KIND_VALUES.includes(p.category) ? '' : p.category,
+                        }))
+                        return
+                      }
+                      setProductForm((p) => ({ ...p, category: v }))
+                    }}
+                  >
+                    {MATERIAL_KIND_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                    <option value="__custom__">기타 (직접 입력)</option>
+                  </select>
+                  {materialKindSelectValue === '__custom__' && (
+                    <input
+                      type="text"
+                      className="form-row-follow"
+                      value={productForm.category}
+                      onChange={(e) => setProductForm((p) => ({ ...p, category: e.target.value }))}
+                      placeholder="category 필드에 저장할 문자열"
+                    />
+                  )}
                 </div>
                 <div className="form-row">
-                  <label>큰 카테고리</label>
+                  <label>관로 구분 (대분류)</label>
                   <select
                     value={productForm.mainCategory}
                     onChange={(e) => setProductForm((p) => ({ ...p, mainCategory: e.target.value }))}
                   >
-                    <option value="">자동(이름/SKU 기준)</option>
+                    <option value="">자동 (품명·규칙으로 추정)</option>
                     {MAIN_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>{getMainCategoryLabel(c)}</option>
                     ))}
                   </select>
                 </div>
@@ -371,7 +415,7 @@ function AdminPage() {
                       className="cancel-btn"
                       onClick={() => {
                         setEditingId(null)
-                        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '', mainCategory: '', price: '', img: '' })
+                        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '도시가스-자재', mainCategory: '', price: '', img: '' })
                         setProductMsg('')
                       }}
                     >
@@ -433,9 +477,9 @@ function AdminPage() {
                       onChange={(e) => setProductMainCategoryFilter(e.target.value)}
                       className="product-filter-select"
                     >
-                      <option value="all">전체 구분</option>
+                      <option value="all">관로 · 전체</option>
                       {MAIN_CATEGORIES.map((c) => (
-                        <option key={c} value={c}>{c}</option>
+                        <option key={c} value={c}>{getMainCategoryLabel(c)}</option>
                       ))}
                     </select>
                     <select
@@ -443,9 +487,9 @@ function AdminPage() {
                       onChange={(e) => setProductCategoryFilter(e.target.value)}
                       className="product-filter-select"
                     >
-                      <option value="all">자재/인건</option>
+                      <option value="all">요금 · 전체</option>
                       {productCategories.map((c) => (
-                        <option key={c} value={c}>{getRemarkDisplay({ category: c }) || c}</option>
+                        <option key={c} value={c}>{getMaterialKindSelectLabel(c)}</option>
                       ))}
                     </select>
                     <select
@@ -465,8 +509,8 @@ function AdminPage() {
                       <span>SKU</span>
                       <span>상품명</span>
                       <span>규격</span>
-                      <span>구분</span>
-                      <span>카테고리</span>
+                      <span>관로</span>
+                      <span>요금</span>
                       <span>가격</span>
                       <span>관리</span>
                     </div>
@@ -475,8 +519,8 @@ function AdminPage() {
                         <span className="product-list-sku">{p.sku || '-'}</span>
                         <span className="product-list-name">{getDisplayItemName(p)}</span>
                         <span className="product-list-spec">{getSpecFromProduct(p) || '-'}</span>
-                        <span className="product-list-category">{getMainCategory(p)}</span>
-                        <span className="product-list-category">{getRemarkDisplay({ category: p.category }) || '-'}</span>
+                        <span className="product-list-category">{getMainCategoryLabel(getMainCategory(p))}</span>
+                        <span className="product-list-category">{getMaterialKindSelectLabel(p.category) || '-'}</span>
                         <span className="product-list-price">{p.price?.toLocaleString()}원</span>
                         <div className="product-list-actions">
                           <button type="button" className="edit-btn" onClick={() => { handleProductEdit(p); setActiveMenu('product') }}>

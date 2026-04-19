@@ -1,5 +1,13 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { getCategory, getDisplayItemName, getMainCategory, getRemarkDisplay, getSpecFromProduct } from '@/data/products'
+import {
+  getCategory,
+  getDisplayItemName,
+  getMainCategory,
+  getRemarkDisplay,
+  getShopCategoryTabLabel,
+  getSpecFromProduct,
+  PE_PIPE_TABS,
+} from '@/data/products'
 import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
 import { downloadOrderListAsExcel } from '@/utils/exportOrderListToExcel'
 import { getListQtysStorageKey } from '@/utils/constants'
@@ -10,6 +18,8 @@ function ShopBody({
   onSearchChange,
   categoryFilter,
   onCategoryChange,
+  pePipeFilter = '전체',
+  onPePipeFilterChange,
   onGoCart,
   categories = [],
   showOrderList,
@@ -580,17 +590,33 @@ function ShopBody({
         ) : (
           <>
             <div className="shop-toolbar">
-              <div className="filter-row">
-                {Array.isArray(categories) && categories.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className={categoryFilter === c ? 'active' : ''}
-                    onClick={() => onCategoryChange(c)}
-                  >
-                    {c}
-                  </button>
-                ))}
+              <div className="filter-col">
+                <div className="filter-row">
+                  {Array.isArray(categories) && categories.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={categoryFilter === c ? 'active' : ''}
+                      onClick={() => onCategoryChange(c)}
+                    >
+                      {getShopCategoryTabLabel(c)}
+                    </button>
+                  ))}
+                </div>
+                {categoryFilter === 'PE' && typeof onPePipeFilterChange === 'function' && (
+                  <div className="filter-row filter-row-pe-sub" role="group" aria-label="PE 세부">
+                    {PE_PIPE_TABS.map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        className={pePipeFilter === t ? 'active' : ''}
+                        onClick={() => onPePipeFilterChange(t)}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="toolbar-right">
                 <input
