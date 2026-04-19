@@ -136,21 +136,24 @@ export function getMainCategory(product) {
     /용접\s*매몰형|용접매몰형/i.test(rawAll) ||
     /절연\s*조인트|절연조인트/i.test(rawAll)
 
-  // 노출 배관: «백»·가스켓·후렌지(플랜지)·엘보·정티·백티 등 — PEM/공통 DB값 보정·휴리스틱용
+  // 노출 배관: «백»·가스켓·후렌지·BALL(볼)·엘보·정티·백티 등 — PEM/공통 DB값 보정·휴리스틱용
   const exposedBaekHangul =
     /백/.test(rawAll) &&
     !/(?:인|드로|스웨|송)백|백(?:업|분율|엔드|데이터|지원|색|금|화|두|전|조류)/i.test(rawAll)
   const exposedFlangeHint = /후렌지|후랜지|플랜지/i.test(rawAll)
   const exposedGasketHint = /가스켓|\bgasket\b/i.test(rawAll)
+  const exposedBallHint =
+    /\bBALL\b|\bBALL[\s\-_]*(VALVE|VLV)\b/i.test(rawAll) || /볼\s*밸브|볼밸브/i.test(rawAll)
   const exposedCommonFittingHint =
     /엘보|정티|백티|백엘보|백관|백\s*엘보|백\s*티/i.test(rawAll) ||
     /(?:^|[\s,(\[/])백(?:$|[\s,)\]/×\-])/i.test(rawAll)
-  // «백»·가스켓·후렌지는 공통이면 코팅(PLP)보다 노출관 우선. 엘보·정티만 있을 때는 PLP와 겹치면 PLP 유지
+  // «백»·가스켓·후렌지·BALL(볼밸브)는 공통이면 코팅(PLP)보다 노출관 우선. 엘보·정티만 있을 때는 PLP와 겹치면 PLP 유지
   const exposedPipeVisualHint =
     !pemCatalogHint &&
     ((exposedBaekHangul && !exposedStrictHint) ||
       (exposedFlangeHint && !exposedStrictHint) ||
       (exposedGasketHint && !exposedStrictHint) ||
+      (exposedBallHint && !exposedStrictHint) ||
       (!plpPipeHint && exposedCommonFittingHint))
 
   // 명시 노출·백강·SPPG → DB가 PEM/공통이어도 노출관으로 보정
