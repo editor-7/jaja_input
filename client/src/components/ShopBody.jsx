@@ -9,7 +9,6 @@ import {
   getPePipeKind,
   getExposedPipeKind,
   getSpecFromProduct,
-  PE_PIPE_TABS,
 } from '@/data/products'
 import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
 import { downloadOrderListAsExcel } from '@/utils/exportOrderListToExcel'
@@ -21,8 +20,6 @@ function ShopBody({
   onSearchChange,
   categoryFilter,
   onCategoryChange,
-  pePipeFilter = '전체',
-  onPePipeFilterChange,
   onGoCart,
   categories = [],
   showOrderList,
@@ -606,20 +603,6 @@ function ShopBody({
                     </button>
                   ))}
                 </div>
-                {categoryFilter === 'PE' && typeof onPePipeFilterChange === 'function' && (
-                  <div className="filter-row filter-row-sub" role="group" aria-label="PE 세부">
-                    {PE_PIPE_TABS.map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        className={pePipeFilter === t ? 'active' : ''}
-                        onClick={() => onPePipeFilterChange(t)}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
               <div className="toolbar-right">
                 <input

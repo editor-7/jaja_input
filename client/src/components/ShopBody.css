@@ -65,7 +65,7 @@
 }
 .filter-row button.active { font-weight: 500; }
 
-/* PE 탭 하위 구분 */
+/* 서브 탭 행 (필요 시 재사용) */
 .filter-row-sub {
   margin-top: 0.35rem;
   padding-top: 0.35rem;

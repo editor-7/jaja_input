@@ -26,10 +26,9 @@ function ShopContent({ user, onLogout }) {
   const navigate = useNavigate()
   const { pendingWelcome, clearWelcome } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
-  // 상단: PLP / PE / 노출관 / 인건비만 (PE만 세부 탭, DB 공통은 노출관에 포함)
+  // 상단: PLP / PE / 노출관 / 인건비만 (DB 공통은 노출관에 포함)
   const categories = ['전체', ...SHOP_SECTIONS, '인건비만']
   const [categoryFilter, setCategoryFilter] = useState('전체')
-  const [pePipeFilter, setPePipeFilter] = useState('전체')
   const {
     cart,
     groupedCart,
@@ -271,9 +270,6 @@ function ShopContent({ user, onLogout }) {
         )
       } else if (SHOP_SECTIONS.includes(categoryFilter)) {
         result = result.filter((p) => getShopSection(p) === categoryFilter)
-        if (categoryFilter === 'PE' && pePipeFilter !== '전체') {
-          result = result.filter((p) => getPePipeKind(p) === pePipeFilter)
-        }
       }
     }
     // 자재 품목 먼저, 그 다음 인건 (자재 선택 시 인건이 따라오는 설계)
@@ -283,7 +279,7 @@ function ShopContent({ user, onLogout }) {
       if (is자재A !== is자재B) return is자재A - is자재B
       return skuSort(a, b)
     })
-  }, [products, searchTerm, categoryFilter, pePipeFilter])
+  }, [products, searchTerm, categoryFilter])
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE))
   const paginatedProducts = useMemo(() => {
@@ -293,11 +289,7 @@ function ShopContent({ user, onLogout }) {
 
   useEffect(() => {
     setProductPage(1)
-  }, [searchTerm, categoryFilter, pePipeFilter])
-
-  useEffect(() => {
-    if (categoryFilter !== 'PE') setPePipeFilter('전체')
-  }, [categoryFilter])
+  }, [searchTerm, categoryFilter])
 
   useEffect(() => {
     if (productPage > totalPages && totalPages > 0) setProductPage(totalPages)
@@ -344,8 +336,6 @@ function ShopContent({ user, onLogout }) {
         onSearchChange={setSearchTerm}
         categoryFilter={categoryFilter}
         onCategoryChange={setCategoryFilter}
-        pePipeFilter={pePipeFilter}
-        onPePipeFilterChange={setPePipeFilter}
         onGoCart={() => navigate('/cart')}
         categories={categories}
         showOrderList={showOrderList}

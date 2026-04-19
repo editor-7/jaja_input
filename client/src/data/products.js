@@ -22,9 +22,6 @@ export const MAIN_CATEGORY_LABELS = {
 /** 쇼핑몰 상단 큰 구분 (탭 키) — PLP / PE / 노출관 (DB·엑셀 «공통»은 노출관 탭에서 함께 표시) */
 export const SHOP_SECTIONS = ['PLP', 'PE', '노출관']
 
-/** PE 탭 안 세부 (표시용) */
-export const PE_PIPE_TABS = ['전체', 'SPPG', '배관']
-
 export function getMainCategoryLabel(id) {
   if (!id || typeof id !== 'string') return ''
   return MAIN_CATEGORY_LABELS[id] || id
