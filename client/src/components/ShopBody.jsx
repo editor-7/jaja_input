@@ -10,7 +10,6 @@ import {
   getExposedPipeKind,
   getSpecFromProduct,
   PE_PIPE_TABS,
-  EXPOSED_PIPE_TABS,
 } from '@/data/products'
 import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
 import { downloadOrderListAsExcel } from '@/utils/exportOrderListToExcel'
@@ -24,8 +23,6 @@ function ShopBody({
   onCategoryChange,
   pePipeFilter = '전체',
   onPePipeFilterChange,
-  exposedPipeFilter = '전체',
-  onExposedPipeFilterChange,
   onGoCart,
   categories = [],
   showOrderList,
@@ -617,20 +614,6 @@ function ShopBody({
                         type="button"
                         className={pePipeFilter === t ? 'active' : ''}
                         onClick={() => onPePipeFilterChange(t)}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {categoryFilter === '노출관' && typeof onExposedPipeFilterChange === 'function' && (
-                  <div className="filter-row filter-row-sub" role="group" aria-label="노출관 세부">
-                    {EXPOSED_PIPE_TABS.map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        className={exposedPipeFilter === t ? 'active' : ''}
-                        onClick={() => onExposedPipeFilterChange(t)}
                       >
                         {t}
                       </button>

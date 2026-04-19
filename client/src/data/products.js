@@ -25,9 +25,6 @@ export const SHOP_SECTIONS = ['PLP', 'PE', '노출관', '공통']
 /** PE 탭 안 세부 (표시용) */
 export const PE_PIPE_TABS = ['전체', 'SPPG', '배관']
 
-/** 노출관 탭 안 세부: SPPG, 백강관, 그 외 배관류 */
-export const EXPOSED_PIPE_TABS = ['전체', 'SPPG', '백강관', '배관']
-
 export function getMainCategoryLabel(id) {
   if (!id || typeof id !== 'string') return ''
   return MAIN_CATEGORY_LABELS[id] || id
