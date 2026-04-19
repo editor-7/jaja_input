@@ -93,8 +93,8 @@ function normalizeStoredCatalogMain(s) {
   if (!t) return ''
   if (MAIN_CATEGORIES.includes(t)) return t
   const collapsed = t.replace(/\s+/g, '')
-  // 엑셀에 "PEM"만 적힌 경우 → 쇼핑 PE(지하관PEM)
-  if (/^pem$/i.test(collapsed)) return '지하관PEM'
+  // 엑셀·DB에 PEM / PEM관 / PE M 등 → 쇼핑 PE(지하관PEM). (PEMxxx 영단어 확장은 제외)
+  if (/^pem(?![a-zA-Z])/i.test(collapsed)) return '지하관PEM'
   const found = MAIN_CATEGORIES.find((m) => collapsed === m.replace(/\s+/g, ''))
   return found || ''
 }
@@ -117,6 +117,9 @@ export function getMainCategory(product) {
   const rawSku = product.sku || ''
   const rawDesc = product.desc || ''
   const rawAll = rawName + rawSku + rawDesc
+
+  // 품명 등에 PEM(지하 PE)이 명시되면 노출 피팅·「백」 힌트보다 PE 구간 우선
+  const pemCatalogHint = /\bPEM\b/i.test(rawAll)
 
   // 노출 명시·백강·SPPG 등 (PLP·「백」글자 힌트보다 우선할 강한 노출 신호)
   const exposedStrictHint =
@@ -144,16 +147,22 @@ export function getMainCategory(product) {
     /엘보|정티|백티|백엘보|백관|백\s*엘보|백\s*티/i.test(rawAll) ||
     /(?:^|[\s,(\[/])백(?:$|[\s,)\]/×\-])/i.test(rawAll)
   const exposedPipeVisualHint =
-    !plpPipeHint && (exposedBaekHangul || exposedCommonFittingHint)
+    !plpPipeHint && !pemCatalogHint && (exposedBaekHangul || exposedCommonFittingHint)
 
-  const exposedHintForOverride = exposedStrictHint || exposedPipeVisualHint
-
-  // DB mainCategory가 먼저 적용되면 휴리스틱이 스킵됨 → PEM/공통이어도 노출 신호면 노출관으로 보정
+  // 명시 노출·백강·SPPG → DB가 PEM/공통이어도 노출관으로 보정
   if (
-    exposedHintForOverride &&
+    exposedStrictHint &&
     (fromMain === '지하관PEM' ||
       fromMain === '공통' ||
       (!fromMain && (fromCat === '지하관PEM' || fromCat === '공통')))
+  ) {
+    return '노출관'
+  }
+
+  // 백·엘보 등은 «공통» 오분류만 노출로 — 지하관PEM(PE)은 품명에 PEM 있으면 PE 유지
+  if (
+    exposedPipeVisualHint &&
+    (fromMain === '공통' || (!fromMain && fromCat === '공통'))
   ) {
     return '노출관'
   }
@@ -175,12 +184,23 @@ export function getMainCategory(product) {
     return '지하관PEM'
   }
 
+  // DB가 공통인데 품명에 PEM(지하 PE)이 있으면 PE(지하관PEM)로
+  if (
+    pemCatalogHint &&
+    !exposedStrictHint &&
+    (fromMain === '공통' || (!fromMain && fromCat === '공통'))
+  ) {
+    return '지하관PEM'
+  }
+
   if (fromMain) return fromMain
   if (fromCat) return fromCat
 
   if (exposedStrictHint) return '노출관'
 
   if (plpPipeHint) return '지하관PLP'
+
+  if (pemCatalogHint && !exposedStrictHint) return '지하관PEM'
 
   if (exposedPipeVisualHint) return '노출관'
 
