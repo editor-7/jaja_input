@@ -19,8 +19,8 @@ export const MAIN_CATEGORY_LABELS = {
   공통: '공통',
 }
 
-/** 쇼핑몰 상단 큰 구분 (탭 키) — PLP / PE / 노출관 / 공통 */
-export const SHOP_SECTIONS = ['PLP', 'PE', '노출관', '공통']
+/** 쇼핑몰 상단 큰 구분 (탭 키) — PLP / PE / 노출관 (DB·엑셀 «공통»은 노출관 탭에서 함께 표시) */
+export const SHOP_SECTIONS = ['PLP', 'PE', '노출관']
 
 /** PE 탭 안 세부 (표시용) */
 export const PE_PIPE_TABS = ['전체', 'SPPG', '배관']
@@ -30,13 +30,12 @@ export function getMainCategoryLabel(id) {
   return MAIN_CATEGORY_LABELS[id] || id
 }
 
-/** DB 대분류 → 쇼핑 상단 구간 */
+/** DB 대분류 → 쇼핑 상단 구간 (공통·미분류는 노출관 탭으로 묶음) */
 export function getShopSection(product) {
   const mc = getMainCategory(product)
   if (mc === '지하관PLP') return 'PLP'
   if (mc === '지하관PEM') return 'PE'
-  if (mc === '노출관') return '노출관'
-  return '공통'
+  return '노출관'
 }
 
 /** PE 구간만: SPPG vs 배관(PEM·PE관 등 그 외) */
