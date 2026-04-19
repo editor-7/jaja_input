@@ -111,7 +111,7 @@ export function getMainCategory(product) {
   const rawDesc = product.desc || ''
   const rawAll = rawName + rawSku + rawDesc
 
-  // PE 배관 본류가 아닌 부속(로켓팅·와이어·밸브박스·흄관 등) — PEM으로 저장돼 있어도 PE 탭에서 제외
+  // PE 배관 본류가 아닌 부속(로켓팅·와이어·밸브박스·흄관 등) — PEM이어도 대분류는 노출관(PE 탭 제외)
   const nonPeAuxiliaryHint =
     /로켓팅|로케이팅|리켓팅/i.test(rawAll) ||
     /와이어|locating\s*wire|\bwire\b/i.test(rawAll) ||
@@ -204,9 +204,9 @@ export function getMainCategory(product) {
     return '지하관PEM'
   }
 
-  if (fromMain === '지하관PEM' && nonPeAuxiliaryHint) return '공통'
+  if (fromMain === '지하관PEM' && nonPeAuxiliaryHint) return '노출관'
   if (fromMain) return fromMain
-  if (fromCat === '지하관PEM' && nonPeAuxiliaryHint) return '공통'
+  if (fromCat === '지하관PEM' && nonPeAuxiliaryHint) return '노출관'
   if (fromCat) return fromCat
 
   if (exposedStrictHint) return '노출관'
@@ -234,6 +234,7 @@ export function getMainCategory(product) {
     return '지하관PEM'
   }
   if (pemBuriedHint && !exposedStrictHint && !exposedPipeVisualHint && !nonPeAuxiliaryHint) return '지하관PEM'
+  if (nonPeAuxiliaryHint) return '노출관'
   return '공통'
 }
 
