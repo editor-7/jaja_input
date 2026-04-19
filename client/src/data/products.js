@@ -104,9 +104,7 @@ function normalizeStoredCatalogMain(s) {
 export function getMainCategory(product) {
   if (!product) return '공통'
   const fromMain = normalizeStoredCatalogMain(product.mainCategory)
-  if (fromMain) return fromMain
   const fromCat = normalizeStoredCatalogMain(product.category)
-  if (fromCat) return fromCat
 
   const name = normalizeForCategory(product.name || '')
   const sku = normalizeForCategory(product.sku || '')
@@ -118,12 +116,26 @@ export function getMainCategory(product) {
   const rawDesc = product.desc || ''
   const rawAll = rawName + rawSku + rawDesc
 
-  // 노출관: 한글·외기류·백강관·SPPG 키워드를 PLP/PEM 휴리스틱보다 먼저
+  // 노출관: 한글·외기류·백강관·SPPG 키워드
   const exposedHint =
     /노출관|노출|외노출|노출배관|노출용|외기관|외기배관|백강관|백강/i.test(rawAll) ||
     /sppg/i.test(rawAll) ||
     /노출관|노출/.test(combined) ||
     combined.includes('exposed')
+
+  // DB mainCategory가 먼저 적용되면 휴리스틱이 스킵됨 → PEM/공통이어도 품명 등에 노출 힌트면 노출관으로 보정
+  if (
+    exposedHint &&
+    (fromMain === '지하관PEM' ||
+      fromMain === '공통' ||
+      (!fromMain && (fromCat === '지하관PEM' || fromCat === '공통')))
+  ) {
+    return '노출관'
+  }
+
+  if (fromMain) return fromMain
+  if (fromCat) return fromCat
+
   if (exposedHint) return '노출관'
 
   if (combined.includes('plp') || combinedNoSpace.includes('plp')) return '지하관PLP'
