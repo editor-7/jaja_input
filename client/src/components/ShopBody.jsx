@@ -7,6 +7,7 @@ import {
   getShopCategoryTabLabel,
   getSpecFromProduct,
   PE_PIPE_TABS,
+  EXPOSED_PIPE_TABS,
 } from '@/data/products'
 import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
 import { downloadOrderListAsExcel } from '@/utils/exportOrderListToExcel'
@@ -20,6 +21,8 @@ function ShopBody({
   onCategoryChange,
   pePipeFilter = '전체',
   onPePipeFilterChange,
+  exposedPipeFilter = '전체',
+  onExposedPipeFilterChange,
   onGoCart,
   categories = [],
   showOrderList,
@@ -136,7 +139,7 @@ function ShopBody({
   }, [filteredProducts])
 
   const syncCartForProduct = (p, newQty) => {
-    // 일반 모드: 정확 수량 동기화 / 공통·인건만 모드: 기존 누적 담기 유지
+    // 일반 모드: 정확 수량 동기화 / 공통·인건비만 모드: 기존 누적 담기 유지
     if (cartAddMode) {
       if (newQty >= 1) addToCart(p, newQty)
       else if (typeof setProductQty === 'function') setProductQty(p, 0)
@@ -604,13 +607,27 @@ function ShopBody({
                   ))}
                 </div>
                 {categoryFilter === 'PE' && typeof onPePipeFilterChange === 'function' && (
-                  <div className="filter-row filter-row-pe-sub" role="group" aria-label="PE 세부">
+                  <div className="filter-row filter-row-sub" role="group" aria-label="PE 세부">
                     {PE_PIPE_TABS.map((t) => (
                       <button
                         key={t}
                         type="button"
                         className={pePipeFilter === t ? 'active' : ''}
                         onClick={() => onPePipeFilterChange(t)}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {categoryFilter === '노출관' && typeof onExposedPipeFilterChange === 'function' && (
+                  <div className="filter-row filter-row-sub" role="group" aria-label="노출관 세부">
+                    {EXPOSED_PIPE_TABS.map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        className={exposedPipeFilter === t ? 'active' : ''}
+                        onClick={() => onExposedPipeFilterChange(t)}
                       >
                         {t}
                       </button>

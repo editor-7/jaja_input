@@ -25,6 +25,9 @@ export const SHOP_SECTIONS = ['PLP', 'PE', '노출관', '공통']
 /** PE 탭 안 세부 (표시용) */
 export const PE_PIPE_TABS = ['전체', 'SPPG', '배관']
 
+/** 노출관 탭 안 세부: SPPG, 백강관, 그 외 배관류 */
+export const EXPOSED_PIPE_TABS = ['전체', 'SPPG', '백강관', '배관']
+
 export function getMainCategoryLabel(id) {
   if (!id || typeof id !== 'string') return ''
   return MAIN_CATEGORY_LABELS[id] || id
@@ -47,9 +50,19 @@ export function getPePipeKind(product) {
   return '배관'
 }
 
+/** 노출관 구간만: SPPG / 백강관 / 배관(그 외) */
+export function getExposedPipeKind(product) {
+  if (!product || getShopSection(product) !== '노출관') return ''
+  const hay = `${product.name || ''} ${product.sku || ''} ${product.desc || ''} ${product.spec || ''}`
+  if (/sppg/i.test(hay)) return 'SPPG'
+  if (/백강/i.test(hay)) return '백강관'
+  return '배관'
+}
+
 /** 쇼핑 탭 라벨 */
 export function getShopCategoryTabLabel(key) {
-  if (key === '전체' || key === '인건만') return key
+  if (key === '전체') return key
+  if (key === '인건비만') return '인건비만'
   if (key === 'PLP') return 'PLP'
   if (key === 'PE') return 'PE'
   if (key === '노출관') return '노출관'

@@ -10,6 +10,7 @@ import {
   getMainCategory,
   getShopSection,
   getPePipeKind,
+  getExposedPipeKind,
   SHOP_SECTIONS,
 } from '@/data/products'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
@@ -25,10 +26,11 @@ function ShopContent({ user, onLogout }) {
   const navigate = useNavigate()
   const { pendingWelcome, clearWelcome } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
-  // 상단: PLP / PE / 노출관 / 공통 (PE 안에서 SPPG·배관)
-  const categories = ['전체', ...SHOP_SECTIONS, '인건만']
+  // 상단: PLP / PE / 노출관 / 공통 / 인건비만 (PE·노출관 안에서 세부)
+  const categories = ['전체', ...SHOP_SECTIONS, '인건비만']
   const [categoryFilter, setCategoryFilter] = useState('전체')
   const [pePipeFilter, setPePipeFilter] = useState('전체')
+  const [exposedPipeFilter, setExposedPipeFilter] = useState('전체')
   const {
     cart,
     groupedCart,
@@ -239,6 +241,7 @@ function ShopContent({ user, onLogout }) {
         const mainCat = (getMainCategory(p) || '').toLowerCase()
         const sec = (getShopSection(p) || '').toLowerCase()
         const peKind = (getPePipeKind(p) || '').toLowerCase()
+        const exposedKind = (getExposedPipeKind(p) || '').toLowerCase()
         const sku = String(p.sku || '').toLowerCase()
         const haystack = [
           p.name || '',
@@ -251,6 +254,7 @@ function ShopContent({ user, onLogout }) {
           mainCat,
           sec,
           peKind,
+          exposedKind,
         ]
           .join(' ')
           .toLowerCase()
@@ -260,7 +264,7 @@ function ShopContent({ user, onLogout }) {
       })
     }
     if (categoryFilter !== '전체' && categoryFilter !== 'all') {
-      if (categoryFilter === '인건만') {
+      if (categoryFilter === '인건비만') {
         result = result.filter(
           (p) =>
             getCategory(p) === '도시가스-인건' &&
@@ -271,6 +275,9 @@ function ShopContent({ user, onLogout }) {
         if (categoryFilter === 'PE' && pePipeFilter !== '전체') {
           result = result.filter((p) => getPePipeKind(p) === pePipeFilter)
         }
+        if (categoryFilter === '노출관' && exposedPipeFilter !== '전체') {
+          result = result.filter((p) => getExposedPipeKind(p) === exposedPipeFilter)
+        }
       }
     }
     // 자재 품목 먼저, 그 다음 인건 (자재 선택 시 인건이 따라오는 설계)
@@ -280,7 +287,7 @@ function ShopContent({ user, onLogout }) {
       if (is자재A !== is자재B) return is자재A - is자재B
       return skuSort(a, b)
     })
-  }, [products, searchTerm, categoryFilter, pePipeFilter])
+  }, [products, searchTerm, categoryFilter, pePipeFilter, exposedPipeFilter])
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE))
   const paginatedProducts = useMemo(() => {
@@ -290,10 +297,11 @@ function ShopContent({ user, onLogout }) {
 
   useEffect(() => {
     setProductPage(1)
-  }, [searchTerm, categoryFilter, pePipeFilter])
+  }, [searchTerm, categoryFilter, pePipeFilter, exposedPipeFilter])
 
   useEffect(() => {
     if (categoryFilter !== 'PE') setPePipeFilter('전체')
+    if (categoryFilter !== '노출관') setExposedPipeFilter('전체')
   }, [categoryFilter])
 
   useEffect(() => {
@@ -302,7 +310,7 @@ function ShopContent({ user, onLogout }) {
 
   const handleAddToCart = (product, qty = 1) => {
     const n = Math.max(0, parseInt(qty) || 0)
-    const addMode = categoryFilter === '공통' || categoryFilter === '인건만'
+    const addMode = categoryFilter === '공통' || categoryFilter === '인건비만'
     if (addMode) {
       addToCart(product, n)
       const laborPair = findLaborPair(product, products)
@@ -343,6 +351,8 @@ function ShopContent({ user, onLogout }) {
         onCategoryChange={setCategoryFilter}
         pePipeFilter={pePipeFilter}
         onPePipeFilterChange={setPePipeFilter}
+        exposedPipeFilter={exposedPipeFilter}
+        onExposedPipeFilterChange={setExposedPipeFilter}
         onGoCart={() => navigate('/cart')}
         categories={categories}
         showOrderList={showOrderList}
@@ -384,7 +394,7 @@ function ShopContent({ user, onLogout }) {
         toggleWishlist={toggleWishlist}
         addToCart={handleAddToCart}
         setProductQty={setProductQty}
-        cartAddMode={categoryFilter === '공통' || categoryFilter === '인건만'}
+        cartAddMode={categoryFilter === '공통' || categoryFilter === '인건비만'}
         groupedCart={groupedCart}
         changeCartQty={changeCartQty}
         removeFromCart={removeFromCart}

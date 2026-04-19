@@ -65,13 +65,13 @@
 }
 .filter-row button.active { font-weight: 500; }
 
-/* PE 탭: SPPG / 배관 세부 */
-.filter-row-pe-sub {
+/* PE·노출관 탭 하위 구분 */
+.filter-row-sub {
   margin-top: 0.35rem;
   padding-top: 0.35rem;
   border-top: 1px dashed var(--color-border, #e0d6cf);
 }
-.filter-row-pe-sub button {
+.filter-row-sub button {
   font-size: 0.88rem;
   padding: 0.35rem 0.75rem;
 }
