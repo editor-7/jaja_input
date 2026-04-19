@@ -6,7 +6,6 @@ import {
   getRemarkDisplay,
   getShopCategoryTabLabel,
   getShopSection,
-  getPePipeKind,
   getExposedPipeKind,
   getSpecFromProduct,
 } from '@/data/products'
@@ -661,8 +660,7 @@ function ShopBody({
                   const colorIndex = groupColorIndices[rowIndex] ?? 0
                   const shopSec = getShopSection(p)
                   const secLabel = getShopCategoryTabLabel(shopSec)
-                  const routeSub =
-                    shopSec === 'PE' ? getPePipeKind(p) : shopSec === '노출관' ? getExposedPipeKind(p) : ''
+                  const routeSub = shopSec === '노출관' ? getExposedPipeKind(p) : ''
                   return (
                   <div key={p._id || p.name} className={`product-list-row group-color-${colorIndex}`}>
                     <span className="col-name">
