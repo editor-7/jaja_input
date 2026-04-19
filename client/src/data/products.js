@@ -143,8 +143,10 @@ export function getMainCategory(product) {
   const exposedCommonFittingHint =
     /엘보|정티|백티|백엘보|백관|백\s*엘보|백\s*티/i.test(rawAll) ||
     /(?:^|[\s,(\[/])백(?:$|[\s,)\]/×\-])/i.test(rawAll)
+  // «백»은 공통이면 코팅·절연조인트(PLP)보다 노출관 우선. 엘보·정티만 있을 때는 PLP와 겹치면 PLP 유지
   const exposedPipeVisualHint =
-    !plpPipeHint && !pemCatalogHint && (exposedBaekHangul || exposedCommonFittingHint)
+    !pemCatalogHint &&
+    ((exposedBaekHangul && !exposedStrictHint) || (!plpPipeHint && exposedCommonFittingHint))
 
   // 명시 노출·백강·SPPG → DB가 PEM/공통이어도 노출관으로 보정
   if (
@@ -195,11 +197,12 @@ export function getMainCategory(product) {
 
   if (exposedStrictHint) return '노출관'
 
+  // 공통·미분류에서 «백»은 PLP(코팅 등)보다 먼저 노출관으로
+  if (exposedPipeVisualHint) return '노출관'
+
   if (plpPipeHint) return '지하관PLP'
 
   if (pemCatalogHint && !exposedStrictHint) return '지하관PEM'
-
-  if (exposedPipeVisualHint) return '노출관'
 
   if (combined.includes('plp') || combinedNoSpace.includes('plp')) return '지하관PLP'
   if (combined.includes('pem') || combinedNoSpace.includes('pem')) return '지하관PEM'
