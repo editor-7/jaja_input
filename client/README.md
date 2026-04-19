@@ -46,6 +46,12 @@ npm run dev
 npm run build
 ```
 
+### Vercel 배포 시
+
+- GitHub 저장소 **루트**를 프로젝트로 연결하고, **Root Directory**는 비워 두는 것이 `루트 vercel.json` 설정과 맞습니다.
+- Cloudinary는 **`client/.env.production`** 에 `VITE_CLOUDINARY_*` 가 들어 있으면, 대시보드에 환경 변수를 따로 넣지 않아도 빌드에 포함됩니다. (값을 바꾸면 이 파일을 수정해 푸시)
+- API는 루트 `vercel.json` 의 `/api` 리라이트로 Cloudtype을 바라봅니다.
+
 ### 프리뷰 (빌드 결과 확인)
 
 ```bash
