@@ -123,6 +123,11 @@ export function getMainCategory(product) {
     /노출관|노출/.test(combined) ||
     combined.includes('exposed')
 
+  // PE 매몰형(지하 매몰) → 공통으로만 저장된 품도 PE(지하관PEM) 구간으로
+  const pemBuriedHint =
+    /PE\s*매몰형|PE매몰형|매몰형\s*PE|매몰형PE/i.test(rawAll) ||
+    /pe\s*매몰형|pe매몰형/i.test(combined)
+
   // DB mainCategory가 먼저 적용되면 휴리스틱이 스킵됨 → PEM/공통이어도 품명 등에 노출 힌트면 노출관으로 보정
   if (
     exposedHint &&
@@ -131,6 +136,14 @@ export function getMainCategory(product) {
       (!fromMain && (fromCat === '지하관PEM' || fromCat === '공통')))
   ) {
     return '노출관'
+  }
+
+  if (
+    pemBuriedHint &&
+    !exposedHint &&
+    (fromMain === '공통' || (!fromMain && fromCat === '공통'))
+  ) {
+    return '지하관PEM'
   }
 
   if (fromMain) return fromMain
@@ -148,6 +161,7 @@ export function getMainCategory(product) {
 
   // PE 관/REDUCER 등 (노출 힌트 없을 때만 지하 PEM으로 간주)
   if (/\bPE\s+REDUCER|PE\s*관|PE관\b|PE\s+배관/i.test(rawName) || /\bPE\s+REDUCER|PE\s*관|PE관/i.test(rawDesc)) return '지하관PEM'
+  if (pemBuriedHint && !exposedHint) return '지하관PEM'
   return '공통'
 }
 
