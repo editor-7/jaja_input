@@ -138,6 +138,10 @@ export function getMainCategory(product) {
     /용접\s*매몰형|용접매몰형/i.test(rawAll) ||
     /절연\s*조인트|절연조인트/i.test(rawAll)
 
+  // 지하 PLP 부속: 보호판·음극(아노드)·시험함 등 — 노출관이 아닌 PLP
+  const plpAncillaryHint =
+    /보호판|mg[\s\-_]*anode|\bmg\s*anode\b|마그네슘\s*아노드|\b아노드\b|\banode\b|test\s*box|테스트\s*박스/i.test(rawAll)
+
   // 노출 배관: «백»·가스켓·후렌지·BALL(볼)·엘보·정티·백티 등 — PEM/공통 DB값 보정·휴리스틱용
   const exposedBaekHangul =
     /백/.test(rawAll) &&
@@ -152,6 +156,7 @@ export function getMainCategory(product) {
   // «백»·가스켓·후렌지·BALL(볼밸브)는 공통이면 코팅(PLP)보다 노출관 우선. 엘보·정티만 있을 때는 PLP와 겹치면 PLP 유지
   const exposedPipeVisualHint =
     !pemCatalogHint &&
+    !plpAncillaryHint &&
     ((exposedBaekHangul && !exposedStrictHint) ||
       (exposedFlangeHint && !exposedStrictHint) ||
       (exposedGasketHint && !exposedStrictHint) ||
@@ -166,6 +171,17 @@ export function getMainCategory(product) {
       (!fromMain && (fromCat === '지하관PEM' || fromCat === '공통')))
   ) {
     return '노출관'
+  }
+
+  // 보호판·아노드·TEST BOX 등 지하 PLP 부속 — 비고 노출관/공통이어도 PLP로
+  if (
+    plpAncillaryHint &&
+    !exposedStrictHint &&
+    (fromMain === '공통' ||
+      fromMain === '노출관' ||
+      (!fromMain && (fromCat === '공통' || fromCat === '노출관')))
+  ) {
+    return '지하관PLP'
   }
 
   // 백·엘보 등은 «공통» 오분류만 노출로 — 지하관PEM(PE)은 품명에 PEM 있으면 PE 유지
@@ -210,6 +226,8 @@ export function getMainCategory(product) {
   if (fromCat) return fromCat
 
   if (exposedStrictHint) return '노출관'
+
+  if (plpAncillaryHint) return '지하관PLP'
 
   // 공통·미분류에서 «백»은 PLP(코팅 등)보다 먼저 노출관으로
   if (exposedPipeVisualHint) return '노출관'
