@@ -8,8 +8,6 @@ import {
   getShopSection,
   getExposedPipeKind,
   getSpecFromProduct,
-  findLaborPair,
-  findMaterialPair,
 } from '@/data/products'
 import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
 import { downloadOrderListAsExcel } from '@/utils/exportOrderListToExcel'
@@ -137,14 +135,32 @@ function ShopBody({
     return arr
   }, [filteredProducts])
 
+  /**
+   * 수량 동기화용 짝 품목 찾기
+   * - GAS-J-xxxx <-> GAS-IN-xxxx / GAS-I-xxxx 만 허용
+   * - 이름/규격 유사도 매칭은 사용하지 않음(오동기화 방지)
+   */
+  const getStrictPairBySku = (product) => {
+    const sku = String(product?.sku || '').trim().toUpperCase()
+    if (!sku) return null
+    const sourceIsMaterial = /^GAS-J-/.test(sku)
+    const targetSkus = sourceIsMaterial
+      ? [sku.replace(/^GAS-J-/, 'GAS-IN-'), sku.replace(/^GAS-J-/, 'GAS-I-')]
+      : /^GAS-(IN|I)-/.test(sku)
+        ? [sku.replace(/^GAS-IN-/, 'GAS-J-').replace(/^GAS-I-/, 'GAS-J-')]
+        : []
+    if (targetSkus.length === 0) return null
+    const expectedCategory = sourceIsMaterial ? '도시가스-인건' : '도시가스-자재'
+    return (
+      products.find((p) => {
+        const ps = String(p?.sku || '').trim().toUpperCase()
+        return targetSkus.includes(ps) && getCategory(p) === expectedCategory
+      }) || null
+    )
+  }
+
   const syncCartForProduct = (p, newQty) => {
-    const category = getCategory(p)
-    const pair =
-      category === '도시가스-자재'
-        ? findLaborPair(p, products)
-        : category === '도시가스-인건'
-          ? findMaterialPair(p, products)
-          : null
+    const pair = getStrictPairBySku(p)
     // 입력칸 수량도 자재/인건 짝으로 같이 동기화 (탭 이동 시에도 동일 수량 표시)
     setListQtys((prev) => {
       const next = { ...prev }
@@ -192,13 +208,7 @@ function ShopBody({
       for (const p of list) {
         const id = p._id ?? p.name
         if (id != null && String(id) !== '') next[id] = 1
-        const cat = getCategory(p)
-        const pair =
-          cat === '도시가스-자재'
-            ? findLaborPair(p, products)
-            : cat === '도시가스-인건'
-              ? findMaterialPair(p, products)
-              : null
+        const pair = getStrictPairBySku(p)
         if (pair) {
           const pid = pair._id ?? pair.name
           if (pid != null && String(pid) !== '') next[pid] = 1
@@ -209,13 +219,7 @@ function ShopBody({
     if (typeof setProductQty !== 'function') return
     for (const p of list) {
       setProductQty(p, 1)
-      const cat = getCategory(p)
-      const pair =
-        cat === '도시가스-자재'
-          ? findLaborPair(p, products)
-          : cat === '도시가스-인건'
-            ? findMaterialPair(p, products)
-            : null
+      const pair = getStrictPairBySku(p)
       if (pair) setProductQty(pair, 1)
     }
   }
