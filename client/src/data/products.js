@@ -23,8 +23,38 @@ const COMMON_TAB_ONLY_SKUS = new Set([
   'GAS-J-0280',
 ])
 
-/** 로켓팅·밸브박스/흄관 등 PE 시공 부속 — DB가 노출관이어도 PE(지하관PEM) 탭으로 고정 */
-const PE_WORKSITE_AUX_SKUS = new Set(['GAS-J-0266', 'GAS-J-0275', 'GAS-J-0276'])
+/** PE 시공 품목 — DB/휴리스틱과 무관하게 PE(지하관PEM) 탭으로 고정 */
+const PE_WORKSITE_AUX_SKUS = new Set([
+  // 로켓팅·밸브박스/흄관
+  'GAS-J-0266',
+  'GAS-J-0275',
+  'GAS-J-0276',
+  // TRANSITION FITTING
+  'GAS-J-0119',
+  'GAS-J-0120',
+  'GAS-J-0121',
+  'GAS-J-0122',
+  'GAS-J-0123',
+  'GAS-J-0124',
+  'GAS-J-0125',
+  'GAS-J-0126',
+  'GAS-J-0127',
+  // PE 시공 부대/공정
+  'GAS-J-0267',
+  'GAS-J-0268',
+  'GAS-J-0269',
+  'GAS-J-0270',
+  'GAS-J-0271',
+  'GAS-J-0272',
+  'GAS-J-0273',
+  'GAS-IN-0043',
+  'GAS-IN-0044',
+  'GAS-IN-0045',
+  'GAS-IN-0046',
+  // 잡자재비(운영 중 중복 SKU 존재)
+  'GAS-J-0281',
+  'GAS-J-0580',
+])
 
 /** 관로(대분류) 표시명 — 관리자·엑셀 체계 (DB mainCategory) */
 export const MAIN_CATEGORY_LABELS = {
