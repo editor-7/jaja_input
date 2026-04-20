@@ -6,8 +6,15 @@ const LEFT = { horizontal: 'left', vertical: 'center' }
 const STYLE_CENTER = { alignment: CENTER }
 const STYLE_CENTER_NUM = { alignment: CENTER, numFmt: '#,##0' }
 const STYLE_LEFT = { alignment: LEFT }
+const STYLE_LEFT_WRAP = { alignment: { horizontal: 'left', vertical: 'top', wrapText: true } }
 const COL_품목 = 0
 const NUM_COLUMNS = [4, 5, 6, 7, 8]
+const MAIN_CATEGORY_ORDER = ['지하관PLP', '지하관PEM', '노출관', 'GAS METER', '공통']
+
+function getMainCategoryRank(v) {
+  const idx = MAIN_CATEGORY_ORDER.indexOf(v)
+  return idx === -1 ? MAIN_CATEGORY_ORDER.length : idx
+}
 
 /**
  * 전체 상품 목록을 엑셀 파일로 다운로드 (관리자용)
@@ -46,7 +53,15 @@ export function downloadProductsAsExcel(products) {
       row.인건비단가 = price
     }
   }
-  const dataRows = Array.from(keyToRow.values()).map((r) => {
+  const dataRows = Array.from(keyToRow.values())
+    .sort((a, b) => {
+      const rankDiff = getMainCategoryRank(a.mainCategory) - getMainCategoryRank(b.mainCategory)
+      if (rankDiff !== 0) return rankDiff
+      const nameDiff = String(a.품목 || '').localeCompare(String(b.품목 || ''), 'ko')
+      if (nameDiff !== 0) return nameDiff
+      return String(a.규격 || '').localeCompare(String(b.규격 || ''), 'ko')
+    })
+    .map((r) => {
     const has자재 = r.자재비단가 > 0
     const has인건 = r.인건비단가 > 0
     const 비고1 = r.mainCategory || '공통'
@@ -72,7 +87,7 @@ export function downloadProductsAsExcel(products) {
     ws[`I${sumRow}`] = { t: 'n', f: `SUM(I${first}:I${last})` }
   }
   ws['!cols'] = [
-    { wch: 24 },
+    { wch: 44 },
     { wch: 10 },
     { wch: 8 },
     { wch: 8 },
@@ -92,7 +107,7 @@ export function downloadProductsAsExcel(products) {
         const addr = XLSX.utils.encode_cell({ r: R, c: C })
         if (!ws[addr]) continue
         if (C === COL_품목) {
-          ws[addr].s = { ...STYLE_LEFT }
+          ws[addr].s = { ...STYLE_LEFT_WRAP }
         } else {
           const isNumCol = NUM_COLUMNS.includes(C)
           ws[addr].s = isNumCol ? { ...STYLE_CENTER_NUM } : { ...STYLE_CENTER }
