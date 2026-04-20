@@ -263,11 +263,8 @@ function ShopContent({ user, onLogout }) {
     }
     if (categoryFilter !== '전체' && categoryFilter !== 'all') {
       if (categoryFilter === '인건비만') {
-        result = result.filter(
-          (p) =>
-            getCategory(p) === '도시가스-인건' &&
-            (p.laborOnly === true || !findMaterialPair(p, products))
-        )
+        // 인건비만 탭은 모든 인건 상품을 노출
+        result = result.filter((p) => getCategory(p) === '도시가스-인건')
       } else if (SHOP_SECTIONS.includes(categoryFilter)) {
         result = result.filter((p) => getShopSection(p) === categoryFilter)
       }
