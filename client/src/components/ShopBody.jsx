@@ -150,10 +150,16 @@ function ShopBody({
         : []
     if (targetSkus.length === 0) return null
     const expectedCategory = sourceIsMaterial ? '도시가스-인건' : '도시가스-자재'
+    const sourceName = getDisplayItemName(product).trim()
+    const sourceSpec = (getSpecFromProduct(product) || '').replace(/\s+/g, '').toUpperCase()
     return (
       products.find((p) => {
         const ps = String(p?.sku || '').trim().toUpperCase()
-        return targetSkus.includes(ps) && getCategory(p) === expectedCategory
+        if (!targetSkus.includes(ps) || getCategory(p) !== expectedCategory) return false
+        // SKU 번호가 우연히 겹쳐도 품명/규격이 같은 진짜 짝만 동기화
+        const targetName = getDisplayItemName(p).trim()
+        const targetSpec = (getSpecFromProduct(p) || '').replace(/\s+/g, '').toUpperCase()
+        return sourceName === targetName && sourceSpec === targetSpec
       }) || null
     )
   }
