@@ -219,6 +219,31 @@ function ShopBody({
     }
   }
 
+  /** 전체 탭: 전체 상품 수량을 1로 일괄 설정 */
+  const handleBulkAllProductsQtyOne = () => {
+    const list = Array.isArray(products) ? products : []
+    if (list.length === 0 || productsLoading) return
+    setListQtys((prev) => {
+      const next = { ...prev }
+      for (const p of list) {
+        const id = p._id ?? p.name
+        if (id != null && String(id) !== '') next[id] = 1
+      }
+      return next
+    })
+    if (typeof setProductQty !== 'function') return
+    for (const p of list) setProductQty(p, 1)
+  }
+
+  /** 전체 탭: 전체 상품을 1개씩 기준으로 엑셀 다운로드 */
+  const handleDownloadAllProductsExcel = () => {
+    const list = Array.isArray(products) ? products : []
+    if (list.length === 0) return
+    const allQtyOne = list.map((p) => ({ ...p, count: 1 }))
+    const total = allQtyOne.reduce((sum, p) => sum + (Number(p.price) || 0), 0)
+    downloadCartAsExcel(allQtyOne, total)
+  }
+
   useEffect(() => {
     if (!isMobileCartOpen) return
     const onEsc = (e) => {
@@ -721,6 +746,28 @@ function ShopBody({
                   >
                     현재 목록 전체 1개
                   </button>
+                  {categoryFilter === '전체' && (
+                    <>
+                      <button
+                        type="button"
+                        className="bulk-qty-one-btn"
+                        onClick={handleBulkAllProductsQtyOne}
+                        disabled={productsLoading || !Array.isArray(products) || products.length === 0}
+                        title="전체 상품 수량을 1개로 설정해 장바구니에 반영합니다"
+                      >
+                        전체 품목 1개
+                      </button>
+                      <button
+                        type="button"
+                        className="bulk-qty-one-btn"
+                        onClick={handleDownloadAllProductsExcel}
+                        disabled={!Array.isArray(products) || products.length === 0}
+                        title="전체 상품을 1개씩 기준으로 엑셀 다운로드합니다"
+                      >
+                        전체 엑셀(1개씩)
+                      </button>
+                    </>
+                  )}
                   {onRetryProducts && (
                     <button type="button" className="refresh-products-btn" onClick={onRetryProducts} title="상품 목록 새로고침">
                       새로고침
