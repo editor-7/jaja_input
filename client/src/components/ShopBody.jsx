@@ -9,6 +9,7 @@ import {
   getExposedPipeKind,
   getSpecFromProduct,
   findLaborPair,
+  findMaterialPair,
 } from '@/data/products'
 import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
 import { downloadOrderListAsExcel } from '@/utils/exportOrderListToExcel'
@@ -137,27 +138,43 @@ function ShopBody({
   }, [filteredProducts])
 
   const syncCartForProduct = (p, newQty) => {
-    const isMaterial = getCategory(p) === '도시가스-자재'
-    const laborPair = isMaterial ? findLaborPair(p, products) : null
+    const category = getCategory(p)
+    const pair =
+      category === '도시가스-자재'
+        ? findLaborPair(p, products)
+        : category === '도시가스-인건'
+          ? findMaterialPair(p, products)
+          : null
+    // 입력칸 수량도 자재/인건 짝으로 같이 동기화 (탭 이동 시에도 동일 수량 표시)
+    setListQtys((prev) => {
+      const next = { ...prev }
+      const id = p._id ?? p.name
+      if (id != null && String(id) !== '') next[id] = newQty
+      if (pair) {
+        const pid = pair._id ?? pair.name
+        if (pid != null && String(pid) !== '') next[pid] = newQty
+      }
+      return next
+    })
     // 일반 모드: 정확 수량 동기화 / 공통·인건비만 모드: 기존 누적 담기 유지
     if (cartAddMode) {
       if (newQty >= 1) {
         addToCart(p, newQty)
-        if (laborPair) addToCart(laborPair, newQty)
+        if (pair) addToCart(pair, newQty)
       } else if (typeof setProductQty === 'function') {
         setProductQty(p, 0)
-        if (laborPair) setProductQty(laborPair, 0)
+        if (pair) setProductQty(pair, 0)
       }
       return
     }
     if (typeof setProductQty === 'function') {
       setProductQty(p, newQty)
-      if (laborPair) setProductQty(laborPair, newQty)
+      if (pair) setProductQty(pair, newQty)
       return
     }
     if (newQty >= 1) {
       addToCart(p, newQty)
-      if (laborPair) addToCart(laborPair, newQty)
+      if (pair) addToCart(pair, newQty)
     }
   }
 
@@ -175,12 +192,16 @@ function ShopBody({
       for (const p of list) {
         const id = p._id ?? p.name
         if (id != null && String(id) !== '') next[id] = 1
-        if (cartAddMode) {
-          const labor = findLaborPair(p, products)
-          if (labor) {
-            const lid = labor._id ?? labor.name
-            if (lid != null && String(lid) !== '') next[lid] = 1
-          }
+        const cat = getCategory(p)
+        const pair =
+          cat === '도시가스-자재'
+            ? findLaborPair(p, products)
+            : cat === '도시가스-인건'
+              ? findMaterialPair(p, products)
+              : null
+        if (pair) {
+          const pid = pair._id ?? pair.name
+          if (pid != null && String(pid) !== '') next[pid] = 1
         }
       }
       return next
@@ -188,10 +209,14 @@ function ShopBody({
     if (typeof setProductQty !== 'function') return
     for (const p of list) {
       setProductQty(p, 1)
-      if (cartAddMode) {
-        const labor = findLaborPair(p, products)
-        if (labor) setProductQty(labor, 1)
-      }
+      const cat = getCategory(p)
+      const pair =
+        cat === '도시가스-자재'
+          ? findLaborPair(p, products)
+          : cat === '도시가스-인건'
+            ? findMaterialPair(p, products)
+            : null
+      if (pair) setProductQty(pair, 1)
     }
   }
 
