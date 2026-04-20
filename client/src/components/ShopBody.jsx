@@ -213,6 +213,18 @@ function ShopBody({
     downloadProductsAsExcel(list)
   }
 
+  /** 현재 카테고리(필터) 기준 수량 입력형 엑셀 다운로드 */
+  const handleDownloadCategoryProductsExcel = () => {
+    const list =
+      Array.isArray(allFilteredProducts) && allFilteredProducts.length > 0
+        ? allFilteredProducts
+        : Array.isArray(filteredProducts)
+          ? filteredProducts
+          : []
+    if (list.length === 0) return
+    downloadProductsAsExcel(list)
+  }
+
   useEffect(() => {
     if (!isMobileCartOpen) return
     const onEsc = (e) => {
@@ -728,6 +740,15 @@ function ShopBody({
                       </button>
                     </>
                   )}
+                  <button
+                    type="button"
+                    className="bulk-qty-one-btn"
+                    onClick={handleDownloadCategoryProductsExcel}
+                    disabled={productsLoading || allFilteredCount === 0}
+                    title="현재 카테고리 전체 품목을 수량 입력형 엑셀로 다운로드합니다"
+                  >
+                    카테고리 엑셀(수량입력)
+                  </button>
                   {onRetryProducts && (
                     <button type="button" className="refresh-products-btn" onClick={onRetryProducts} title="상품 목록 새로고침">
                       새로고침
