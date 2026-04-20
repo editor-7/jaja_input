@@ -219,20 +219,20 @@ function ShopBody({
     }
   }
 
-  /** 전체 탭: 전체 상품 수량을 1로 일괄 설정 */
-  const handleBulkAllProductsQtyOne = () => {
+  /** 전체 탭: 전체 상품 수량을 0으로 일괄 설정 */
+  const handleBulkAllProductsQtyZero = () => {
     const list = Array.isArray(products) ? products : []
     if (list.length === 0 || productsLoading) return
     setListQtys((prev) => {
       const next = { ...prev }
       for (const p of list) {
         const id = p._id ?? p.name
-        if (id != null && String(id) !== '') next[id] = 1
+        if (id != null && String(id) !== '') next[id] = 0
       }
       return next
     })
     if (typeof setProductQty !== 'function') return
-    for (const p of list) setProductQty(p, 1)
+    for (const p of list) setProductQty(p, 0)
   }
 
   /** 전체 탭: 전체 상품을 1개씩 기준으로 엑셀 다운로드 */
@@ -751,11 +751,11 @@ function ShopBody({
                       <button
                         type="button"
                         className="bulk-qty-one-btn"
-                        onClick={handleBulkAllProductsQtyOne}
+                        onClick={handleBulkAllProductsQtyZero}
                         disabled={productsLoading || !Array.isArray(products) || products.length === 0}
-                        title="전체 상품 수량을 1개로 설정해 장바구니에 반영합니다"
+                        title="전체 상품 수량을 0으로 설정해 장바구니에서 제거합니다"
                       >
-                        전체 품목 1개
+                        전체 수량 0
                       </button>
                       <button
                         type="button"
