@@ -171,17 +171,7 @@ function ShopBody({
       }
       return next
     })
-    // 일반 모드: 정확 수량 동기화 / 공통·인건비만 모드: 기존 누적 담기 유지
-    if (cartAddMode) {
-      if (newQty >= 1) {
-        addToCart(p, newQty)
-        if (pair) addToCart(pair, newQty)
-      } else if (typeof setProductQty === 'function') {
-        setProductQty(p, 0)
-        if (pair) setProductQty(pair, 0)
-      }
-      return
-    }
+    // 수량 입력/증감은 탭과 무관하게 "정확 수량(set)"으로 동기화
     if (typeof setProductQty === 'function') {
       setProductQty(p, newQty)
       if (pair) setProductQty(pair, newQty)
