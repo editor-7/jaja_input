@@ -272,6 +272,10 @@ function ShopContent({ user, onLogout }) {
         result = result.filter((p) => getShopSection(p) === categoryFilter)
       }
     }
+    // 요청: 인건 품목은 인건비만 탭에서만 노출
+    if (categoryFilter !== '인건비만') {
+      result = result.filter((p) => getCategory(p) !== '도시가스-인건')
+    }
     // 자재 품목 먼저, 그 다음 인건 (자재 선택 시 인건이 따라오는 설계)
     return [...result].sort((a, b) => {
       const is자재A = getCategory(a) === '도시가스-자재' ? 0 : 1

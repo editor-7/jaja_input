@@ -137,17 +137,28 @@ function ShopBody({
   }, [filteredProducts])
 
   const syncCartForProduct = (p, newQty) => {
+    const isMaterial = getCategory(p) === '도시가스-자재'
+    const laborPair = isMaterial ? findLaborPair(p, products) : null
     // 일반 모드: 정확 수량 동기화 / 공통·인건비만 모드: 기존 누적 담기 유지
     if (cartAddMode) {
-      if (newQty >= 1) addToCart(p, newQty)
-      else if (typeof setProductQty === 'function') setProductQty(p, 0)
+      if (newQty >= 1) {
+        addToCart(p, newQty)
+        if (laborPair) addToCart(laborPair, newQty)
+      } else if (typeof setProductQty === 'function') {
+        setProductQty(p, 0)
+        if (laborPair) setProductQty(laborPair, 0)
+      }
       return
     }
     if (typeof setProductQty === 'function') {
       setProductQty(p, newQty)
+      if (laborPair) setProductQty(laborPair, newQty)
       return
     }
-    if (newQty >= 1) addToCart(p, newQty)
+    if (newQty >= 1) {
+      addToCart(p, newQty)
+      if (laborPair) addToCart(laborPair, newQty)
+    }
   }
 
   /** 현재 필터·검색에 맞는 전체 품목 수량 1 + 장바구니 반영(공통·인건비만 탭은 자재+대응 인건 1세트) */

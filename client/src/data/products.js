@@ -57,6 +57,13 @@ const PE_WORKSITE_AUX_SKUS = new Set([
   'GAS-J-0580',
 ])
 
+/** 지하 PLP 고정 품목 */
+const PLP_FIXED_SKUS = new Set([
+  // 비파괴촬영
+  'GAS-J-0569',
+  'GAS-J-0570',
+])
+
 /** GAS METER 카탈로그 품목 — 비고1/탭에서 GAS METER로 고정 */
 const GAS_METER_SKUS = new Set([
   'GAS-J-0571',
@@ -182,6 +189,7 @@ export function getMainCategory(product) {
   const rawDesc = product.desc || ''
   const rawAll = rawName + rawSku + rawDesc
   const skuNorm = String(rawSku || '').trim().toUpperCase()
+  if (PLP_FIXED_SKUS.has(skuNorm)) return '지하관PLP'
   const gasMeterHint = /gas\s*meter|가스\s*미터/i.test(rawAll)
   if (GAS_METER_SKUS.has(skuNorm) || gasMeterHint) return 'GAS METER'
   if (COMMON_TAB_ONLY_SKUS.has(skuNorm)) return '공통'
