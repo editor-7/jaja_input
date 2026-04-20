@@ -751,7 +751,10 @@ function ShopBody({
                   <div key={p._id || p.name} className={`product-list-row group-color-${colorIndex}`}>
                     <span className="col-name">
                       <span className="list-name">{getDisplayItemName(p)}</span>
-                      <span className="product-route-meta" title="품명·규격·DB 대분류 기준 자동 분류">
+                      <span
+                        className={`product-route-meta ${shopSec === '노출관' ? 'product-route-meta--right' : ''}`}
+                        title="품명·규격·DB 대분류 기준 자동 분류"
+                      >
                         <span className="route-pill route-pill--main">{secLabel}</span>
                         {routeSub ? <span className="route-pill route-pill--sub">{routeSub}</span> : null}
                       </span>
