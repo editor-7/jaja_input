@@ -9,9 +9,9 @@ export const staticProducts = FALLBACK_PRODUCTS
 const GAS_CATEGORIES = ['도시가스-자재', '도시가스-인건']
 
 /** 큰 카테고리: 필터 탭·DB mainCategory 값 (엑셀 비고1과 동일 체계) */
-export const MAIN_CATEGORIES = ['지하관PLP', '지하관PEM', '노출관', '공통']
+export const MAIN_CATEGORIES = ['지하관PLP', '지하관PEM', '노출관', 'GAS METER', '공통']
 
-/** 공통 탭에만 둘 SKU (행정·표지 8종). 그 외 L/S 행정비는 노출관 휴리스틱 */
+/** 공통 탭에만 둘 SKU (행정·표지 + 지정 공정 품목) */
 const COMMON_TAB_ONLY_SKUS = new Set([
   'GAS-J-0262',
   'GAS-J-0263',
@@ -21,6 +21,15 @@ const COMMON_TAB_ONLY_SKUS = new Set([
   'GAS-J-0278',
   'GAS-J-0279',
   'GAS-J-0280',
+  // 요청 반영: 모래·터파기·되메우기·잔토처리는 공통
+  'GAS-J-0269',
+  'GAS-J-0270',
+  'GAS-J-0271',
+  'GAS-J-0272',
+  'GAS-IN-0043',
+  'GAS-IN-0044',
+  'GAS-IN-0045',
+  'GAS-IN-0046',
 ])
 
 /** PE 시공 품목 — DB/휴리스틱과 무관하게 PE(지하관PEM) 탭으로 고정 */
@@ -42,18 +51,27 @@ const PE_WORKSITE_AUX_SKUS = new Set([
   // PE 시공 부대/공정
   'GAS-J-0267',
   'GAS-J-0268',
-  'GAS-J-0269',
-  'GAS-J-0270',
-  'GAS-J-0271',
-  'GAS-J-0272',
   'GAS-J-0273',
-  'GAS-IN-0043',
-  'GAS-IN-0044',
-  'GAS-IN-0045',
-  'GAS-IN-0046',
   // 잡자재비(운영 중 중복 SKU 존재)
   'GAS-J-0281',
   'GAS-J-0580',
+])
+
+/** GAS METER 카탈로그 품목 — 비고1/탭에서 GAS METER로 고정 */
+const GAS_METER_SKUS = new Set([
+  'GAS-J-0571',
+  'GAS-J-0572',
+  'GAS-J-0573',
+  'GAS-J-0574',
+  'GAS-J-0575',
+  'GAS-J-0576',
+  'GAS-J-0577',
+  'GAS-J-0578',
+  'GAS-IN-0093',
+  'GAS-IN-0094',
+  'GAS-IN-0095',
+  'GAS-IN-0096',
+  'GAS-IN-0097',
 ])
 
 /** 관로(대분류) 표시명 — 관리자·엑셀 체계 (DB mainCategory) */
@@ -61,11 +79,12 @@ export const MAIN_CATEGORY_LABELS = {
   지하관PLP: 'PLP (지하관)',
   지하관PEM: 'PE (지하관)',
   노출관: '노출관',
+  'GAS METER': 'GAS METER',
   공통: '공통',
 }
 
-/** 쇼핑몰 상단 큰 구분 (탭 키) — PLP / PE / 노출관 / 공통 */
-export const SHOP_SECTIONS = ['PLP', 'PE', '노출관', '공통']
+/** 쇼핑몰 상단 큰 구분 (탭 키) — PLP / PE / 노출관 / GAS METER / 공통 */
+export const SHOP_SECTIONS = ['PLP', 'PE', '노출관', 'GAS METER', '공통']
 
 export function getMainCategoryLabel(id) {
   if (!id || typeof id !== 'string') return ''
@@ -78,6 +97,7 @@ export function getShopSection(product) {
   if (mc === '지하관PLP') return 'PLP'
   if (mc === '지하관PEM') return 'PE'
   if (mc === '노출관') return '노출관'
+  if (mc === 'GAS METER') return 'GAS METER'
   return '공통'
 }
 
@@ -105,6 +125,7 @@ export function getShopCategoryTabLabel(key) {
   if (key === 'PLP') return 'PLP'
   if (key === 'PE') return 'PE'
   if (key === '노출관') return '노출관'
+  if (key === 'GAS METER') return 'GAS METER'
   if (key === '공통') return '공통'
   return getMainCategoryLabel(key) || key
 }
@@ -132,6 +153,7 @@ function normalizeStoredCatalogMain(s) {
   if (!t) return ''
   if (MAIN_CATEGORIES.includes(t)) return t
   const collapsed = t.replace(/\s+/g, '')
+  if (/^gasmeter$/i.test(collapsed)) return 'GAS METER'
   // 관리자/엑셀에 PE로 저장된 값도 지하관PEM으로 해석
   if (/^pe$/i.test(collapsed)) return '지하관PEM'
   if (/^지하관pe$/i.test(collapsed)) return '지하관PEM'
@@ -160,6 +182,8 @@ export function getMainCategory(product) {
   const rawDesc = product.desc || ''
   const rawAll = rawName + rawSku + rawDesc
   const skuNorm = String(rawSku || '').trim().toUpperCase()
+  const gasMeterHint = /gas\s*meter|가스\s*미터/i.test(rawAll)
+  if (GAS_METER_SKUS.has(skuNorm) || gasMeterHint) return 'GAS METER'
   if (COMMON_TAB_ONLY_SKUS.has(skuNorm)) return '공통'
   if (PE_WORKSITE_AUX_SKUS.has(skuNorm)) return '지하관PEM'
 
