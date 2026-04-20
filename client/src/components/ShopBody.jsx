@@ -6,7 +6,6 @@ import {
   getRemarkDisplay,
   getShopCategoryTabLabel,
   getShopSection,
-  getExposedPipeKind,
   getSpecFromProduct,
 } from '@/data/products'
 import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
@@ -747,7 +746,7 @@ function ShopBody({
                   const colorIndex = groupColorIndices[rowIndex] ?? 0
                   const shopSec = getShopSection(p)
                   const secLabel = getShopCategoryTabLabel(shopSec)
-                  const routeSub = shopSec === '노출관' ? getExposedPipeKind(p) : ''
+                  const routeSub = ''
                   return (
                   <div key={p._id || p.name} className={`product-list-row group-color-${colorIndex}`}>
                     <span className="col-name">
