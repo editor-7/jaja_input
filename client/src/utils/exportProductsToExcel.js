@@ -47,17 +47,30 @@ export function downloadProductsAsExcel(products) {
     }
   }
   const dataRows = Array.from(keyToRow.values()).map((r) => {
-    const 합계 = r.자재비금액 + r.인건비금액
     const has자재 = r.자재비단가 > 0
     const has인건 = r.인건비단가 > 0
     const 비고1 = r.mainCategory || '공통'
     const 비고2 = has자재 && has인건 ? '자재·인건' : has자재 ? '자재' : has인건 ? '인건' : ''
-    return [r.품목, r.규격, r.수량, r.단위, r.자재비단가, r.자재비금액, r.인건비단가, r.인건비금액, 합계, 비고1, 비고2]
+    // 수량은 사용자가 입력, 금액/합계는 엑셀 수식으로 자동 계산
+    return [r.품목, r.규격, '', r.단위, r.자재비단가, 0, r.인건비단가, 0, 0, 비고1, 비고2]
   })
   const 계행 = ['계', '', '', '', '', 0, '', 0, 0, '', '']
   const rows = [headers, ...dataRows, 계행]
   const wb = XLSX.utils.book_new()
   const ws = XLSX.utils.aoa_to_sheet(rows)
+  if (dataRows.length > 0) {
+    const first = 2
+    const last = dataRows.length + 1
+    for (let row = first; row <= last; row++) {
+      ws[`F${row}`] = { t: 'n', f: `IFERROR(C${row}*E${row},0)` }
+      ws[`H${row}`] = { t: 'n', f: `IFERROR(C${row}*G${row},0)` }
+      ws[`I${row}`] = { t: 'n', f: `F${row}+H${row}` }
+    }
+    const sumRow = dataRows.length + 2
+    ws[`F${sumRow}`] = { t: 'n', f: `SUM(F${first}:F${last})` }
+    ws[`H${sumRow}`] = { t: 'n', f: `SUM(H${first}:H${last})` }
+    ws[`I${sumRow}`] = { t: 'n', f: `SUM(I${first}:I${last})` }
+  }
   ws['!cols'] = [
     { wch: 24 },
     { wch: 10 },

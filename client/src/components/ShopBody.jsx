@@ -10,6 +10,7 @@ import {
 } from '@/data/products'
 import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
 import { downloadOrderListAsExcel } from '@/utils/exportOrderListToExcel'
+import { downloadProductsAsExcel } from '@/utils/exportProductsToExcel'
 import { getListQtysStorageKey } from '@/utils/constants'
 import './ShopBody.css'
 
@@ -189,36 +190,6 @@ function ShopBody({
     }
   }
 
-  /** 현재 필터·검색에 맞는 전체 품목 수량 1 + 장바구니 반영(공통·인건비만 탭은 자재+대응 인건 1세트) */
-  const handleBulkAllQtyOne = () => {
-    const list =
-      Array.isArray(allFilteredProducts) && allFilteredProducts.length > 0
-        ? allFilteredProducts
-        : Array.isArray(filteredProducts)
-          ? filteredProducts
-          : []
-    if (list.length === 0 || productsLoading) return
-    setListQtys((prev) => {
-      const next = { ...prev }
-      for (const p of list) {
-        const id = p._id ?? p.name
-        if (id != null && String(id) !== '') next[id] = 1
-        const pair = getStrictPairBySku(p)
-        if (pair) {
-          const pid = pair._id ?? pair.name
-          if (pid != null && String(pid) !== '') next[pid] = 1
-        }
-      }
-      return next
-    })
-    if (typeof setProductQty !== 'function') return
-    for (const p of list) {
-      setProductQty(p, 1)
-      const pair = getStrictPairBySku(p)
-      if (pair) setProductQty(pair, 1)
-    }
-  }
-
   /** 전체 탭: 전체 상품 수량을 0으로 일괄 설정 */
   const handleBulkAllProductsQtyZero = () => {
     const list = Array.isArray(products) ? products : []
@@ -235,13 +206,11 @@ function ShopBody({
     for (const p of list) setProductQty(p, 0)
   }
 
-  /** 전체 탭: 전체 상품을 1개씩 기준으로 엑셀 다운로드 */
+  /** 전체 탭: 수량 입력형 전체 엑셀 다운로드 */
   const handleDownloadAllProductsExcel = () => {
     const list = Array.isArray(products) ? products : []
     if (list.length === 0) return
-    const allQtyOne = list.map((p) => ({ ...p, count: 1 }))
-    const total = allQtyOne.reduce((sum, p) => sum + (Number(p.price) || 0), 0)
-    downloadCartAsExcel(allQtyOne, total)
+    downloadProductsAsExcel(list)
   }
 
   useEffect(() => {
@@ -737,15 +706,6 @@ function ShopBody({
               <div className="section-banner-header">
                 <h2>자재 목록 {!productsLoading && !productsLoadError && allFilteredCount > 0 && `(${allFilteredCount}종)`}</h2>
                 <div className="section-banner-actions">
-                  <button
-                    type="button"
-                    className="bulk-qty-one-btn"
-                    onClick={handleBulkAllQtyOne}
-                    disabled={productsLoading || allFilteredCount === 0}
-                    title="현재 탭·검색 결과 전체 품목 수량을 1로 맞추고 장바구니에 반영합니다"
-                  >
-                    현재 목록 전체 1개
-                  </button>
                   {categoryFilter === '전체' && (
                     <>
                       <button
@@ -762,9 +722,9 @@ function ShopBody({
                         className="bulk-qty-one-btn"
                         onClick={handleDownloadAllProductsExcel}
                         disabled={!Array.isArray(products) || products.length === 0}
-                        title="전체 상품을 1개씩 기준으로 엑셀 다운로드합니다"
+                        title="전체 상품 수량 입력형 엑셀을 다운로드합니다"
                       >
-                        전체 엑셀(1개씩)
+                        전체 엑셀(수량입력)
                       </button>
                     </>
                   )}
