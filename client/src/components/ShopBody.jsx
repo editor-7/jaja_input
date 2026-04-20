@@ -190,22 +190,6 @@ function ShopBody({
     }
   }
 
-  /** 전체 탭: 전체 상품 수량을 0으로 일괄 설정 */
-  const handleBulkAllProductsQtyZero = () => {
-    const list = Array.isArray(products) ? products : []
-    if (list.length === 0 || productsLoading) return
-    setListQtys((prev) => {
-      const next = { ...prev }
-      for (const p of list) {
-        const id = p._id ?? p.name
-        if (id != null && String(id) !== '') next[id] = 0
-      }
-      return next
-    })
-    if (typeof setProductQty !== 'function') return
-    for (const p of list) setProductQty(p, 0)
-  }
-
   /** 전체 탭: 수량 입력형 전체 엑셀 다운로드 */
   const handleDownloadAllProductsExcel = () => {
     const list = Array.isArray(products) ? products : []
@@ -722,37 +706,27 @@ function ShopBody({
               <div className="section-banner-header">
                 <h2>자재 목록 {!productsLoading && !productsLoadError && allFilteredCount > 0 && `(${allFilteredCount}종)`}</h2>
                 <div className="section-banner-actions">
-                  {categoryFilter === '전체' && (
-                    <>
-                      <button
-                        type="button"
-                        className="bulk-qty-one-btn"
-                        onClick={handleBulkAllProductsQtyZero}
-                        disabled={productsLoading || !Array.isArray(products) || products.length === 0}
-                        title="전체 상품 수량을 0으로 설정해 장바구니에서 제거합니다"
-                      >
-                        전체 수량 0
-                      </button>
-                      <button
-                        type="button"
-                        className="bulk-qty-one-btn"
-                        onClick={handleDownloadAllProductsExcel}
-                        disabled={!Array.isArray(products) || products.length === 0}
-                        title="전체 상품 수량 입력형 엑셀을 다운로드합니다"
-                      >
-                        전체 엑셀(수량입력)
-                      </button>
-                    </>
+                  {(categoryFilter === '전체' || categoryFilter === 'all') ? (
+                    <button
+                      type="button"
+                      className="bulk-qty-one-btn"
+                      onClick={handleDownloadAllProductsExcel}
+                      disabled={!Array.isArray(products) || products.length === 0}
+                      title="전체 상품 수량 입력형 엑셀을 다운로드합니다"
+                    >
+                      전체 엑셀(수량입력)
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="bulk-qty-one-btn"
+                      onClick={handleDownloadCategoryProductsExcel}
+                      disabled={productsLoading || allFilteredCount === 0}
+                      title={`${categoryFilter || '카테고리'} 전체 품목을 수량 입력형 엑셀로 다운로드합니다`}
+                    >
+                      {(categoryFilter || '카테고리') + ' 엑셀(수량입력)'}
+                    </button>
                   )}
-                  <button
-                    type="button"
-                    className="bulk-qty-one-btn"
-                    onClick={handleDownloadCategoryProductsExcel}
-                    disabled={productsLoading || allFilteredCount === 0}
-                    title="현재 카테고리 전체 품목을 수량 입력형 엑셀로 다운로드합니다"
-                  >
-                    카테고리 엑셀(수량입력)
-                  </button>
                   {onRetryProducts && (
                     <button type="button" className="refresh-products-btn" onClick={onRetryProducts} title="상품 목록 새로고침">
                       새로고침
