@@ -366,6 +366,7 @@ function ShopContent({ user, onLogout }) {
         }}
         products={products}
         filteredProducts={paginatedProducts}
+        allFilteredProducts={filteredProducts}
         allFilteredCount={filteredProducts.length}
         productPage={productPage}
         totalPages={totalPages}

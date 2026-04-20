@@ -337,6 +337,29 @@
   padding-bottom: 0.75rem;
   border-bottom: 2px solid var(--color-blush);
 }
+.section-banner-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.bulk-qty-one-btn {
+  padding: 0.4rem 0.75rem;
+  background: #fff;
+  color: var(--color-rose-gold);
+  border: 1px solid rgba(183, 110, 121, 0.45);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bulk-qty-one-btn:hover:not(:disabled) {
+  background: rgba(183, 110, 121, 0.08);
+}
+.bulk-qty-one-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 .refresh-products-btn {
   padding: 0.4rem 0.8rem;
   background: var(--color-rose-gold);

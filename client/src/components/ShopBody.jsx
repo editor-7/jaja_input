@@ -8,6 +8,7 @@ import {
   getShopSection,
   getExposedPipeKind,
   getSpecFromProduct,
+  findLaborPair,
 } from '@/data/products'
 import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
 import { downloadOrderListAsExcel } from '@/utils/exportOrderListToExcel'
@@ -40,6 +41,7 @@ function ShopBody({
   onPaymentComplete,
   products = [],
   filteredProducts = [],
+  allFilteredProducts,
   allFilteredCount = (filteredProducts && filteredProducts.length) ?? 0,
   productPage = 1,
   totalPages = 1,
@@ -146,6 +148,40 @@ function ShopBody({
       return
     }
     if (newQty >= 1) addToCart(p, newQty)
+  }
+
+  /** 현재 필터·검색에 맞는 전체 품목 수량 1 + 장바구니 반영(공통·인건비만 탭은 자재+대응 인건 1세트) */
+  const handleBulkAllQtyOne = () => {
+    const list =
+      Array.isArray(allFilteredProducts) && allFilteredProducts.length > 0
+        ? allFilteredProducts
+        : Array.isArray(filteredProducts)
+          ? filteredProducts
+          : []
+    if (list.length === 0 || productsLoading) return
+    setListQtys((prev) => {
+      const next = { ...prev }
+      for (const p of list) {
+        const id = p._id ?? p.name
+        if (id != null && String(id) !== '') next[id] = 1
+        if (cartAddMode) {
+          const labor = findLaborPair(p, products)
+          if (labor) {
+            const lid = labor._id ?? labor.name
+            if (lid != null && String(lid) !== '') next[lid] = 1
+          }
+        }
+      }
+      return next
+    })
+    if (typeof setProductQty !== 'function') return
+    for (const p of list) {
+      setProductQty(p, 1)
+      if (cartAddMode) {
+        const labor = findLaborPair(p, products)
+        if (labor) setProductQty(labor, 1)
+      }
+    }
   }
 
   useEffect(() => {
@@ -640,11 +676,22 @@ function ShopBody({
             <section className="section-banner">
               <div className="section-banner-header">
                 <h2>자재 목록 {!productsLoading && !productsLoadError && allFilteredCount > 0 && `(${allFilteredCount}종)`}</h2>
-                {onRetryProducts && (
-                  <button type="button" className="refresh-products-btn" onClick={onRetryProducts} title="상품 목록 새로고침">
-                    새로고침
+                <div className="section-banner-actions">
+                  <button
+                    type="button"
+                    className="bulk-qty-one-btn"
+                    onClick={handleBulkAllQtyOne}
+                    disabled={productsLoading || allFilteredCount === 0}
+                    title="현재 탭·검색 결과 전체 품목 수량을 1로 맞추고 장바구니에 반영합니다"
+                  >
+                    현재 목록 전체 1개
                   </button>
-                )}
+                  {onRetryProducts && (
+                    <button type="button" className="refresh-products-btn" onClick={onRetryProducts} title="상품 목록 새로고침">
+                      새로고침
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="product-list-wrap">
                 <div className="product-list-header-row">

@@ -11,6 +11,21 @@ const GAS_CATEGORIES = ['도시가스-자재', '도시가스-인건']
 /** 큰 카테고리: 필터 탭·DB mainCategory 값 (엑셀 비고1과 동일 체계) */
 export const MAIN_CATEGORIES = ['지하관PLP', '지하관PEM', '노출관', '공통']
 
+/** 공통 탭에만 둘 SKU (행정·표지 8종). 그 외 L/S 행정비는 노출관 휴리스틱 */
+const COMMON_TAB_ONLY_SKUS = new Set([
+  'GAS-J-0262',
+  'GAS-J-0263',
+  'GAS-J-0264',
+  'GAS-J-0274',
+  'GAS-J-0277',
+  'GAS-J-0278',
+  'GAS-J-0279',
+  'GAS-J-0280',
+])
+
+/** 로켓팅·밸브박스/흄관 등 PE 시공 부속 — DB가 노출관이어도 PE(지하관PEM) 탭으로 고정 */
+const PE_WORKSITE_AUX_SKUS = new Set(['GAS-J-0266', 'GAS-J-0275', 'GAS-J-0276'])
+
 /** 관로(대분류) 표시명 — 관리자·엑셀 체계 (DB mainCategory) */
 export const MAIN_CATEGORY_LABELS = {
   지하관PLP: 'PLP (지하관)',
@@ -87,6 +102,9 @@ function normalizeStoredCatalogMain(s) {
   if (!t) return ''
   if (MAIN_CATEGORIES.includes(t)) return t
   const collapsed = t.replace(/\s+/g, '')
+  // 관리자/엑셀에 PE로 저장된 값도 지하관PEM으로 해석
+  if (/^pe$/i.test(collapsed)) return '지하관PEM'
+  if (/^지하관pe$/i.test(collapsed)) return '지하관PEM'
   // 엑셀·DB에 PEM / PEM관 / PE M 등 → 쇼핑 PE(지하관PEM). (PEMxxx 영단어 확장은 제외)
   if (/^pem(?![a-zA-Z])/i.test(collapsed)) return '지하관PEM'
   const found = MAIN_CATEGORIES.find((m) => collapsed === m.replace(/\s+/g, ''))
@@ -111,12 +129,16 @@ export function getMainCategory(product) {
   const rawSku = product.sku || ''
   const rawDesc = product.desc || ''
   const rawAll = rawName + rawSku + rawDesc
+  const skuNorm = String(rawSku || '').trim().toUpperCase()
+  if (COMMON_TAB_ONLY_SKUS.has(skuNorm)) return '공통'
+  if (PE_WORKSITE_AUX_SKUS.has(skuNorm)) return '지하관PEM'
 
-  // PE 배관 본류가 아닌 부속(로켓팅·와이어·밸브박스·흄관 등) — PEM이어도 대분류는 노출관(PE 탭 제외)
-  const nonPeAuxiliaryHint =
+  // PE 시공·매설 부속(로켓팅·와이어·밸브박스·흄관 등) — 노출관으로만 저장된 경우 PE 구간으로
+  const pemFieldAuxiliaryHint =
     /로켓팅|로케이팅|리켓팅/i.test(rawAll) ||
     /와이어|locating\s*wire|\bwire\b/i.test(rawAll) ||
     /밸브박스|흄관\s*d?\d{2,4}/i.test(rawAll)
+  const isGasJMaterial = /^GAS-J-/i.test(skuNorm) || String(product.category || '').includes('자재')
 
   // 품명 등에 PEM(지하 PE)이 명시되면 노출 피팅·「백」 힌트보다 PE 구간 우선
   const pemCatalogHint = /\bPEM\b/i.test(rawAll)
@@ -128,10 +150,8 @@ export function getMainCategory(product) {
     /노출관|노출/.test(combined) ||
     combined.includes('exposed')
 
-  // 기술검토·시공감리·완공검사·잡자재비 등 L/S·행정비 — 노출관이 아닌 공통
-  const commonFeeCatalogHint =
-    /기술검토|시공감리|완공검사|잡자재비|준공검사/i.test(rawAll)
-  if (commonFeeCatalogHint && !exposedStrictHint) return '공통'
+  // 잡자재비·준공검사 등 — 공통 탭 8종 SKU 외 행정비류는 노출관
+  if (/잡자재비|준공검사/i.test(rawAll) && !exposedStrictHint) return '노출관'
 
   // PE 매몰형(지하 매몰) → 공통으로만 저장된 품도 PE(지하관PEM) 구간으로
   const pemBuriedHint =
@@ -210,7 +230,6 @@ export function getMainCategory(product) {
     pemBuriedHint &&
     !exposedStrictHint &&
     !exposedPipeVisualHint &&
-    !nonPeAuxiliaryHint &&
     (fromMain === '공통' || (!fromMain && fromCat === '공통'))
   ) {
     return '지하관PEM'
@@ -220,15 +239,30 @@ export function getMainCategory(product) {
   if (
     pemCatalogHint &&
     !exposedStrictHint &&
-    !nonPeAuxiliaryHint &&
     (fromMain === '공통' || (!fromMain && fromCat === '공통'))
   ) {
     return '지하관PEM'
   }
 
-  if (fromMain === '지하관PEM' && nonPeAuxiliaryHint) return '노출관'
-  if (fromMain) return fromMain
-  if (fromCat === '지하관PEM' && nonPeAuxiliaryHint) return '노출관'
+  // 로켓팅·와이어·밸브박스·흄관 등 — 노출관/공통·대분류 없음이면 PE(지하관PEM)
+  if (
+    pemFieldAuxiliaryHint &&
+    isGasJMaterial &&
+    !exposedStrictHint &&
+    !plpAncillaryHint &&
+    (fromMain === '노출관' || fromMain === '공통' || !fromMain)
+  ) {
+    return '지하관PEM'
+  }
+
+  // DB 공통은 공통 탭 8 SKU만 인정. 그 외 mainCategory=공통은 아래 휴리스틱으로 재분류
+  if (fromMain) {
+    if (fromMain === '공통' && !COMMON_TAB_ONLY_SKUS.has(skuNorm)) {
+      /* fall through */
+    } else {
+      return fromMain
+    }
+  }
   if (fromCat) return fromCat
 
   if (exposedStrictHint) return '노출관'
@@ -240,25 +274,27 @@ export function getMainCategory(product) {
 
   if (plpPipeHint) return '지하관PLP'
 
-  if (pemCatalogHint && !exposedStrictHint && !nonPeAuxiliaryHint) return '지하관PEM'
+  if (pemCatalogHint && !exposedStrictHint) return '지하관PEM'
 
   if (combined.includes('plp') || combinedNoSpace.includes('plp')) return '지하관PLP'
-  if (!nonPeAuxiliaryHint && (combined.includes('pem') || combinedNoSpace.includes('pem'))) return '지하관PEM'
+  if (combined.includes('pem') || combinedNoSpace.includes('pem')) return '지하관PEM'
 
   const catStr = (product.category || '').trim()
   if (catStr.includes('plp') || catStr.includes('PLP')) return '지하관PLP'
-  if (!nonPeAuxiliaryHint && (catStr.includes('pem') || catStr.includes('PEM'))) return '지하관PEM'
-  if (catStr.includes('노출')) return '노출관'
+  if (catStr.includes('pem') || catStr.includes('PEM')) return '지하관PEM'
+  if (catStr.includes('백','백강관')) return '노출관'
 
   // PE 관/REDUCER 등 (노출 힌트 없을 때만 지하 PEM으로 간주) — 위에서 plpPipeHint로 이미 PLP 처리됨
   if (
-    !nonPeAuxiliaryHint &&
-    (/\bPE\s+REDUCER|PE\s*관|PE관\b|PE\s+배관/i.test(rawName) || /\bPE\s+REDUCER|PE\s*관|PE관/i.test(rawDesc))
+    /\bPE\s+REDUCER|PE\s*관|PE관\b|PE\s+배관/i.test(rawName) ||
+    /\bPE\s+REDUCER|PE\s*관|PE관/i.test(rawDesc)
   ) {
     return '지하관PEM'
   }
-  if (pemBuriedHint && !exposedStrictHint && !exposedPipeVisualHint && !nonPeAuxiliaryHint) return '지하관PEM'
-  if (nonPeAuxiliaryHint) return '노출관'
+  if (pemBuriedHint && !exposedStrictHint && !exposedPipeVisualHint) return '지하관PEM'
+  if (pemFieldAuxiliaryHint && isGasJMaterial && !exposedStrictHint && !plpAncillaryHint) return '지하관PEM'
+  // 공통 탭은 맨 위 COMMON_TAB 8 SKU early return만. 그 외 도시가스 품목은 노출관
+  if (String(product.category || '').includes('도시가스') || /^GAS-/i.test(skuNorm)) return '노출관'
   return '공통'
 }
 
