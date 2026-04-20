@@ -210,7 +210,7 @@ function ShopBody({
   const handleDownloadAllProductsExcel = () => {
     const list = Array.isArray(products) ? products : []
     if (list.length === 0) return
-    downloadProductsAsExcel(list)
+    downloadProductsAsExcel(list, '전체물량')
   }
 
   /** 현재 카테고리(필터) 기준 수량 입력형 엑셀 다운로드 */
@@ -222,7 +222,11 @@ function ShopBody({
           ? filteredProducts
           : []
     if (list.length === 0) return
-    downloadProductsAsExcel(list)
+    const label =
+      categoryFilter === '전체' || categoryFilter === 'all'
+        ? '전체'
+        : categoryFilter || '카테고리'
+    downloadProductsAsExcel(list, label)
   }
 
   useEffect(() => {

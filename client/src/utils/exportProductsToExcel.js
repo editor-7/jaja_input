@@ -4,7 +4,8 @@ import { getDisplayItemName, getSpecFromProduct, getCategory, getMainCategory } 
 const CENTER = { horizontal: 'center', vertical: 'center' }
 const LEFT = { horizontal: 'left', vertical: 'center' }
 const STYLE_CENTER = { alignment: CENTER }
-const STYLE_CENTER_NUM = { alignment: CENTER, numFmt: '#,##0' }
+// 0 값은 셀에 표시하지 않음
+const STYLE_CENTER_NUM = { alignment: CENTER, numFmt: '#,##0;-#,##0;;@' }
 const STYLE_LEFT = { alignment: LEFT }
 const STYLE_LEFT_WRAP = { alignment: { horizontal: 'left', vertical: 'top', wrapText: true } }
 const COL_품목 = 0
@@ -20,7 +21,7 @@ function getMainCategoryRank(v) {
  * 전체 상품 목록을 엑셀 파일로 다운로드 (관리자용)
  * 품목·규격별 한 행에 자재비/인건비 단가, 수량·금액은 0, 마지막에 계 행
  */
-export function downloadProductsAsExcel(products) {
+export function downloadProductsAsExcel(products, fileLabel = '전체물량') {
   if (!products || products.length === 0) {
     return
   }
@@ -122,8 +123,9 @@ export function downloadProductsAsExcel(products) {
   })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
+  const safeLabel = String(fileLabel || '전체물량').replace(/[\\/:*?"<>|]/g, '_').trim() || '전체물량'
   a.href = url
-  a.download = `전체물량_${new Date().toISOString().slice(0, 10)}.xlsx`
+  a.download = `${safeLabel}_${new Date().toISOString().slice(0, 10)}.xlsx`
   a.click()
   URL.revokeObjectURL(url)
 }
