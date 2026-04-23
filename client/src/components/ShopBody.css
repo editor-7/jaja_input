@@ -111,6 +111,12 @@
   cursor: pointer;
 }
 .toolbar-order-btn:hover { background: rgba(183, 110, 121, 0.08); color: var(--color-rose-gold); }
+.toolbar-order-btn.active {
+  background: rgba(183, 110, 121, 0.12);
+  color: var(--color-rose-gold);
+  border-color: var(--color-rose-gold);
+  font-weight: 600;
+}
 .toolbar-cart-btn {
   display: none;
   padding: 0.45rem 0.8rem;

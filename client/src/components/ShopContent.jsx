@@ -26,8 +26,9 @@ function ShopContent({ user, onLogout }) {
   const navigate = useNavigate()
   const { pendingWelcome, clearWelcome } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
-  // 상단: 전체 / PLP / PE / 노출관 / 공통 / 인건비만 / 견적제출완료 / 신규단가입력
-  const categories = ['전체', ...SHOP_SECTIONS, '인건비만', '견적제출완료', '신규단가입력']
+  // 상단 탭: 전체 / PLP / PE / 노출관 / 공통 / 인건비만
+  // 견적제출완료/신규단가입력은 우측 검색 영역의 전용 버튼으로 분리
+  const categories = ['전체', ...SHOP_SECTIONS, '인건비만']
   const [categoryFilter, setCategoryFilter] = useState('전체')
   const {
     cart,
@@ -230,6 +231,7 @@ function ShopContent({ user, onLogout }) {
 
   const filteredProducts = useMemo(() => {
     let result = Array.isArray(products) ? products : []
+    const specialCategorySet = new Set(['견적제출완료', '신규단가입력'])
     const trimmed = searchTerm.trim()
     if (trimmed) {
       const tokens = trimmed.toLowerCase().split(/\s+/).filter(Boolean)
@@ -274,6 +276,10 @@ function ShopContent({ user, onLogout }) {
       } else if (SHOP_SECTIONS.includes(categoryFilter)) {
         result = result.filter((p) => getShopSection(p) === categoryFilter)
       }
+    }
+    // 견적 전용 카테고리는 전용 탭에서만 노출 (전체/기본 탭에서는 숨김)
+    if (categoryFilter !== '견적제출완료' && categoryFilter !== '신규단가입력') {
+      result = result.filter((p) => !specialCategorySet.has(getCategory(p)))
     }
     // 요청: 인건 품목은 인건비만 탭에서만 노출
     if (categoryFilter !== '인건비만') {
