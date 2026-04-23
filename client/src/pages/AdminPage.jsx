@@ -218,9 +218,10 @@ function AdminPage() {
   const productCategories = (() => {
     const sorted = [...products].sort(skuSort)
     const seen = new Set()
-    return sorted
+    const fromProducts = sorted
       .map((p) => p.category || p.name)
       .filter(Boolean)
+    return [...MATERIAL_KIND_VALUES, ...fromProducts]
       .filter((c) => {
         if (seen.has(c)) return false
         seen.add(c)
