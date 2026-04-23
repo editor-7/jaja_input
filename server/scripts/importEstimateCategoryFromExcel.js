@@ -9,11 +9,14 @@
  * - --target-category="카테고리명": 대상 category 지정 (기본: 참조단가)
  * - --insert-unique-only: 대상 category에는 품명/규격/자재-인건 키 기준 1건만 추가(중복 방지)
  *   * 이 모드에서는 기존 상품 category를 업데이트하지 않음(신규 추가만 수행)
+ * - --allow-update-existing: 기존 자재/인건 상품의 category를 대상값으로 이동 허용 (기본 비활성)
+ * - --reset-target: 대상 category 기존 데이터를 먼저 비우고 적재(교체 적재)
  *
  * 사용 예:
  *   node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx" --dry-run
  *   node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx"
  *   node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx" --target-category="신규단가입력" --insert-unique-only
+ *   node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx" --target-category="참조단가" --reset-target
  */
 
 const fs = require('fs');
@@ -133,10 +136,12 @@ function makeItemKey(kind, displayName, spec) {
 async function main() {
   const filePath = process.argv[2];
   const dryRun = process.argv.includes('--dry-run');
-  const uniqueOnly = process.argv.includes('--insert-unique-only');
+  const allowUpdateExisting = process.argv.includes('--allow-update-existing');
+  const uniqueOnly = process.argv.includes('--insert-unique-only') || !allowUpdateExisting;
+  const resetTarget = process.argv.includes('--reset-target');
   const targetCategory = parseArgValue('--target-category', DEFAULT_TARGET_CATEGORY) || DEFAULT_TARGET_CATEGORY;
   if (!filePath || !fs.existsSync(filePath)) {
-    console.error('사용법: node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx" [--dry-run] [--target-category=...] [--insert-unique-only]');
+    console.error('사용법: node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx" [--dry-run] [--target-category=...] [--insert-unique-only] [--allow-update-existing] [--reset-target]');
     process.exit(1);
   }
 
@@ -156,6 +161,16 @@ async function main() {
 
   await mongoose.connect(config.MONGODB_URI);
   try {
+    const existingTargetCount = await Product.countDocuments({ category: targetCategory });
+    if (resetTarget) {
+      if (dryRun) {
+        console.log('[DRY-RUN] reset-target 예정 삭제 건수:', existingTargetCount);
+      } else {
+        const deleted = await Product.deleteMany({ category: targetCategory });
+        console.log('reset-target 삭제 완료:', deleted.deletedCount);
+      }
+    }
+
     const products = await Product.find().lean();
     const byKey = new Map();
     const targetCategoryKeys = new Set();
@@ -168,7 +183,7 @@ async function main() {
       const key = `${nameBase}|${spec}`;
       if (!byKey.has(key)) byKey.set(key, []);
       byKey.get(key).push(p);
-      if ((p.category || '').trim() === targetCategory) {
+      if (!resetTarget && (p.category || '').trim() === targetCategory) {
         const kind = /\(인건\)\s*$/.test(p.name || '') ? '인건' : '자재';
         const displayName = stripSpecSuffix(nameBase, spec);
         targetCategoryKeys.add(makeItemKey(kind, displayName, spec));
@@ -238,7 +253,7 @@ async function main() {
       targetCategoryKeys.add(itemKey);
     }
 
-    console.log('대상 category:', targetCategory, uniqueOnly ? '(insert-unique-only)' : '');
+    console.log('대상 category:', targetCategory, uniqueOnly ? '(insert-unique-only)' : '(allow-update-existing)');
     console.log('엑셀 항목 수(중복 제거 후):', excelItems.length);
     console.log(dryRun ? '[DRY-RUN]' : '[APPLIED]', '업데이트:', updated, '신규등록:', inserted, '스킵:', skipped);
     if (dryRun && insertDocs.length > 0) {

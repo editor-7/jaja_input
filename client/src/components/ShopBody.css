@@ -79,6 +79,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .toolbar-search {
   padding: 0.4rem 0.75rem;
@@ -116,6 +118,16 @@
   color: var(--color-rose-gold);
   border-color: var(--color-rose-gold);
   font-weight: 600;
+}
+@media (max-width: 900px) {
+  .toolbar-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .toolbar-order-btn {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.6rem;
+  }
 }
 .toolbar-cart-btn {
   display: none;
