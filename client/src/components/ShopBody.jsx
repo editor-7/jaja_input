@@ -685,10 +685,10 @@ function ShopBody({
                 </button>
                 <button
                   type="button"
-                  className={categoryFilter === '견적제출완료' ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
+                  className={categoryFilter === '참조단가' ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
                   onClick={() => {
                     onSearchChange('')
-                    onCategoryChange(categoryFilter === '견적제출완료' ? '전체' : '견적제출완료')
+                    onCategoryChange(categoryFilter === '참조단가' ? '전체' : '참조단가')
                   }}
                   title="참조단가 데이터 보기"
                 >

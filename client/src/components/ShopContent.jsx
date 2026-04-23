@@ -27,7 +27,7 @@ function ShopContent({ user, onLogout }) {
   const { pendingWelcome, clearWelcome } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
   // 상단 탭: 전체 / PLP / PE / 노출관 / 공통 / 인건비만
-  // 견적제출완료/신규단가입력은 우측 검색 영역의 전용 버튼으로 분리
+  // 참조단가/신규단가입력은 우측 검색 영역의 전용 버튼으로 분리
   const categories = ['전체', ...SHOP_SECTIONS, '인건비만']
   const [categoryFilter, setCategoryFilter] = useState('전체')
   const {
@@ -231,7 +231,7 @@ function ShopContent({ user, onLogout }) {
 
   const filteredProducts = useMemo(() => {
     let result = Array.isArray(products) ? products : []
-    const specialCategorySet = new Set(['견적제출완료', '신규단가입력'])
+    const specialCategorySet = new Set(['참조단가', '신규단가입력'])
     const trimmed = searchTerm.trim()
     if (trimmed) {
       const tokens = trimmed.toLowerCase().split(/\s+/).filter(Boolean)
@@ -267,9 +267,9 @@ function ShopContent({ user, onLogout }) {
       if (categoryFilter === '인건비만') {
         // 인건비만 탭은 모든 인건 상품을 노출
         result = result.filter((p) => getCategory(p) === '도시가스-인건')
-      } else if (categoryFilter === '견적제출완료') {
-        // 견적제출완료 탭은 해당 카테고리만 노출
-        result = result.filter((p) => getCategory(p) === '견적제출완료')
+      } else if (categoryFilter === '참조단가') {
+        // 참조단가 탭은 해당 카테고리만 노출
+        result = result.filter((p) => getCategory(p) === '참조단가')
       } else if (categoryFilter === '신규단가입력') {
         // 신규단가입력 탭은 해당 카테고리만 노출
         result = result.filter((p) => getCategory(p) === '신규단가입력')
@@ -278,7 +278,7 @@ function ShopContent({ user, onLogout }) {
       }
     }
     // 견적 전용 카테고리는 전용 탭에서만 노출 (전체/기본 탭에서는 숨김)
-    if (categoryFilter !== '견적제출완료' && categoryFilter !== '신규단가입력') {
+    if (categoryFilter !== '참조단가' && categoryFilter !== '신규단가입력') {
       result = result.filter((p) => !specialCategorySet.has(getCategory(p)))
     }
     // 요청: 인건 품목은 인건비만 탭에서만 노출

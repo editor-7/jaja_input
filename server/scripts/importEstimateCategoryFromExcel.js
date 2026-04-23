@@ -1,0 +1,259 @@
+/**
+ * 엑셀(품명/규격/단가) 기준으로 카테고리 등재
+ *
+ * 기본 동작:
+ * 1) 품명+규격 매칭으로 기존 상품 category 업데이트
+ * 2) 매칭 실패 항목은 신규 상품 생성
+ *
+ * 옵션:
+ * - --target-category="카테고리명": 대상 category 지정 (기본: 참조단가)
+ * - --insert-unique-only: 대상 category에는 품명/규격/자재-인건 키 기준 1건만 추가(중복 방지)
+ *   * 이 모드에서는 기존 상품 category를 업데이트하지 않음(신규 추가만 수행)
+ *
+ * 사용 예:
+ *   node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx" --dry-run
+ *   node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx"
+ *   node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx" --target-category="신규단가입력" --insert-unique-only
+ */
+
+const fs = require('fs');
+const XLSX = require('xlsx');
+const mongoose = require('mongoose');
+const config = require('../config/env');
+const Product = require('../models/Product');
+
+const DEFAULT_TARGET_CATEGORY = '참조단가';
+
+function normalizeName(s) {
+  return String(s || '').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeSpec(s) {
+  return String(s || '').replace(/\s+/g, '').trim();
+}
+
+function toPrice(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.round(n);
+}
+
+function stripSuffix(name) {
+  return String(name || '').replace(/\s*\((자재|인건)\)\s*$/, '').trim();
+}
+
+function stripSpecSuffix(nameBase, spec) {
+  const n = normalizeName(nameBase);
+  const rawSpec = String(spec || '').trim();
+  if (!rawSpec) return n;
+  const escaped = rawSpec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const removed = n.replace(new RegExp(`\\s*${escaped}\\s*$`, 'i'), '').trim();
+  if (removed && removed !== n) return removed;
+  // 규격 문자열 공백 차이(예: "D 90" vs "D90")를 허용한 보조 제거
+  const compactSpec = normalizeSpec(rawSpec);
+  if (!compactSpec) return n;
+  const compactName = normalizeSpec(n);
+  if (compactName.endsWith(compactSpec)) {
+    const cutLen = compactName.length - compactSpec.length;
+    if (cutLen > 0) {
+      return n.slice(0, Math.max(0, n.length - rawSpec.length)).trim() || n;
+    }
+  }
+  return n;
+}
+
+function pickHeaderIndex(headerRow, keyRegex, fallback) {
+  const idx = headerRow.findIndex((c) => keyRegex.test(String(c || '').replace(/\s/g, '')));
+  return idx >= 0 ? idx : fallback;
+}
+
+function parseExcel(filePath) {
+  const wb = XLSX.readFile(filePath);
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+  const header = rows[1] || [];
+
+  const iName = pickHeaderIndex(header, /품명/, 0);
+  const iSpec = pickHeaderIndex(header, /규격/, 1);
+  const iUnit = pickHeaderIndex(header, /^단위$/, 2);
+  const iMat = 4;
+  const iLabor = 6;
+
+  const items = [];
+  for (let i = 3; i < rows.length; i++) {
+    const row = rows[i] || [];
+    const name = normalizeName(row[iName]);
+    if (!name) continue;
+    const spec = normalizeSpec(row[iSpec]);
+    const unitRaw = String(row[iUnit] || '').trim();
+    const unit = unitRaw === 'Ｍ' ? 'M' : unitRaw || 'EA';
+    const matPrice = toPrice(row[iMat]);
+    const laborPrice = toPrice(row[iLabor]);
+    if (matPrice == null && laborPrice == null) continue;
+
+    const baseName = spec ? `${name} ${spec}` : name;
+    if (matPrice != null) {
+      items.push({
+        kind: '자재',
+        name: `${baseName} (자재)`,
+        displayName: name,
+        spec,
+        price: matPrice,
+        unit,
+      });
+    }
+    if (laborPrice != null) {
+      items.push({
+        kind: '인건',
+        name: `${baseName} (인건)`,
+        displayName: name,
+        spec,
+        price: laborPrice,
+        unit,
+      });
+    }
+  }
+  return items;
+}
+
+function getNextSku(prefix, maxNum) {
+  return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
+}
+
+function parseArgValue(flagName, defaultValue = '') {
+  const hit = process.argv.find((a) => a.startsWith(`${flagName}=`));
+  if (!hit) return defaultValue;
+  return String(hit.slice(flagName.length + 1)).trim();
+}
+
+function makeItemKey(kind, displayName, spec) {
+  return `${kind}|${normalizeName(displayName)}|${normalizeSpec(spec)}`;
+}
+
+async function main() {
+  const filePath = process.argv[2];
+  const dryRun = process.argv.includes('--dry-run');
+  const uniqueOnly = process.argv.includes('--insert-unique-only');
+  const targetCategory = parseArgValue('--target-category', DEFAULT_TARGET_CATEGORY) || DEFAULT_TARGET_CATEGORY;
+  if (!filePath || !fs.existsSync(filePath)) {
+    console.error('사용법: node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx" [--dry-run] [--target-category=...] [--insert-unique-only]');
+    process.exit(1);
+  }
+
+  const excelItemsRaw = parseExcel(filePath);
+  const seenExcelKeys = new Set();
+  const excelItems = [];
+  for (const item of excelItemsRaw) {
+    const k = makeItemKey(item.kind, item.displayName, item.spec);
+    if (seenExcelKeys.has(k)) continue;
+    seenExcelKeys.add(k);
+    excelItems.push(item);
+  }
+  if (excelItems.length === 0) {
+    console.error('엑셀에서 등재 가능한 항목(자재/인건 단가 포함)을 찾지 못했습니다.');
+    process.exit(1);
+  }
+
+  await mongoose.connect(config.MONGODB_URI);
+  try {
+    const products = await Product.find().lean();
+    const byKey = new Map();
+    const targetCategoryKeys = new Set();
+    let maxJ = 0;
+    let maxIN = 0;
+
+    for (const p of products) {
+      const nameBase = normalizeName(stripSuffix(p.name));
+      const spec = normalizeSpec(p.spec);
+      const key = `${nameBase}|${spec}`;
+      if (!byKey.has(key)) byKey.set(key, []);
+      byKey.get(key).push(p);
+      if ((p.category || '').trim() === targetCategory) {
+        const kind = /\(인건\)\s*$/.test(p.name || '') ? '인건' : '자재';
+        const displayName = stripSpecSuffix(nameBase, spec);
+        targetCategoryKeys.add(makeItemKey(kind, displayName, spec));
+      }
+
+      const sku = String(p.sku || '').trim().toUpperCase();
+      const mJ = sku.match(/^GAS-J-(\d{4})$/);
+      if (mJ) maxJ = Math.max(maxJ, Number(mJ[1]));
+      const mIN = sku.match(/^GAS-IN-(\d{4})$/);
+      if (mIN) maxIN = Math.max(maxIN, Number(mIN[1]));
+    }
+
+    let updated = 0;
+    let inserted = 0;
+    let skipped = 0;
+    const insertDocs = [];
+
+    for (const item of excelItems) {
+      const itemKey = makeItemKey(item.kind, item.displayName, item.spec);
+      if (targetCategoryKeys.has(itemKey)) {
+        skipped++;
+        continue;
+      }
+      const key = `${normalizeName(item.displayName)}|${normalizeSpec(item.spec)}`;
+      const candidates = byKey.get(key) || [];
+      const wantedCategory = item.kind === '자재' ? '도시가스-자재' : '도시가스-인건';
+      const hit =
+        candidates.find((p) => (p.category || '').trim() === wantedCategory) ||
+        candidates.find((p) => (item.kind === '자재' ? /\(자재\)\s*$/.test(p.name || '') : /\(인건\)\s*$/.test(p.name || ''))) ||
+        null;
+
+      if (!uniqueOnly && hit) {
+        if ((hit.category || '').trim() === targetCategory) {
+          skipped++;
+          continue;
+        }
+        if (!dryRun) {
+          await Product.updateOne(
+            { _id: hit._id },
+            { $set: { category: targetCategory } }
+          );
+        }
+        updated++;
+        targetCategoryKeys.add(itemKey);
+        continue;
+      }
+
+      const sku = item.kind === '자재'
+        ? getNextSku('GAS-J-', maxJ++)
+        : getNextSku('GAS-IN-', maxIN++);
+      const doc = {
+        sku,
+        name: item.name,
+        desc: `${targetCategory} - ${item.displayName} ${item.spec}`.trim(),
+        spec: item.spec,
+        category: targetCategory,
+        price: item.price,
+        img: '',
+        size: item.unit,
+        unit: item.unit,
+      };
+      insertDocs.push(doc);
+      if (!dryRun) {
+        await Product.create(doc);
+      }
+      inserted++;
+      targetCategoryKeys.add(itemKey);
+    }
+
+    console.log('대상 category:', targetCategory, uniqueOnly ? '(insert-unique-only)' : '');
+    console.log('엑셀 항목 수(중복 제거 후):', excelItems.length);
+    console.log(dryRun ? '[DRY-RUN]' : '[APPLIED]', '업데이트:', updated, '신규등록:', inserted, '스킵:', skipped);
+    if (dryRun && insertDocs.length > 0) {
+      console.log('신규등록 예정 예시(최대 10건):');
+      insertDocs.slice(0, 10).forEach((d) => {
+        console.log('-', d.sku, '|', d.name, '|', d.price);
+      });
+    }
+  } finally {
+    await mongoose.disconnect();
+  }
+}
+
+main().catch((e) => {
+  console.error('오류:', e.message);
+  process.exit(1);
+});
+
