@@ -128,7 +128,6 @@ export function getExposedPipeKind(product) {
 /** 쇼핑 탭 라벨 */
 export function getShopCategoryTabLabel(key) {
   if (key === '전체') return key
-  if (key === '카타로그') return '카타로그'
   if (key === '인건비만') return '인건비만'
   if (key === 'PLP') return 'PLP'
   if (key === 'PE') return 'PE'
