@@ -6,7 +6,7 @@ const FALLBACK_PRODUCTS = [
 
 export const staticProducts = FALLBACK_PRODUCTS
 
-const GAS_CATEGORIES = ['도시가스-자재', '도시가스-인건']
+const GAS_CATEGORIES = ['도시가스-자재', '도시가스-인건', '견적제출완료', '신규단가입력']
 
 /** 큰 카테고리: 필터 탭·DB mainCategory 값 (엑셀 비고1과 동일 체계) */
 export const MAIN_CATEGORIES = ['지하관PLP', '지하관PEM', '노출관', 'GAS METER', '공통']
@@ -141,6 +141,8 @@ export function getShopCategoryTabLabel(key) {
 export const MATERIAL_KIND_OPTIONS = [
   { value: '도시가스-자재', label: '도시가스 · 자재비' },
   { value: '도시가스-인건', label: '도시가스 · 인건비' },
+  { value: '견적제출완료', label: '견적제출완료' },
+  { value: '신규단가입력', label: '신규단가입력' },
 ]
 
 export const MATERIAL_KIND_VALUES = MATERIAL_KIND_OPTIONS.map((o) => o.value)
