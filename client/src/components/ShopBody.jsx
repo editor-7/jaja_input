@@ -686,7 +686,10 @@ function ShopBody({
                 <button
                   type="button"
                   className={categoryFilter === '견적제출완료' ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
-                  onClick={() => onCategoryChange(categoryFilter === '견적제출완료' ? '전체' : '견적제출완료')}
+                  onClick={() => {
+                    onSearchChange('')
+                    onCategoryChange(categoryFilter === '견적제출완료' ? '전체' : '견적제출완료')
+                  }}
                   title="참조단가 데이터 보기"
                 >
                   참조단가
@@ -694,7 +697,10 @@ function ShopBody({
                 <button
                   type="button"
                   className={categoryFilter === '신규단가입력' ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
-                  onClick={() => onCategoryChange(categoryFilter === '신규단가입력' ? '전체' : '신규단가입력')}
+                  onClick={() => {
+                    onSearchChange('')
+                    onCategoryChange(categoryFilter === '신규단가입력' ? '전체' : '신규단가입력')
+                  }}
                   title="신규단가입력 데이터 보기"
                 >
                   신규단가입력
