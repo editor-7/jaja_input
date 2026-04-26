@@ -141,7 +141,7 @@ export function getShopCategoryTabLabel(key) {
 export const MATERIAL_KIND_OPTIONS = [
   { value: '도시가스-자재', label: '도시가스 · 자재비' },
   { value: '도시가스-인건', label: '도시가스 · 인건비' },
-  { value: '참조단가', label: '참조단가' },
+  { value: '참조단가001', label: '참조단가001' },
   { value: '신규단가입력', label: '신규단가입력' },
 ]
 
@@ -371,12 +371,19 @@ export function getMainCategory(product) {
 export function getCategory(product) {
   if (!product) return ''
   const raw = (product.category || '').trim()
-  if (raw === '견적제출완료') return '참조단가'
-  if (/^참조단가(?:\d+)?$/.test(raw)) return raw
+  const sku = (product.sku || '').trim().toUpperCase()
+  // 참조단가 배치(참조단가001/002...)도 자재/인건 구분은 SKU 기준으로 유지
+  // -> 엑셀 생성 시 자재비/인건비 단가 칼럼이 비지 않도록 보정
+  if (raw === '견적제출완료' || /^참조단가(?:\d+)?$/.test(raw)) {
+    if (/^GAS-J-/.test(sku)) return '도시가스-자재'
+    if (/^GAS-I-/.test(sku) || /^GAS-IN-/.test(sku)) return '도시가스-인건'
+    if ((product.name || '').includes('(자재)')) return '도시가스-자재'
+    if ((product.name || '').includes('(인건)')) return '도시가스-인건'
+    return raw === '견적제출완료' ? '참조단가' : raw
+  }
   if (GAS_CATEGORIES.includes(raw)) return raw
   if (raw?.includes('자재') || raw?.includes('재료')) return '도시가스-자재'
   if (raw?.includes('인건') || raw?.includes('노무')) return '도시가스-인건'
-  const sku = (product.sku || '').trim().toUpperCase()
   if (/^GAS-J-/.test(sku)) return '도시가스-자재'
   if (/^GAS-I-/.test(sku) || /^GAS-IN-/.test(sku)) return '도시가스-인건'
   return raw || product.name || ''
@@ -413,6 +420,8 @@ export function getRemarkDisplay(product) {
 /** 자재/인건 필터·옵션 표시 (표준값은 한 줄 라벨, 그 외는 비고 스타일) */
 export function getMaterialKindSelectLabel(value) {
   if (!value || typeof value !== 'string') return ''
+  // 레거시 값은 관리 화면/필터에서 001 배치로 통일 표시
+  if (value === '견적제출완료' || value === '참조단가') return '참조단가001'
   const hit = MATERIAL_KIND_OPTIONS.find((o) => o.value === value)
   if (hit) return hit.label
   return getRemarkDisplay({ category: value }) || value
