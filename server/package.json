@@ -10,7 +10,9 @@
     "seed-list": "node scripts/seedFromProductList.js",
     "seed-list:replace": "node scripts/seedFromProductList.js --replace",
     "export-excel": "node scripts/exportProductsToExcel.js",
-    "apply-moves": "node scripts/applyMainCategoryMoves.js"
+    "apply-moves": "node scripts/applyMainCategoryMoves.js",
+    "verify:reference": "node scripts/verifyReferenceProdVsDb.js",
+    "import:reference": "node scripts/importReferenceBatches.js"
   },
   "keywords": [],
   "author": "",
