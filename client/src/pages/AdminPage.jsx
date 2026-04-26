@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { userApi, productApi } from '@/services/api'
@@ -11,8 +11,8 @@ import {
   getMainCategoryLabel,
   getMaterialKindSelectLabel,
   MAIN_CATEGORIES,
-  MATERIAL_KIND_OPTIONS,
-  MATERIAL_KIND_VALUES,
+  getMaterialKindOptionsForAdmin,
+  isAdminMaterialKindSelectValue,
 } from '@/data/products'
 import { downloadProductsAsExcel } from '@/utils/exportProductsToExcel'
 import ShopNavbar from '@/components/ShopNavbar'
@@ -66,6 +66,8 @@ function AdminPage() {
       setSearchParams({}, { replace: true })
     }
   }, [isReady, isLoggedIn, user, searchParams, setSearchParams])
+
+  const adminMaterialKindOptions = useMemo(() => getMaterialKindOptionsForAdmin(products), [products])
 
   const loadProducts = async () => {
     try {
@@ -231,7 +233,7 @@ function AdminPage() {
     const fromProducts = sorted
       .map((p) => p.category || p.name)
       .filter(Boolean)
-    return [...MATERIAL_KIND_VALUES, ...fromProducts]
+    return [...adminMaterialKindOptions.map((o) => o.value), ...fromProducts]
       .filter((c) => {
         if (seen.has(c)) return false
         seen.add(c)
@@ -239,7 +241,7 @@ function AdminPage() {
       })
   })()
 
-  const materialKindSelectValue = MATERIAL_KIND_VALUES.includes(productForm.category)
+  const materialKindSelectValue = isAdminMaterialKindSelectValue(productForm.category, products)
     ? productForm.category
     : '__custom__'
 
@@ -372,14 +374,14 @@ function AdminPage() {
                       if (v === '__custom__') {
                         setProductForm((p) => ({
                           ...p,
-                          category: MATERIAL_KIND_VALUES.includes(p.category) ? '' : p.category,
+                          category: isAdminMaterialKindSelectValue(p.category, products) ? '' : p.category,
                         }))
                         return
                       }
                       setProductForm((p) => ({ ...p, category: v }))
                     }}
                   >
-                    {MATERIAL_KIND_OPTIONS.map((o) => (
+                    {adminMaterialKindOptions.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                     <option value="__custom__">기타 (직접 입력)</option>

@@ -148,6 +148,34 @@ export const MATERIAL_KIND_OPTIONS = [
 
 export const MATERIAL_KIND_VALUES = MATERIAL_KIND_OPTIONS.map((o) => o.value)
 
+/**
+ * 관리자 새상품 등록 등: 기본 요금 옵션 + DB에 존재하는 참조단가NNN 자동 병합 (번호순, 신규단가입력 앞)
+ */
+export function getMaterialKindOptionsForAdmin(products = []) {
+  const refMap = new Map()
+  for (const o of MATERIAL_KIND_OPTIONS) {
+    if (/^참조단가\d+$/.test(o.value)) refMap.set(o.value, o)
+  }
+  for (const p of Array.isArray(products) ? products : []) {
+    const c = String(p?.category || '').trim()
+    if (/^참조단가\d+$/.test(c) && !refMap.has(c)) refMap.set(c, { value: c, label: c })
+  }
+  const refSorted = [...refMap.keys()].sort(
+    (a, b) => Number(a.replace('참조단가', '')) - Number(b.replace('참조단가', ''))
+  ).map((k) => refMap.get(k))
+  const nonRef = MATERIAL_KIND_OPTIONS.filter((o) => !/^참조단가\d+$/.test(o.value))
+  const 신규Idx = nonRef.findIndex((o) => o.value === '신규단가입력')
+  if (신규Idx === -1) return [...nonRef, ...refSorted]
+  return [...nonRef.slice(0, 신규Idx), ...refSorted, ...nonRef.slice(신규Idx)]
+}
+
+/** 요금 셀렉트에 직접 매핑되는 값인지 (기타 입력 제외) */
+export function isAdminMaterialKindSelectValue(category, products = []) {
+  const c = String(category || '').trim()
+  if (!c) return false
+  return getMaterialKindOptionsForAdmin(products).some((o) => o.value === c)
+}
+
 /** 전각 영문 → 반각으로 정규화 (ＰＬＰ → PLP) */
 function normalizeForCategory(s) {
   if (typeof s !== 'string') return ''
