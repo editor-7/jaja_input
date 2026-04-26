@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '@/contexts/CartContext'
+import logoImage from '../../jpg/001.png'
 import './ShopNavbar.css'
 
 function ShopNavbar({ user, onLogout, cartCount = 0 }) {
@@ -30,7 +31,7 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
           <div className="shop-logo">
             <div className="shop-logo-top">
               <Link to="/" className="logo-img-btn" aria-label="메인으로">
-                <img src="/jpg/jpg_01.png?v=3" alt="도시가스 자재몰" className="logo-img" loading="eager" decoding="async" />
+                <img src={logoImage} alt="도시가스 자재몰" className="logo-img" loading="eager" decoding="async" />
               </Link>
               <button type="button" className="logo-zoom-btn" onClick={(e) => { e.preventDefault(); setShowLogoModal(true) }} aria-label="로고 크게 보기" title="로고 크게 보기">
                 🔍
@@ -42,7 +43,7 @@ function ShopNavbar({ user, onLogout, cartCount = 0 }) {
           </div>
           {showLogoModal && createPortal(
             <div className="logo-modal-overlay" onClick={() => setShowLogoModal(false)} role="dialog" aria-modal="true">
-              <img src="/jpg/jpg_01.png?v=3" alt="도시가스 자재몰" className="logo-modal-img" onClick={(e) => e.stopPropagation()} />
+              <img src={logoImage} alt="도시가스 자재몰" className="logo-modal-img" onClick={(e) => e.stopPropagation()} />
             </div>,
             document.body
           )}
