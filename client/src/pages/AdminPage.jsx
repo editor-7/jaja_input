@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { userApi, productApi } from '@/services/api'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
@@ -21,6 +21,7 @@ import './AdminPage.css'
 function AdminPage() {
   const { user, isLoggedIn, logout, isReady } = useAuth()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [activeMenu, setActiveMenu] = useState('orders')
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
@@ -56,6 +57,15 @@ function AdminPage() {
     loadOrders()
     loadProducts()
   }, [isReady, isLoggedIn, user, navigate])
+
+  /** 쇼핑 화면 등에서 /admin?tab=product 로 진입 시 새상품 등록과 동일 탭 오픈 */
+  useEffect(() => {
+    if (!isReady || !isLoggedIn || user?.user_type !== 'admin') return
+    if (searchParams.get('tab') === 'product') {
+      setActiveMenu('product')
+      setSearchParams({}, { replace: true })
+    }
+  }, [isReady, isLoggedIn, user, searchParams, setSearchParams])
 
   const loadProducts = async () => {
     try {

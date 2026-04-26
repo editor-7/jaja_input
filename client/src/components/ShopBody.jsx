@@ -64,6 +64,7 @@ function ShopBody({
   user,
   referenceCategories = [],
   primaryReferenceCategory = '참조단가001',
+  onAdminNewProduct,
 }) {
   const [listQtys, setListQtys] = useState({})
   const [lastSpaceAddedId, setLastSpaceAddedId] = useState(null)
@@ -710,6 +711,16 @@ function ShopBody({
                 >
                   참조단가
                 </button>
+                {user?.user_type === 'admin' && typeof onAdminNewProduct === 'function' && (
+                  <button
+                    type="button"
+                    className="toolbar-order-btn"
+                    onClick={() => onAdminNewProduct()}
+                    title="관리자: 새상품 등록 (관리자 화면과 동일)"
+                  >
+                    새상품 등록
+                  </button>
+                )}
                 {isReferenceMenuOpen && Array.isArray(referenceCategories) && referenceCategories.length > 0 && referenceCategories.map((refCat) => (
                   <button
                     key={refCat}

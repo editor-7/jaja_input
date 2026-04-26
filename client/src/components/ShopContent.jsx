@@ -456,6 +456,9 @@ function ShopContent({ user, onLogout }) {
         user={user}
         referenceCategories={referenceCategories}
         primaryReferenceCategory={primaryReferenceCategory}
+        onAdminNewProduct={
+          user?.user_type === 'admin' ? () => navigate('/admin?tab=product') : undefined
+        }
       />
 
       <ShopFooter />
