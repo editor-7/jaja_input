@@ -66,6 +66,8 @@ function ShopBody({
   primaryReferenceCategory = '참조단가001',
   onAdminNewProduct,
   onAdmin신규단가,
+  is신규단가PanelOpen = false,
+  on신규단가PanelOpenChange,
 }) {
   const [listQtys, setListQtys] = useState({})
   const [lastSpaceAddedId, setLastSpaceAddedId] = useState(null)
@@ -77,8 +79,6 @@ function ShopBody({
   const [orderEditProductSearch, setOrderEditProductSearch] = useState('')
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false)
   const [isReferenceMenuOpen, setIsReferenceMenuOpen] = useState(false)
-  const [show신규단가ShopButton, setShow신규단가ShopButton] = useState(false)
-  const [is신규단가PanelOpen, setIs신규단가PanelOpen] = useState(false)
 
   const userId = user?._id ?? null
   const isReferenceCategory = (v) => /^참조단가\d+$/.test(String(v || '').trim())
@@ -88,21 +88,8 @@ function ShopBody({
   }, [categoryFilter])
 
   useEffect(() => {
-    const read = () => {
-      try {
-        setShow신규단가ShopButton(localStorage.getItem('jaja_show_신규단가_shop_button') === '1')
-      } catch (_) {
-        setShow신규단가ShopButton(false)
-      }
-    }
-    read()
-    window.addEventListener('jajaShopPrefs', read)
-    return () => window.removeEventListener('jajaShopPrefs', read)
-  }, [])
-
-  useEffect(() => {
-    if (!show신규단가ShopButton) setIs신규단가PanelOpen(false)
-  }, [show신규단가ShopButton])
+    if (user?.user_type !== 'admin') on신규단가PanelOpenChange?.(false)
+  }, [user?.user_type, on신규단가PanelOpenChange])
 
   useEffect(() => {
     if (!userId) return
@@ -731,7 +718,20 @@ function ShopBody({
                 >
                   참조단가
                 </button>
-                {user?.user_type === 'admin' && typeof onAdminNewProduct === 'function' && (
+                {user?.user_type === 'admin' && typeof onAdmin신규단가 === 'function' && (
+                  <button
+                    type="button"
+                    className={is신규단가PanelOpen ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
+                    onClick={() => on신규단가PanelOpenChange?.(!is신규단가PanelOpen)}
+                    title="신규 단가: 목록 비우고 등록 안내"
+                  >
+                    신규단가
+                  </button>
+                )}
+                {user?.user_type === 'admin' &&
+                  typeof onAdminNewProduct === 'function' &&
+                  !isReferenceCategory(categoryFilter) &&
+                  !isReferenceMenuOpen && (
                   <button
                     type="button"
                     className="toolbar-order-btn"
@@ -739,16 +739,6 @@ function ShopBody({
                     title="관리자: 새상품 등록 (관리자 화면과 동일)"
                   >
                     새상품 등록
-                  </button>
-                )}
-                {user?.user_type === 'admin' && show신규단가ShopButton && typeof onAdmin신규단가 === 'function' && (
-                  <button
-                    type="button"
-                    className={is신규단가PanelOpen ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
-                    onClick={() => setIs신규단가PanelOpen((v) => !v)}
-                    title="신규 단가 입력 안내"
-                  >
-                    신규단가
                   </button>
                 )}
                 {isReferenceMenuOpen && Array.isArray(referenceCategories) && referenceCategories.length > 0 && referenceCategories.map((refCat) => (
@@ -797,7 +787,7 @@ function ShopBody({
                 </button>
               </div>
             </div>
-            {show신규단가ShopButton && is신규단가PanelOpen && (
+            {user?.user_type === 'admin' && is신규단가PanelOpen && (
               <div className="admin-shingyu-panel" role="region" aria-label="신규 단가 안내">
                 <p className="admin-shingyu-panel-text">
                   관리자 화면에서 요금을 <strong>신규단가입력</strong>으로 선택한 상태입니다. 아래에서 등록 화면으로 이동해 품목을 추가하세요.
@@ -808,7 +798,7 @@ function ShopBody({
                       신규단가 등록 열기
                     </button>
                   )}
-                  <button type="button" className="toolbar-order-btn" onClick={() => setIs신규단가PanelOpen(false)}>
+                  <button type="button" className="toolbar-order-btn" onClick={() => on신규단가PanelOpenChange?.(false)}>
                     닫기
                   </button>
                 </div>

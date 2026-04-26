@@ -13,6 +13,8 @@ import {
   MAIN_CATEGORIES,
   getMaterialKindOptionsForAdmin,
   isAdminMaterialKindSelectValue,
+  mapAdminFeeCategoryToDb,
+  mapDbCategoryToAdminFeeSelect,
 } from '@/data/products'
 import { downloadProductsAsExcel } from '@/utils/exportProductsToExcel'
 import ShopNavbar from '@/components/ShopNavbar'
@@ -71,19 +73,6 @@ function AdminPage() {
       setSearchParams({}, { replace: true })
     }
   }, [isReady, isLoggedIn, user, searchParams, setSearchParams])
-
-  /** 요금에서 신규단가입력 선택 시 자재몰 툴바에 신규단가 버튼 표시 */
-  useEffect(() => {
-    if (user?.user_type !== 'admin') return
-    try {
-      if (productForm.category === '신규단가입력') {
-        localStorage.setItem('jaja_show_신규단가_shop_button', '1')
-      } else {
-        localStorage.removeItem('jaja_show_신규단가_shop_button')
-      }
-      window.dispatchEvent(new Event('jajaShopPrefs'))
-    } catch (_) {}
-  }, [productForm.category, user?.user_type])
 
   const adminMaterialKindOptions = useMemo(() => getMaterialKindOptionsForAdmin(products), [products])
 
@@ -161,7 +150,7 @@ function AdminPage() {
         name: fresh.name || '',
         desc: fresh.desc || '',
         spec: fresh.spec || '',
-        category: fresh.category || '',
+        category: mapDbCategoryToAdminFeeSelect(fresh.category || ''),
         mainCategory: fresh.mainCategory || '',
         price: fresh.price ?? '',
         img: fresh.img || '',
@@ -172,7 +161,7 @@ function AdminPage() {
         name: p.name || '',
         desc: p.desc || '',
         spec: p.spec || '',
-        category: p.category || '',
+        category: mapDbCategoryToAdminFeeSelect(p.category || ''),
         mainCategory: p.mainCategory || '',
         price: p.price ?? '',
         img: p.img || '',
@@ -184,12 +173,13 @@ function AdminPage() {
     e.preventDefault()
     setProductMsg('')
     const skuVal = String(productForm.sku ?? '').trim()
+    const rawCat = productForm.category.trim() || '도시가스-자재'
     const payload = {
       sku: skuVal,
       name: productForm.name.trim(),
       desc: productForm.desc.trim() || `정성스럽게 구운 ${productForm.name.trim()}`,
       spec: (productForm.spec ?? '').trim(),
-      category: productForm.category.trim() || '도시가스-자재',
+      category: mapAdminFeeCategoryToDb(rawCat) || '도시가스-자재',
       mainCategory: (productForm.mainCategory ?? '').trim(),
       price: Number(productForm.price) || 0,
       img: productForm.img?.trim() || '',
@@ -203,7 +193,7 @@ function AdminPage() {
           sku: updated.sku || '',
           name: updated.name || '',
           desc: updated.desc || '',
-          category: updated.category || '',
+          category: mapDbCategoryToAdminFeeSelect(updated.category || ''),
           mainCategory: updated.mainCategory || '',
           price: updated.price ?? '',
           img: updated.img || '',
@@ -211,7 +201,18 @@ function AdminPage() {
       } else {
         await productApi.create(payload)
         setProductMsg('상품이 등록되었습니다.')
-        setProductForm({ sku: '', name: '', desc: '', spec: '', category: '도시가스-자재', mainCategory: '', price: '', img: '' })
+        const keepFee =
+          String(productForm.category || '').trim() === '신규단가입력' ? '신규단가입력' : '도시가스-자재'
+        setProductForm({
+          sku: '',
+          name: '',
+          desc: '',
+          spec: '',
+          category: keepFee,
+          mainCategory: '',
+          price: '',
+          img: '',
+        })
       }
       if (!editingId) loadProducts()
     } catch (err) {
@@ -259,9 +260,20 @@ function AdminPage() {
       })
   })()
 
-  const materialKindSelectValue = isAdminMaterialKindSelectValue(productForm.category, products)
-    ? productForm.category
+  const feeSelectKey = mapDbCategoryToAdminFeeSelect(productForm.category)
+  const materialKindSelectValue = isAdminMaterialKindSelectValue(feeSelectKey, products)
+    ? feeSelectKey
     : '__custom__'
+
+  const 신규단가CatalogRows = useMemo(() => {
+    if (feeSelectKey !== '신규단가입력') return []
+    return [...products]
+      .filter((p) => {
+        const c = String(p?.category || '').trim()
+        return c === '신규단가' || c === '신규단가입력'
+      })
+      .sort(skuSort)
+  }, [products, feeSelectKey])
 
   const handleProductDelete = async (id) => {
     if (!window.confirm('이 상품을 삭제하시겠습니까?')) return
@@ -456,22 +468,55 @@ function AdminPage() {
                 </div>
               </form>
               {productMsg && <p className="product-msg">{productMsg}</p>}
-              {products.length > 0 && (
-                <div className="product-list-admin">
-                  <h3>등록된 상품 ({products.length})</h3>
-                  <ul>
-                    {products.map((p) => (
-                      <li key={p._id} className="product-item-admin">
-                        <span className="product-sku">{p.sku || '-'}</span>
-                        <span>{p.name}</span>
-                        <span>{p.price?.toLocaleString()}원</span>
-                        <div className="product-actions">
-                          <button type="button" className="edit-btn" onClick={() => handleProductEdit(p)}>수정</button>
-                          <button type="button" className="delete-btn" onClick={() => handleProductDelete(p._id)}>삭제</button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+              {(feeSelectKey === '신규단가입력' || products.length > 0) && (
+                <div
+                  className={
+                    feeSelectKey === '신규단가입력'
+                      ? 'product-list-admin product-list-admin--신규단가'
+                      : 'product-list-admin'
+                  }
+                >
+                  <h3>
+                    {feeSelectKey === '신규단가입력'
+                      ? `신규 단가 품목 (${신규단가CatalogRows.length})`
+                      : `등록된 상품 (${products.length})`}
+                  </h3>
+                  {feeSelectKey === '신규단가입력' ? (
+                    신규단가CatalogRows.length === 0 ? (
+                      <p className="empty-msg">
+                        등록된 신규 단가 품목이 없습니다. 위 폼에서 요금 <strong>신규단가입력</strong>으로 저장한 품목만 이 목록에 표시됩니다.
+                      </p>
+                    ) : (
+                      <ul>
+                        {신규단가CatalogRows.map((p) => (
+                          <li key={p._id} className="product-item-admin product-item-admin--신규단가-row">
+                            <span className="product-sku">{p.sku || '-'}</span>
+                            <span className="admin-신규단가-name">{getDisplayItemName(p)}</span>
+                            <span className="admin-신규단가-spec">{getSpecFromProduct(p) || '-'}</span>
+                            <span className="admin-신규단가-price">{p.price != null ? `${Number(p.price).toLocaleString()}원` : '-'}</span>
+                            <div className="product-actions">
+                              <button type="button" className="edit-btn" onClick={() => handleProductEdit(p)}>수정</button>
+                              <button type="button" className="delete-btn" onClick={() => handleProductDelete(p._id)}>삭제</button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )
+                  ) : (
+                    <ul>
+                      {products.map((p) => (
+                        <li key={p._id} className="product-item-admin">
+                          <span className="product-sku">{p.sku || '-'}</span>
+                          <span>{p.name}</span>
+                          <span>{p.price?.toLocaleString()}원</span>
+                          <div className="product-actions">
+                            <button type="button" className="edit-btn" onClick={() => handleProductEdit(p)}>수정</button>
+                            <button type="button" className="delete-btn" onClick={() => handleProductDelete(p._id)}>삭제</button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               )}
             </section>

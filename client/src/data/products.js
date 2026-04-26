@@ -6,7 +6,29 @@ const FALLBACK_PRODUCTS = [
 
 export const staticProducts = FALLBACK_PRODUCTS
 
-const GAS_CATEGORIES = ['도시가스-자재', '도시가스-인건', '참조단가', '참조단가001', '참조단가002', '신규단가입력']
+const GAS_CATEGORIES = [
+  '도시가스-자재',
+  '도시가스-인건',
+  '참조단가',
+  '참조단가001',
+  '참조단가002',
+  '신규단가입력',
+  '신규단가',
+]
+
+/** 관리자 요금 셀렉트 값(신규단가입력) → DB category */
+export function mapAdminFeeCategoryToDb(category) {
+  const c = String(category || '').trim()
+  if (c === '신규단가입력') return '신규단가'
+  return c
+}
+
+/** DB category → 관리자 요금 셀렉트(표시는 신규단가입력) */
+export function mapDbCategoryToAdminFeeSelect(category) {
+  const c = String(category || '').trim()
+  if (c === '신규단가') return '신규단가입력'
+  return c
+}
 
 /** 큰 카테고리: 필터 탭·DB mainCategory 값 (엑셀 비고1과 동일 체계) */
 export const MAIN_CATEGORIES = ['지하관PLP', '지하관PEM', '노출관', 'GAS METER', '공통']
@@ -173,6 +195,7 @@ export function getMaterialKindOptionsForAdmin(products = []) {
 export function isAdminMaterialKindSelectValue(category, products = []) {
   const c = String(category || '').trim()
   if (!c) return false
+  if (c === '신규단가') return true
   return getMaterialKindOptionsForAdmin(products).some((o) => o.value === c)
 }
 
@@ -451,6 +474,7 @@ export function getMaterialKindSelectLabel(value) {
   if (!value || typeof value !== 'string') return ''
   // 레거시 값은 관리 화면/필터에서 001 배치로 통일 표시
   if (value === '견적제출완료' || value === '참조단가') return '참조단가001'
+  if (value === '신규단가') return '신규단가입력'
   const hit = MATERIAL_KIND_OPTIONS.find((o) => o.value === value)
   if (hit) return hit.label
   return getRemarkDisplay({ category: value }) || value

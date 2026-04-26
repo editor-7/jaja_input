@@ -469,6 +469,63 @@
   flex: 1;
 }
 
+.product-list-admin--신규단가 {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(183, 110, 121, 0.35);
+  border-radius: 10px;
+  padding: 1rem 1rem 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.product-list-admin--신규단가 h3 {
+  color: var(--color-rose-gold);
+  font-size: 1.05rem;
+}
+
+.product-item-admin--신규단가-row {
+  display: grid;
+  grid-template-columns: minmax(88px, 1fr) minmax(120px, 2.2fr) minmax(56px, 0.8fr) minmax(72px, 1fr) auto;
+  gap: 0.65rem 0.75rem;
+  align-items: center;
+  font-size: 0.92rem;
+}
+
+.product-list-admin--신규단가 .product-item-admin--신규단가-row span:nth-child(2) {
+  flex: unset;
+}
+
+.product-item-admin--신규단가-row .admin-신규단가-name {
+  font-weight: 500;
+  color: var(--color-charcoal);
+}
+
+.product-item-admin--신규단가-row .admin-신규단가-spec {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.product-item-admin--신규단가-row .admin-신규단가-price {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .product-item-admin--신규단가-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .product-item-admin--신규단가-row .product-sku {
+    grid-column: 1 / -1;
+  }
+
+  .product-item-admin--신규단가-row .product-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
 .product-actions {
   display: flex;
   gap: 0.5rem;

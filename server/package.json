@@ -12,7 +12,8 @@
     "export-excel": "node scripts/exportProductsToExcel.js",
     "apply-moves": "node scripts/applyMainCategoryMoves.js",
     "verify:reference": "node scripts/verifyReferenceProdVsDb.js",
-    "import:reference": "node scripts/importReferenceBatches.js"
+    "import:reference": "node scripts/importReferenceBatches.js",
+    "dedupe:reference": "node scripts/dedupeReferenceCategoryDuplicates.js"
   },
   "keywords": [],
   "author": "",

@@ -52,6 +52,8 @@ function ShopContent({ user, onLogout }) {
   const [productsLoading, setProductsLoading] = useState(true)
   const [productsLoadError, setProductsLoadError] = useState(false)
   const [productPage, setProductPage] = useState(1)
+  /** 신규단가 패널이 열리면 자재 목록은 비움(신규 단가 입력용 빈 화면) */
+  const [is신규단가PanelOpen, setIs신규단가PanelOpen] = useState(false)
 
   const ITEMS_PER_PAGE = 60
 
@@ -247,6 +249,7 @@ function ShopContent({ user, onLogout }) {
   const primaryReferenceCategory = referenceCategories[0] || '참조단가001'
 
   const filteredProducts = useMemo(() => {
+    if (is신규단가PanelOpen) return []
     let result = Array.isArray(products) ? products : []
     const isReferenceFilter = (value) => /^참조단가\d+$/.test(String(value || '').trim())
     const getRawCategory = (product) => String(product?.category || '').trim()
@@ -336,7 +339,7 @@ function ShopContent({ user, onLogout }) {
       if (is자재A !== is자재B) return is자재A - is자재B
       return skuSort(a, b)
     })
-  }, [products, searchTerm, categoryFilter, referenceCategories, primaryReferenceCategory])
+  }, [products, searchTerm, categoryFilter, referenceCategories, primaryReferenceCategory, is신규단가PanelOpen])
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE))
   const paginatedProducts = useMemo(() => {
@@ -461,9 +464,14 @@ function ShopContent({ user, onLogout }) {
         }
         onAdmin신규단가={
           user?.user_type === 'admin'
-            ? () => navigate(`/admin?tab=product&fee=${encodeURIComponent('신규단가입력')}`)
+            ? () => {
+                setIs신규단가PanelOpen(false)
+                navigate(`/admin?tab=product&fee=${encodeURIComponent('신규단가입력')}`)
+              }
             : undefined
         }
+        is신규단가PanelOpen={is신규단가PanelOpen}
+        on신규단가PanelOpenChange={setIs신규단가PanelOpen}
       />
 
       <ShopFooter />
