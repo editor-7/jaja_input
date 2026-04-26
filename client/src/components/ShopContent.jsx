@@ -258,6 +258,7 @@ function ShopContent({ user, onLogout }) {
       if (primaryReferenceCategory === '참조단가001' && raw === '참조단가') return true
       return false
     }
+    const hasReferenceData = result.some((p) => isAnyReferenceLike(p))
     const trimmed = searchTerm.trim()
     if (trimmed) {
       const tokens = trimmed.toLowerCase().split(/\s+/).filter(Boolean)
@@ -294,18 +295,27 @@ function ShopContent({ user, onLogout }) {
         // 인건비만 탭은 모든 인건 상품을 노출
         result = result.filter((p) => getCategory(p) === '도시가스-인건')
       } else if (isReferenceFilter(categoryFilter)) {
-        // 참조단가NNN 탭은 해당 배치만 노출
-        if (categoryFilter === primaryReferenceCategory) {
-          result = result.filter((p) => isPrimaryReferenceLike(p))
+        // 운영 DB에 참조단가 데이터가 비어있는 경우 임시 폴백:
+        // 참조단가 탭에서 자재/인건 전체를 보여 사용자가 작업을 계속할 수 있게 한다.
+        if (!hasReferenceData) {
+          result = result.filter((p) => {
+            const c = getCategory(p)
+            return c === '도시가스-자재' || c === '도시가스-인건'
+          })
         } else {
-          result = result.filter((p) => getRawCategory(p) === categoryFilter)
+          // 참조단가NNN 탭은 해당 배치만 노출
+          if (categoryFilter === primaryReferenceCategory) {
+            result = result.filter((p) => isPrimaryReferenceLike(p))
+          } else {
+            result = result.filter((p) => getRawCategory(p) === categoryFilter)
+          }
         }
       } else if (SHOP_SECTIONS.includes(categoryFilter)) {
         result = result.filter((p) => getShopSection(p) === categoryFilter)
       }
     }
     // 참조단가는 전용 탭에서만 노출 (전체/기본 탭에서는 숨김)
-    if (!isReferenceFilter(categoryFilter)) {
+    if (!isReferenceFilter(categoryFilter) && hasReferenceData) {
       result = result.filter((p) => !isAnyReferenceLike(p))
     }
     // 요청: 인건 품목은 인건비만 탭에서만 노출
