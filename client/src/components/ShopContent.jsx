@@ -231,7 +231,12 @@ function ShopContent({ user, onLogout }) {
 
   const referenceCategories = useMemo(() => {
     const raws = (Array.isArray(products) ? products : [])
-      .map((p) => String(p?.category || '').trim())
+      .map((p) => {
+        const raw = String(p?.category || '').trim()
+        if (raw) return raw
+        // 과거 적재 데이터 중 category는 일반값이고 desc에만 참조단가 마커가 있는 경우 보정
+        return String(p?.desc || '').includes('참조단가 -') ? '참조단가001' : ''
+      })
       .map((raw) => (raw === '참조단가' || raw === '견적제출완료' ? '참조단가001' : raw))
       .filter((raw) => /^참조단가\d+$/.test(raw))
     const unique = Array.from(new Set(raws))
@@ -256,6 +261,8 @@ function ShopContent({ user, onLogout }) {
       if (raw === primaryReferenceCategory) return true
       // 과거 데이터(참조단가)는 1차 배치(참조단가001)로 함께 취급
       if (primaryReferenceCategory === '참조단가001' && raw === '참조단가') return true
+      // 과거 적재 데이터: desc에만 참조단가 표기가 있는 경우도 001로 포함
+      if (primaryReferenceCategory === '참조단가001' && String(product?.desc || '').includes('참조단가 -')) return true
       return false
     }
     const hasReferenceData = result.some((p) => isAnyReferenceLike(p))
