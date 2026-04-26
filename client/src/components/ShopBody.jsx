@@ -62,6 +62,8 @@ function ShopBody({
   addedMsg,
   onShowPayment,
   user,
+  referenceCategories = [],
+  primaryReferenceCategory = '참조단가001',
 }) {
   const [listQtys, setListQtys] = useState({})
   const [lastSpaceAddedId, setLastSpaceAddedId] = useState(null)
@@ -72,8 +74,14 @@ function ShopBody({
   const [editOrderForm, setEditOrderForm] = useState(null)
   const [orderEditProductSearch, setOrderEditProductSearch] = useState('')
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false)
+  const [isReferenceMenuOpen, setIsReferenceMenuOpen] = useState(false)
 
   const userId = user?._id ?? null
+  const isReferenceCategory = (v) => /^참조단가\d+$/.test(String(v || '').trim())
+
+  useEffect(() => {
+    if (isReferenceCategory(categoryFilter)) setIsReferenceMenuOpen(true)
+  }, [categoryFilter])
 
   useEffect(() => {
     if (!userId) return
@@ -685,26 +693,50 @@ function ShopBody({
                 </button>
                 <button
                   type="button"
-                  className={categoryFilter === '참조단가' ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
+                  className={isReferenceCategory(categoryFilter) ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
                   onClick={() => {
                     onSearchChange('')
-                    onCategoryChange(categoryFilter === '참조단가' ? '전체' : '참조단가')
+                    setIsReferenceMenuOpen((prev) => {
+                      const next = !prev
+                      if (next && Array.isArray(referenceCategories) && referenceCategories.length > 0) {
+                        onCategoryChange(referenceCategories[0] || primaryReferenceCategory)
+                      } else if (!next && isReferenceCategory(categoryFilter)) {
+                        onCategoryChange('전체')
+                      }
+                      return next
+                    })
                   }}
-                  title="참조단가 데이터 보기"
+                  title="참조단가 목록 보기"
                 >
                   참조단가
                 </button>
-                <button
-                  type="button"
-                  className={categoryFilter === '신규단가입력' ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
-                  onClick={() => {
-                    onSearchChange('')
-                    onCategoryChange(categoryFilter === '신규단가입력' ? '전체' : '신규단가입력')
-                  }}
-                  title="신규단가입력 데이터 보기"
-                >
-                  신규단가입력
-                </button>
+                {isReferenceMenuOpen && Array.isArray(referenceCategories) && referenceCategories.length > 0 && referenceCategories.map((refCat) => (
+                  <button
+                    key={refCat}
+                    type="button"
+                    className={categoryFilter === refCat ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
+                    onClick={() => {
+                      onSearchChange('')
+                      onCategoryChange(refCat)
+                    }}
+                    title={`${refCat} 데이터 보기`}
+                  >
+                    {refCat}
+                  </button>
+                ))}
+                {isReferenceMenuOpen && (!Array.isArray(referenceCategories) || referenceCategories.length === 0) && (
+                  <button
+                    type="button"
+                    className={categoryFilter === primaryReferenceCategory ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
+                    onClick={() => {
+                      onSearchChange('')
+                      onCategoryChange(primaryReferenceCategory)
+                    }}
+                    title={`${primaryReferenceCategory} 데이터 보기`}
+                  >
+                    {primaryReferenceCategory}
+                  </button>
+                )}
                 <button type="button" className="toolbar-order-btn" onClick={onShowOrderList}>
                   구매내역
                 </button>

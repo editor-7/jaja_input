@@ -372,6 +372,7 @@ export function getCategory(product) {
   if (!product) return ''
   const raw = (product.category || '').trim()
   if (raw === '견적제출완료') return '참조단가'
+  if (/^참조단가(?:\d+)?$/.test(raw)) return raw
   if (GAS_CATEGORIES.includes(raw)) return raw
   if (raw?.includes('자재') || raw?.includes('재료')) return '도시가스-자재'
   if (raw?.includes('인건') || raw?.includes('노무')) return '도시가스-인건'

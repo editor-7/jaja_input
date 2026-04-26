@@ -229,9 +229,35 @@ function ShopContent({ user, onLogout }) {
     })
   }, [user?._id, user?.name, groupedCart, totalPrice, deliveryInfo])
 
+  const referenceCategories = useMemo(() => {
+    const raws = (Array.isArray(products) ? products : [])
+      .map((p) => String(p?.category || '').trim())
+      .map((raw) => (raw === '참조단가' || raw === '견적제출완료' ? '참조단가001' : raw))
+      .filter((raw) => /^참조단가\d+$/.test(raw))
+    const unique = Array.from(new Set(raws))
+    unique.sort((a, b) => Number(a.replace('참조단가', '')) - Number(b.replace('참조단가', '')))
+    return unique
+  }, [products])
+
+  const primaryReferenceCategory = referenceCategories[0] || '참조단가001'
+
   const filteredProducts = useMemo(() => {
     let result = Array.isArray(products) ? products : []
-    const specialCategorySet = new Set(['참조단가', '신규단가입력'])
+    const isReferenceFilter = (value) => /^참조단가\d+$/.test(String(value || '').trim())
+    const getRawCategory = (product) => String(product?.category || '').trim()
+    const isAnyReferenceLike = (product) => {
+      const raw = getRawCategory(product)
+      if (raw === '견적제출완료') return true
+      if (/^참조단가(?:\d+)?$/.test(raw)) return true
+      return String(product?.desc || '').includes('참조단가 -')
+    }
+    const isPrimaryReferenceLike = (product) => {
+      const raw = getRawCategory(product)
+      if (raw === primaryReferenceCategory) return true
+      // 과거 데이터(참조단가)는 1차 배치(참조단가001)로 함께 취급
+      if (primaryReferenceCategory === '참조단가001' && raw === '참조단가') return true
+      return false
+    }
     const trimmed = searchTerm.trim()
     if (trimmed) {
       const tokens = trimmed.toLowerCase().split(/\s+/).filter(Boolean)
@@ -267,22 +293,23 @@ function ShopContent({ user, onLogout }) {
       if (categoryFilter === '인건비만') {
         // 인건비만 탭은 모든 인건 상품을 노출
         result = result.filter((p) => getCategory(p) === '도시가스-인건')
-      } else if (categoryFilter === '참조단가') {
-        // 참조단가 탭은 해당 카테고리만 노출
-        result = result.filter((p) => getCategory(p) === '참조단가')
-      } else if (categoryFilter === '신규단가입력') {
-        // 신규단가입력 탭은 해당 카테고리만 노출
-        result = result.filter((p) => getCategory(p) === '신규단가입력')
+      } else if (isReferenceFilter(categoryFilter)) {
+        // 참조단가NNN 탭은 해당 배치만 노출
+        if (categoryFilter === primaryReferenceCategory) {
+          result = result.filter((p) => isPrimaryReferenceLike(p))
+        } else {
+          result = result.filter((p) => getRawCategory(p) === categoryFilter)
+        }
       } else if (SHOP_SECTIONS.includes(categoryFilter)) {
         result = result.filter((p) => getShopSection(p) === categoryFilter)
       }
     }
-    // 견적 전용 카테고리는 전용 탭에서만 노출 (전체/기본 탭에서는 숨김)
-    if (categoryFilter !== '참조단가' && categoryFilter !== '신규단가입력') {
-      result = result.filter((p) => !specialCategorySet.has(getCategory(p)))
+    // 참조단가는 전용 탭에서만 노출 (전체/기본 탭에서는 숨김)
+    if (!isReferenceFilter(categoryFilter)) {
+      result = result.filter((p) => !isAnyReferenceLike(p))
     }
     // 요청: 인건 품목은 인건비만 탭에서만 노출
-    if (categoryFilter !== '인건비만') {
+    if (categoryFilter !== '인건비만' && !isReferenceFilter(categoryFilter)) {
       result = result.filter((p) => getCategory(p) !== '도시가스-인건')
     }
     // 자재 품목 먼저, 그 다음 인건 (자재 선택 시 인건이 따라오는 설계)
@@ -292,7 +319,7 @@ function ShopContent({ user, onLogout }) {
       if (is자재A !== is자재B) return is자재A - is자재B
       return skuSort(a, b)
     })
-  }, [products, searchTerm, categoryFilter])
+  }, [products, searchTerm, categoryFilter, referenceCategories, primaryReferenceCategory])
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE))
   const paginatedProducts = useMemo(() => {
@@ -410,6 +437,8 @@ function ShopContent({ user, onLogout }) {
           setPaymentMethod('')
         }}
         user={user}
+        referenceCategories={referenceCategories}
+        primaryReferenceCategory={primaryReferenceCategory}
       />
 
       <ShopFooter />
