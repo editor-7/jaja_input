@@ -119,6 +119,26 @@
   border-color: var(--color-rose-gold);
   font-weight: 600;
 }
+.admin-shingyu-panel {
+  width: 100%;
+  max-width: 40rem;
+  margin: 0 0 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(183, 110, 121, 0.35);
+  border-radius: 8px;
+  background: rgba(183, 110, 121, 0.06);
+  font-size: 0.9rem;
+  color: var(--color-soft-brown);
+}
+.admin-shingyu-panel-text {
+  margin: 0 0 0.65rem 0;
+  line-height: 1.45;
+}
+.admin-shingyu-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
 @media (max-width: 900px) {
   .toolbar-right {
     width: 100%;

@@ -459,6 +459,11 @@ function ShopContent({ user, onLogout }) {
         onAdminNewProduct={
           user?.user_type === 'admin' ? () => navigate('/admin?tab=product') : undefined
         }
+        onAdmin신규단가={
+          user?.user_type === 'admin'
+            ? () => navigate(`/admin?tab=product&fee=${encodeURIComponent('신규단가입력')}`)
+            : undefined
+        }
       />
 
       <ShopFooter />

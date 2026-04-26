@@ -58,14 +58,32 @@ function AdminPage() {
     loadProducts()
   }, [isReady, isLoggedIn, user, navigate])
 
-  /** 쇼핑 화면 등에서 /admin?tab=product 로 진입 시 새상품 등록과 동일 탭 오픈 */
+  /** 쇼핑 화면 등에서 /admin?tab=product 로 진입 시 새상품 등록과 동일 탭 오픈 (+ fee=신규단가입력 시 요금 프리셋) */
   useEffect(() => {
     if (!isReady || !isLoggedIn || user?.user_type !== 'admin') return
     if (searchParams.get('tab') === 'product') {
       setActiveMenu('product')
+      const feeRaw = searchParams.get('fee')
+      const fee = feeRaw ? decodeURIComponent(feeRaw) : ''
+      if (fee === '신규단가입력') {
+        setProductForm((prev) => ({ ...prev, category: '신규단가입력' }))
+      }
       setSearchParams({}, { replace: true })
     }
   }, [isReady, isLoggedIn, user, searchParams, setSearchParams])
+
+  /** 요금에서 신규단가입력 선택 시 자재몰 툴바에 신규단가 버튼 표시 */
+  useEffect(() => {
+    if (user?.user_type !== 'admin') return
+    try {
+      if (productForm.category === '신규단가입력') {
+        localStorage.setItem('jaja_show_신규단가_shop_button', '1')
+      } else {
+        localStorage.removeItem('jaja_show_신규단가_shop_button')
+      }
+      window.dispatchEvent(new Event('jajaShopPrefs'))
+    } catch (_) {}
+  }, [productForm.category, user?.user_type])
 
   const adminMaterialKindOptions = useMemo(() => getMaterialKindOptionsForAdmin(products), [products])
 
