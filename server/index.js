@@ -97,6 +97,19 @@ app.use(express.urlencoded({ extended: true }));
 
 async function start() {
   await connectDB();
+  try {
+    const mongoose = require('mongoose');
+    const Product = require('./models/Product');
+    const dbName = mongoose.connection.db?.databaseName || '';
+    const total = await Product.countDocuments();
+    const ref001 = await Product.countDocuments({ category: '참조단가001' })
+    const ref002 = await Product.countDocuments({ category: '참조단가002' })
+    console.log(
+      `[상품 DB] database=${dbName} total=${total} 참조단가001=${ref001} 참조단가002=${ref002}`
+    )
+  } catch (e) {
+    console.warn('[상품 DB] 부트 통계 실패:', e.message)
+  }
 }
 
 // 기본 라우트
