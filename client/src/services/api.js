@@ -55,11 +55,9 @@ async function request(endpoint, options = {}) {
   } catch {
     data = {}
   }
-  // Cloudtype 라우팅 환경에 따라 /api prefix가 없는 경우가 있어 products GET에 한해 1회 폴백
+  // Cloudtype 라우팅 환경에 따라 /api prefix가 없는 경우가 있어 products 요청은 1회 폴백
   if (
     res.status === 404 &&
-    options.method === 'GET' &&
-    options.auth === false &&
     API_BASE_RAW &&
     (endpoint === '/products' || endpoint.startsWith('/products/'))
   ) {
