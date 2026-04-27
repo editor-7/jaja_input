@@ -46,6 +46,34 @@ body {
   min-height: 100vh;
 }
 
+/* 화면 텍스트는 드래그/복사가 가능하도록 기본 허용 */
+body,
+p,
+span,
+div,
+td,
+th,
+li,
+label,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* 조작 UI는 오선택 방지를 위해 기존처럼 선택 비활성 유지 */
+button,
+input,
+select,
+textarea {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 #root {
   min-height: 100vh;
   width: 100%;
