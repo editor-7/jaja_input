@@ -236,24 +236,32 @@ function AdminPage() {
   const managedProducts = (() => {
     let list = [...products]
     if (productSearch.trim()) {
-      const term = productSearch.trim().toLowerCase()
-      const termCompact = term.replace(/[^a-z0-9가-힣]/gi, '')
-      list = list.filter(
-        (p) => {
-          const name = String(p.name || '').toLowerCase()
-          const sku = String(p.sku || '').toLowerCase()
-          const category = String(p.category || '').toLowerCase()
-          const desc = String(p.desc || '').toLowerCase()
-          const skuCompact = sku.replace(/[^a-z0-9]/gi, '')
-          return (
-            name.includes(term) ||
-            sku.includes(term) ||
-            category.includes(term) ||
-            desc.includes(term) ||
-            (!!termCompact && skuCompact.includes(termCompact))
-          )
-        }
-      )
+      const query = productSearch.trim().toLowerCase()
+      const tokens = query.split(/\s+/).filter(Boolean)
+      const tokenCompacts = tokens.map((t) => t.replace(/[^a-z0-9가-힣]/gi, ''))
+      list = list.filter((p) => {
+        const mainCat = getMainCategory(p)
+        const haystack = [
+          p.name,
+          p.sku,
+          p.category,
+          p.desc,
+          getSpecFromProduct(p),
+          mainCat,
+          getMainCategoryLabel(mainCat),
+          p.unit,
+          p.size,
+          p._id,
+          p.price,
+        ]
+          .map((v) => String(v ?? '').toLowerCase())
+          .join(' ')
+        const haystackCompact = haystack.replace(/[^a-z0-9가-힣]/gi, '')
+        return tokens.every((t, i) => {
+          const tc = tokenCompacts[i]
+          return haystack.includes(t) || (!!tc && haystackCompact.includes(tc))
+        })
+      })
     }
     if (productCategoryFilter !== 'all') {
       list = list.filter((p) => (p.category || p.name) === productCategoryFilter)
