@@ -509,6 +509,8 @@ export function findLaborPair(materialProduct, productList) {
   const sku = (materialProduct.sku || '').trim()
   const spec = getSpecFromProduct(materialProduct)
   const displayName = getDisplayItemName(materialProduct)
+  const specKey = String(spec || '').replace(/\s+/g, '').toUpperCase()
+  const nameKey = String(displayName || '').replace(/\s+/g, '').toUpperCase()
   // SKU 매칭: GAS-J-0001 → GAS-IN-0001 또는 GAS-I-0001
   if (sku && /^GAS-J-/i.test(sku)) {
     const laborSku1 = sku.replace(/^GAS-J-/i, 'GAS-IN-')
@@ -520,12 +522,12 @@ export function findLaborPair(materialProduct, productList) {
     if (bySku) return bySku
   }
   // 품목명·규격으로 매칭
-  return productList.find(
-    (p) =>
-      getCategory(p) === '도시가스-인건' &&
-      getSpecFromProduct(p) === spec &&
-      getDisplayItemName(p) === displayName
-  ) || null
+  return productList.find((p) => {
+    if (getCategory(p) !== '도시가스-인건') return false
+    const pSpecKey = String(getSpecFromProduct(p) || '').replace(/\s+/g, '').toUpperCase()
+    const pNameKey = String(getDisplayItemName(p) || '').replace(/\s+/g, '').toUpperCase()
+    return pSpecKey === specKey && pNameKey === nameKey
+  }) || null
 }
 
 /**
@@ -538,15 +540,17 @@ export function findMaterialPair(laborProduct, productList) {
   const sku = (laborProduct.sku || '').trim()
   const spec = getSpecFromProduct(laborProduct)
   const displayName = getDisplayItemName(laborProduct)
+  const specKey = String(spec || '').replace(/\s+/g, '').toUpperCase()
+  const nameKey = String(displayName || '').replace(/\s+/g, '').toUpperCase()
   if (sku && /^GAS-(I|IN)-/i.test(sku)) {
     const materialSku = sku.replace(/^GAS-IN-/i, 'GAS-J-').replace(/^GAS-I-/i, 'GAS-J-')
     const bySku = productList.find((p) => (p.sku || '').trim() === materialSku)
     if (bySku) return bySku
   }
-  return productList.find(
-    (p) =>
-      getCategory(p) === '도시가스-자재' &&
-      getSpecFromProduct(p) === spec &&
-      getDisplayItemName(p) === displayName
-  ) || null
+  return productList.find((p) => {
+    if (getCategory(p) !== '도시가스-자재') return false
+    const pSpecKey = String(getSpecFromProduct(p) || '').replace(/\s+/g, '').toUpperCase()
+    const pNameKey = String(getDisplayItemName(p) || '').replace(/\s+/g, '').toUpperCase()
+    return pSpecKey === specKey && pNameKey === nameKey
+  }) || null
 }
