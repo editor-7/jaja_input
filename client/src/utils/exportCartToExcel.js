@@ -7,9 +7,9 @@ const LEFT = { horizontal: 'left', vertical: 'center' }
 const STYLE_CENTER = { alignment: CENTER }
 const STYLE_CENTER_NUM = { alignment: CENTER, numFmt: '#,##0' }
 const STYLE_LEFT = { alignment: LEFT }
-const COL_품목 = 0
-// 컬럼: 품목(0), 규격(1), 수량(2), 단위(3), 자재비단가(4), 자재비금액(5), 인건비단가(6), 인건비금액(7), 합계(8), 비고1(9), 비고2(10)
-const NUM_COLUMNS = [4, 5, 6, 7, 8]
+const COL_품목 = 1
+// 컬럼: SKU(0), 품목(1), 규격(2), 수량(3), 단위(4), 자재비단가(5), 자재비금액(6), 인건비단가(7), 인건비금액(8), 합계(9), 비고1(10), 비고2(11)
+const NUM_COLUMNS = [5, 6, 7, 8, 9]
 
 /**
  * 장바구니(groupedCart)를 엑셀 파일로 다운로드
@@ -20,7 +20,7 @@ export function downloadCartAsExcel(groupedCart, totalPrice = 0) {
   if (!groupedCart || groupedCart.length === 0) {
     return
   }
-  const headers = ['품목', '규격', '수량', '단위', '자재비단가', '자재비금액', '인건비단가', '인건비금액', '합계', '비고1', '비고2']
+  const headers = ['SKU', '품목', '규격', '수량', '단위', '자재비단가', '자재비금액', '인건비단가', '인건비금액', '합계', '비고1', '비고2']
   const keyToRow = new Map()
   for (const g of groupedCart) {
     const displayName = getDisplayItemName(g)
@@ -28,6 +28,7 @@ export function downloadCartAsExcel(groupedCart, totalPrice = 0) {
     const key = `${displayName}\t${spec}`
     if (!keyToRow.has(key)) {
       keyToRow.set(key, {
+        SKU: String(g.sku || '').trim(),
         품목: displayName,
         규격: spec,
         수량: 0,
@@ -45,6 +46,7 @@ export function downloadCartAsExcel(groupedCart, totalPrice = 0) {
     const amount = (g.price != null ? g.price : 0) * qty
     row.수량 = qty
     if (cat === '도시가스-자재') {
+      if (String(g.sku || '').trim()) row.SKU = String(g.sku || '').trim()
       row.자재비단가 = g.price != null ? g.price : 0
       row.자재비금액 = amount
     }
@@ -59,22 +61,23 @@ export function downloadCartAsExcel(groupedCart, totalPrice = 0) {
     const has인건 = r.인건비단가 > 0 || r.인건비금액 > 0
     const 비고1 = toCatalogMainDisplay(r.mainCategory) || '공통'
     const 비고2 = has자재 && has인건 ? '자재·인건' : has자재 ? '자재' : has인건 ? '인건' : ''
-    return [r.품목, r.규격, r.수량, r.단위, r.자재비단가, r.자재비금액, r.인건비단가, r.인건비금액, 합계, 비고1, 비고2]
+    return [r.SKU || '', r.품목, r.규격, r.수량, r.단위, r.자재비단가, r.자재비금액, r.인건비단가, r.인건비금액, 합계, 비고1, 비고2]
   })
-  dataRows = dataRows.sort((a, b) => getExcelItemSortIndex(a[0], a[1]) - getExcelItemSortIndex(b[0], b[1]))
+  dataRows = dataRows.sort((a, b) => getExcelItemSortIndex(a[1], a[2]) - getExcelItemSortIndex(b[1], b[2]))
   let sum자재비금액 = 0
   let sum인건비금액 = 0
   let sum합계 = 0
   dataRows.forEach((row) => {
-    sum자재비금액 += row[5]
-    sum인건비금액 += row[7]
-    sum합계 += row[8]
+    sum자재비금액 += row[6]
+    sum인건비금액 += row[8]
+    sum합계 += row[9]
   })
-  const 계행 = ['계', '', '', '', '', sum자재비금액, '', sum인건비금액, sum합계, '', '']
+  const 계행 = ['', '계', '', '', '', '', sum자재비금액, '', sum인건비금액, sum합계, '', '']
   const rows = [headers, ...dataRows, 계행]
   const wb = XLSX.utils.book_new()
   const ws = XLSX.utils.aoa_to_sheet(rows)
   ws['!cols'] = [
+    { wch: 14 },
     { wch: 24 },
     { wch: 10 },
     { wch: 8 },
