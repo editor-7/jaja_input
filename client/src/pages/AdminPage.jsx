@@ -45,6 +45,7 @@ function AdminPage() {
   const [productMsg, setProductMsg] = useState('')
   const [productSearch, setProductSearch] = useState('')
   const [productSearchInput, setProductSearchInput] = useState('')
+  const [productSearchMsg, setProductSearchMsg] = useState('')
   const [productCategoryFilter, setProductCategoryFilter] = useState('all')
   const [productMainCategoryFilter, setProductMainCategoryFilter] = useState('all')
   const [productSortBy, setProductSortBy] = useState('skuAsc')
@@ -85,7 +86,7 @@ function AdminPage() {
   }, [productSearch])
 
   const applyProductSearch = () => {
-    setProductSearch(productSearchInput)
+    setProductSearch(String(productSearchInput || '').trim())
   }
 
   const loadProducts = async () => {
@@ -267,6 +268,17 @@ function AdminPage() {
     else if (productSortBy === 'createdAt') list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
     return list
   })()
+
+  useEffect(() => {
+    const q = String(productSearch || '').trim()
+    if (!q) {
+      setProductSearchMsg('')
+      return
+    }
+    const n = managedProducts.length
+    if (n > 0) setProductSearchMsg(`검색어 "${q}" 결과 ${n}건`)
+    else setProductSearchMsg(`검색어 "${q}" 결과가 없습니다.`)
+  }, [productSearch, managedProducts.length])
 
   const productCategories = (() => {
     const sorted = [...products].sort(skuSort)
@@ -653,6 +665,7 @@ function AdminPage() {
                       <option value="priceDesc">가격 높은순</option>
                     </select>
                   </div>
+                  {productSearchMsg && <p className="product-msg">{productSearchMsg}</p>}
                   <div className="product-list-table">
                     <div className="product-list-header">
                       <span>SKU</span>
