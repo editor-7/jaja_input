@@ -44,6 +44,7 @@ function AdminPage() {
   const [editingId, setEditingId] = useState(null)
   const [productMsg, setProductMsg] = useState('')
   const [productSearch, setProductSearch] = useState('')
+  const [productSearchInput, setProductSearchInput] = useState('')
   const [productCategoryFilter, setProductCategoryFilter] = useState('all')
   const [productMainCategoryFilter, setProductMainCategoryFilter] = useState('all')
   const [productSortBy, setProductSortBy] = useState('skuAsc')
@@ -78,6 +79,14 @@ function AdminPage() {
   }, [isReady, isLoggedIn, user, searchParams, setSearchParams])
 
   const adminMaterialKindOptions = useMemo(() => getMaterialKindOptionsForAdmin(products), [products])
+
+  useEffect(() => {
+    setProductSearchInput(productSearch)
+  }, [productSearch])
+
+  const applyProductSearch = () => {
+    setProductSearch(productSearchInput)
+  }
 
   const loadProducts = async () => {
     try {
@@ -589,10 +598,19 @@ function AdminPage() {
                     <input
                       type="text"
                       placeholder="상품명, SKU, 카테고리 검색"
-                      value={productSearch}
-                      onChange={(e) => setProductSearch(e.target.value)}
+                      value={productSearchInput}
+                      onChange={(e) => setProductSearchInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          applyProductSearch()
+                        }
+                      }}
                       className="product-search-input"
                     />
+                    <button type="button" className="toolbar-search-btn" onClick={applyProductSearch} aria-label="검색">
+                      🔍
+                    </button>
                     <select
                       value={productMainCategoryFilter}
                       onChange={(e) => setProductMainCategoryFilter(e.target.value)}

@@ -576,6 +576,21 @@
   font-size: 0.95rem;
 }
 
+.product-management-toolbar .toolbar-search-btn {
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fff;
+  color: var(--color-charcoal);
+  cursor: pointer;
+}
+
+.product-management-toolbar .toolbar-search-btn:hover {
+  background: var(--color-blush);
+  color: var(--color-rose-gold);
+}
+
 .product-filter-select,
 .product-sort-select {
   padding: 0.5rem 0.8rem;
