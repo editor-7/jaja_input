@@ -7,8 +7,11 @@ import { skuSort } from '@/utils/productUtils'
 import {
   getDisplayItemName,
   getSpecFromProduct,
+  getCategory,
   getMainCategory,
   getMainCategoryLabel,
+  findLaborPair,
+  findMaterialPair,
   getMaterialKindSelectLabel,
   MAIN_CATEGORIES,
   getMaterialKindOptionsForAdmin,
@@ -278,13 +281,36 @@ function AdminPage() {
   const handleProductDelete = async (id) => {
     if (!window.confirm('이 상품을 삭제하시겠습니까?')) return
     try {
+      const target = products.find((p) => String(p._id) === String(id))
+      const toDeleteIds = new Set([String(id)])
+      if (target) {
+        const cat = getCategory(target)
+        const pair =
+          cat === '도시가스-자재'
+            ? findLaborPair(target, products)
+            : cat === '도시가스-인건'
+              ? findMaterialPair(target, products)
+              : null
+        if (pair?._id) toDeleteIds.add(String(pair._id))
+      }
+
+      // 선택한 품목은 반드시 삭제, 짝 품목은 존재할 때 함께 삭제
       await productApi.delete(id)
-      setProducts((prev) => prev.filter((p) => String(p._id) !== String(id)))
-      if (editingId && String(editingId) === String(id)) {
+      const pairIds = [...toDeleteIds].filter((x) => x !== String(id))
+      for (const pairId of pairIds) {
+        try {
+          await productApi.delete(pairId)
+        } catch (err) {
+          // 이미 없거나 권한/동기화 지연으로 실패할 수 있어 주 삭제 흐름은 유지
+        }
+      }
+
+      setProducts((prev) => prev.filter((p) => !toDeleteIds.has(String(p._id))))
+      if (editingId && toDeleteIds.has(String(editingId))) {
         setEditingId(null)
         setProductForm({ sku: '', name: '', desc: '', spec: '', category: '도시가스-자재', mainCategory: '', price: '', img: '' })
       }
-      setProductMsg('상품이 삭제되었습니다.')
+      setProductMsg(toDeleteIds.size > 1 ? `상품 ${toDeleteIds.size}건이 삭제되었습니다.` : '상품이 삭제되었습니다.')
       setTimeout(() => setProductMsg(''), 3000)
     } catch (err) {
       setProductMsg(err?.message || '삭제에 실패했습니다.')
