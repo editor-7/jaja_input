@@ -79,6 +79,7 @@ function ShopBody({
   const [orderEditProductSearch, setOrderEditProductSearch] = useState('')
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false)
   const [isReferenceMenuOpen, setIsReferenceMenuOpen] = useState(false)
+  const [searchInput, setSearchInput] = useState(searchTerm || '')
 
   const userId = user?._id ?? null
   const isReferenceCategory = (v) => /^참조단가\d+$/.test(String(v || '').trim())
@@ -86,6 +87,19 @@ function ShopBody({
   useEffect(() => {
     if (isReferenceCategory(categoryFilter)) setIsReferenceMenuOpen(true)
   }, [categoryFilter])
+
+  useEffect(() => {
+    setSearchInput(searchTerm || '')
+  }, [searchTerm])
+
+  const applySearch = () => {
+    onSearchChange?.(searchInput)
+  }
+
+  const clearSearch = () => {
+    setSearchInput('')
+    onSearchChange?.('')
+  }
 
   useEffect(() => {
     if (user?.user_type !== 'admin') on신규단가PanelOpenChange?.(false)
@@ -687,15 +701,22 @@ function ShopBody({
               <div className="toolbar-right">
                 <input
                   type="text"
-                  placeholder="검색"
-                  value={searchTerm}
-                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder="상품명/SKU 검색"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      applySearch()
+                    }
+                  }}
                   className="toolbar-search"
                 />
                 <button
                   type="button"
                   className="toolbar-search-btn"
                   aria-label="검색"
+                  onClick={applySearch}
                 >
                   🔍
                 </button>
@@ -703,7 +724,7 @@ function ShopBody({
                   type="button"
                   className={isReferenceCategory(categoryFilter) ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
                   onClick={() => {
-                    onSearchChange('')
+                    clearSearch()
                     setIsReferenceMenuOpen((prev) => {
                       const next = !prev
                       if (next && Array.isArray(referenceCategories) && referenceCategories.length > 0) {
@@ -747,7 +768,7 @@ function ShopBody({
                     type="button"
                     className={categoryFilter === refCat ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
                     onClick={() => {
-                      onSearchChange('')
+                      clearSearch()
                       onCategoryChange(refCat)
                     }}
                     title={`${refCat} 데이터 보기`}
@@ -760,7 +781,7 @@ function ShopBody({
                     type="button"
                     className={categoryFilter === primaryReferenceCategory ? 'toolbar-order-btn active' : 'toolbar-order-btn'}
                     onClick={() => {
-                      onSearchChange('')
+                      clearSearch()
                       onCategoryChange(primaryReferenceCategory)
                     }}
                     title={`${primaryReferenceCategory} 데이터 보기`}
