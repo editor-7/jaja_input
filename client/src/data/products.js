@@ -106,7 +106,8 @@ const GAS_METER_SKUS = new Set([
 /** 관로(대분류) 표시명 — 관리자·엑셀 체계 (DB mainCategory) */
 export const MAIN_CATEGORY_LABELS = {
   지하관PLP: 'PLP (지하관)',
-  지하관PEM: 'PE (지하관)',
+  지하관PEM: '지하관PE',
+  지하관PE: '지하관PE',
   노출관: '노출관',
   'GAS METER': 'GAS METER',
   공통: '공통',
@@ -118,6 +119,13 @@ export const SHOP_SECTIONS = ['PLP', 'PE', '노출관', 'GAS METER', '공통']
 export function getMainCategoryLabel(id) {
   if (!id || typeof id !== 'string') return ''
   return MAIN_CATEGORY_LABELS[id] || id
+}
+
+/** 내부 키(mainCategory) → 엑셀/표시용 카탈로그명 */
+export function toCatalogMainDisplay(id) {
+  if (!id || typeof id !== 'string') return ''
+  if (id === '지하관PEM') return '지하관PE'
+  return id
 }
 
 /** DB 대분류 → 쇼핑 상단 구간 */
@@ -257,6 +265,8 @@ export function getMainCategory(product) {
 
   // 품명 등에 PEM(지하 PE)이 명시되면 노출 피팅·「백」 힌트보다 PE 구간 우선
   const pemCatalogHint = /\bPEM\b/i.test(rawAll)
+  const peCatalogHint = /\bPE\b|PE\s*매몰형|PE매몰형/i.test(rawAll)
+  const peBuriedValveHint = /PE\s*매몰형\s*V\/V|2\s*-\s*PURGE|2PURGE/i.test(rawAll)
 
   // 노출 명시·백강·SPPG 등 (PLP·「백」글자 힌트보다 우선할 강한 노출 신호)
   const exposedStrictHint =
@@ -350,6 +360,11 @@ export function getMainCategory(product) {
     return '지하관PEM'
   }
 
+  // 운영 데이터 정정: PE 매몰형 V/V(2-PURGE) 계열은 PLP/공통 저장값과 무관하게 PE 탭 고정
+  if (peBuriedValveHint && !exposedStrictHint) {
+    return '지하관PEM'
+  }
+
   // DB가 공통인데 품명에 PEM(지하 PE)이 있으면 PE(지하관PEM)로
   if (
     pemCatalogHint &&
@@ -371,6 +386,10 @@ export function getMainCategory(product) {
 
   // DB 공통은 공통 탭 8 SKU만 인정. 그 외 mainCategory=공통은 아래 휴리스틱으로 재분류
   if (fromMain) {
+    // 운영 데이터 정정: DB가 PLP여도 품명이 명확한 PE 매몰형이면 PE로 우선 보정
+    if (fromMain === '지하관PLP' && peCatalogHint && !/\bPLP\b/i.test(rawAll) && !plpPipeHint && !plpAncillaryHint) {
+      return '지하관PEM'
+    }
     if (fromMain === '공통' && !COMMON_TAB_ONLY_SKUS.has(skuNorm)) {
       /* fall through */
     } else {

@@ -27,8 +27,11 @@ function normalizeMainCategory(v) {
   if (v == null || v === '') return '';
   const s = String(v).trim();
   if (MAIN_CATEGORIES.includes(s)) return s;
+  // 현장 엑셀에서 "지하관PE"로 입력하는 경우를 기존 PEM 카탈로그로 매핑
+  if (/^지하관\s*PE$/i.test(s) || /^PE$/i.test(s)) return '지하관PEM';
   if (/PLP/i.test(s)) return '지하관PLP';
   if (/PEM/i.test(s)) return '지하관PEM';
+  if (/PE/i.test(s)) return '지하관PEM';
   if (/노출관|노출/.test(s)) return '노출관';
   if (/공통/.test(s)) return '공통';
   return '';

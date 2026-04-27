@@ -33,6 +33,7 @@ function normalizeMainCategory(v) {
   const s = String(v).trim();
   if (MAIN_CATEGORIES.includes(s)) return s;
   if (/^plp$/i.test(s.replace(/\s/g, ''))) return '지하관PLP';
+  if (/^pe$/i.test(s.replace(/\s/g, ''))) return '지하관PEM';
   if (/^pem$/i.test(s.replace(/\s/g, ''))) return '지하관PEM';
   if (/노출관|노출/.test(s)) return '노출관';
   if (/공통/.test(s)) return '공통';

@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx-js-style'
-import { getDisplayItemName, getSpecFromProduct, getCategory, getMainCategory } from '@/data/products'
+import { getDisplayItemName, getSpecFromProduct, getCategory, getMainCategory, toCatalogMainDisplay } from '@/data/products'
 import { getExcelItemSortIndex } from '@/data/excelItemOrder'
 
 const CENTER = { horizontal: 'center', vertical: 'center' }
@@ -57,7 +57,7 @@ export function downloadCartAsExcel(groupedCart, totalPrice = 0) {
     const 합계 = r.자재비금액 + r.인건비금액
     const has자재 = r.자재비단가 > 0 || r.자재비금액 > 0
     const has인건 = r.인건비단가 > 0 || r.인건비금액 > 0
-    const 비고1 = r.mainCategory || '공통'
+    const 비고1 = toCatalogMainDisplay(r.mainCategory) || '공통'
     const 비고2 = has자재 && has인건 ? '자재·인건' : has자재 ? '자재' : has인건 ? '인건' : ''
     return [r.품목, r.규격, r.수량, r.단위, r.자재비단가, r.자재비금액, r.인건비단가, r.인건비금액, 합계, 비고1, 비고2]
   })

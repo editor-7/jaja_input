@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx-js-style'
-import { getDisplayItemName, getSpecFromProduct, getCategory, getMainCategory } from '@/data/products'
+import { getDisplayItemName, getSpecFromProduct, getCategory, getMainCategory, toCatalogMainDisplay } from '@/data/products'
 
 const CENTER = { horizontal: 'center', vertical: 'center' }
 const LEFT = { horizontal: 'left', vertical: 'center' }
@@ -65,7 +65,7 @@ export function downloadProductsAsExcel(products, fileLabel = '전체물량') {
     .map((r) => {
     const has자재 = r.자재비단가 > 0
     const has인건 = r.인건비단가 > 0
-    const 비고1 = r.mainCategory || '공통'
+    const 비고1 = toCatalogMainDisplay(r.mainCategory) || '공통'
     const 비고2 = has자재 && has인건 ? '자재·인건' : has자재 ? '자재' : has인건 ? '인건' : ''
     // 수량은 사용자가 입력, 금액/합계는 엑셀 수식으로 자동 계산
     return [r.품목, r.규격, '', r.단위, r.자재비단가, 0, r.인건비단가, 0, 0, 비고1, 비고2]
