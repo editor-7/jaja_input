@@ -46,7 +46,7 @@ function AdminPage() {
   const [productSearch, setProductSearch] = useState('')
   const [productCategoryFilter, setProductCategoryFilter] = useState('all')
   const [productMainCategoryFilter, setProductMainCategoryFilter] = useState('all')
-  const [productSortBy, setProductSortBy] = useState('sku')
+  const [productSortBy, setProductSortBy] = useState('skuAsc')
 
   useEffect(() => {
     if (!isReady) return
@@ -241,7 +241,7 @@ function AdminPage() {
     if (productMainCategoryFilter !== 'all') {
       list = list.filter((p) => getMainCategory(p) === productMainCategoryFilter)
     }
-    if (productSortBy === 'sku') list.sort(skuSort)
+    if (productSortBy === 'skuAsc') list.sort(skuSort)
     else if (productSortBy === 'name') list.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
     else if (productSortBy === 'priceAsc') list.sort((a, b) => (a.price || 0) - (b.price || 0))
     else if (productSortBy === 'priceDesc') list.sort((a, b) => (b.price || 0) - (a.price || 0))
@@ -618,7 +618,7 @@ function AdminPage() {
                       onChange={(e) => setProductSortBy(e.target.value)}
                       className="product-sort-select"
                     >
-                      <option value="sku">ID(SKU)순</option>
+                      <option value="skuAsc">SKU 낮은번호순</option>
                       <option value="createdAt">최신순</option>
                       <option value="name">이름순</option>
                       <option value="priceAsc">가격 낮은순</option>
