@@ -236,12 +236,22 @@ function AdminPage() {
     let list = [...products]
     if (productSearch.trim()) {
       const term = productSearch.trim().toLowerCase()
+      const termCompact = term.replace(/[^a-z0-9가-힣]/gi, '')
       list = list.filter(
-        (p) =>
-          (p.name || '').toLowerCase().includes(term) ||
-          (p.sku || '').toLowerCase().includes(term) ||
-          (p.category || '').toLowerCase().includes(term) ||
-          (p.desc || '').toLowerCase().includes(term)
+        (p) => {
+          const name = String(p.name || '').toLowerCase()
+          const sku = String(p.sku || '').toLowerCase()
+          const category = String(p.category || '').toLowerCase()
+          const desc = String(p.desc || '').toLowerCase()
+          const skuCompact = sku.replace(/[^a-z0-9]/gi, '')
+          return (
+            name.includes(term) ||
+            sku.includes(term) ||
+            category.includes(term) ||
+            desc.includes(term) ||
+            (!!termCompact && skuCompact.includes(termCompact))
+          )
+        }
       )
     }
     if (productCategoryFilter !== 'all') {
