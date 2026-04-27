@@ -280,9 +280,26 @@ function AdminPage() {
 
   const handleProductDelete = async (id) => {
     if (!window.confirm('이 상품을 삭제하시겠습니까?')) return
+    const targetId = String(id || '').trim()
+    if (!targetId) {
+      setProductMsg('삭제할 상품 ID를 찾지 못했습니다.')
+      return
+    }
+    const target = products.find((p) => String(p._id) === targetId)
+    const targetName = target ? `${getDisplayItemName(target)} ${getSpecFromProduct(target) || ''}`.trim() : ''
+    const confirmText = '삭제'
+    const typed = window.prompt(
+      `삭제 잠금: 정말 삭제하려면 "${confirmText}" 를 입력하세요.\n` +
+      `${targetName ? `대상: ${targetName}` : ''}`
+    )
+    if (typed == null) return
+    if (String(typed).trim() !== confirmText) {
+      setProductMsg('삭제가 취소되었습니다. (확인 문구 불일치)')
+      setTimeout(() => setProductMsg(''), 2500)
+      return
+    }
     try {
-      const target = products.find((p) => String(p._id) === String(id))
-      const toDeleteIds = new Set([String(id)])
+      const toDeleteIds = new Set([targetId])
       if (target) {
         const cat = getCategory(target)
         const pair =
@@ -295,8 +312,8 @@ function AdminPage() {
       }
 
       // 선택한 품목은 반드시 삭제, 짝 품목은 존재할 때 함께 삭제
-      await productApi.delete(id)
-      const pairIds = [...toDeleteIds].filter((x) => x !== String(id))
+      await productApi.delete(targetId)
+      const pairIds = [...toDeleteIds].filter((x) => x !== targetId)
       for (const pairId of pairIds) {
         try {
           await productApi.delete(pairId)
@@ -311,6 +328,8 @@ function AdminPage() {
         setProductForm({ sku: '', name: '', desc: '', spec: '', category: '도시가스-자재', mainCategory: '', price: '', img: '' })
       }
       setProductMsg(toDeleteIds.size > 1 ? `상품 ${toDeleteIds.size}건이 삭제되었습니다.` : '상품이 삭제되었습니다.')
+      // 서버 기준으로 한 번 더 동기화해 재등장/잔상 이슈를 방지
+      await loadProducts()
       setTimeout(() => setProductMsg(''), 3000)
     } catch (err) {
       setProductMsg(err?.message || '삭제에 실패했습니다.')
