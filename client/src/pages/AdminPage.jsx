@@ -264,7 +264,9 @@ function AdminPage() {
       })
     }
     if (productCategoryFilter !== 'all') {
-      list = list.filter((p) => (p.category || p.name) === productCategoryFilter)
+      list = list.filter(
+        (p) => mapDbCategoryToAdminFeeSelect((p.category || p.name)) === productCategoryFilter
+      )
     }
     if (productMainCategoryFilter !== 'all') {
       list = list.filter((p) => getMainCategory(p) === productMainCategoryFilter)
@@ -292,7 +294,7 @@ function AdminPage() {
     const sorted = [...products].sort(skuSort)
     const seen = new Set()
     const fromProducts = sorted
-      .map((p) => p.category || p.name)
+      .map((p) => mapDbCategoryToAdminFeeSelect(p.category || p.name))
       .filter(Boolean)
     return [...adminMaterialKindOptions.map((o) => o.value), ...fromProducts]
       .filter((c) => {
