@@ -187,12 +187,19 @@ function AdminPage() {
     setProductMsg('')
     const skuVal = String(productForm.sku ?? '').trim()
     const rawCat = productForm.category.trim() || '도시가스-자재'
+    const mappedCategory = mapAdminFeeCategoryToDb(rawCat) || '도시가스-자재'
+    const defaultDescPrefix =
+      mappedCategory === '도시가스-인건'
+        ? '도시가스 인건비'
+        : mappedCategory === '신규단가'
+          ? '신규 단가'
+          : '도시가스 자재비'
     const payload = {
       sku: skuVal,
       name: productForm.name.trim(),
-      desc: productForm.desc.trim() || `정성스럽게 구운 ${productForm.name.trim()}`,
+      desc: productForm.desc.trim() || `${defaultDescPrefix} - ${productForm.name.trim()}`,
       spec: (productForm.spec ?? '').trim(),
-      category: mapAdminFeeCategoryToDb(rawCat) || '도시가스-자재',
+      category: mappedCategory,
       mainCategory: (productForm.mainCategory ?? '').trim(),
       price: Number(productForm.price) || 0,
       img: productForm.img?.trim() || '',
@@ -308,6 +315,13 @@ function AdminPage() {
   const materialKindSelectValue = isAdminMaterialKindSelectValue(feeSelectKey, products)
     ? feeSelectKey
     : '__custom__'
+  const previewProductName = String(productForm.name || '').trim() || 'PEM 관 63A'
+  const productDescPlaceholder =
+    feeSelectKey === '도시가스-인건'
+      ? `예: 도시가스 인건비 - ${previewProductName}`
+      : feeSelectKey === '신규단가입력'
+        ? `예: 신규 단가 - ${previewProductName}`
+        : `예: 도시가스 자재비 - ${previewProductName}`
 
   const 신규단가CatalogRows = useMemo(() => {
     if (feeSelectKey !== '신규단가입력') return []
@@ -450,7 +464,7 @@ function AdminPage() {
                     type="text"
                     value={productForm.sku ?? ''}
                     onChange={(e) => setProductForm((p) => ({ ...p, sku: e.target.value }))}
-                    placeholder="예: BREAD-001"
+                    placeholder="예: GAS-J-0001"
                   />
                 </div>
                 <div className="form-row">
@@ -478,7 +492,7 @@ function AdminPage() {
                     type="text"
                     value={productForm.desc}
                     onChange={(e) => setProductForm((p) => ({ ...p, desc: e.target.value }))}
-                    placeholder="예: 정성스럽게 구운 깜바뉴"
+                    placeholder={productDescPlaceholder}
                   />
                 </div>
                 <div className="form-row">
