@@ -17,6 +17,23 @@ function getMainCategoryRank(v) {
   return idx === -1 ? MAIN_CATEGORY_ORDER.length : idx
 }
 
+/** 참조단가NNN은 DB category가 그대로일 수 있어, 엑셀 단가 열용으로 자재/인건 축만 판별 */
+function getExcelPriceKind(product) {
+  const cat = getCategory(product)
+  if (cat === '도시가스-자재') return '자재'
+  if (cat === '도시가스-인건') return '인건'
+  const raw = String(product?.category || '').trim()
+  const batch = /^참조단가\d+$/.test(cat) ? cat : /^참조단가\d+$/.test(raw) ? raw : ''
+  if (!batch) return ''
+  const sku = String(product.sku || '').trim().toUpperCase()
+  const nm = product.name || ''
+  if (/^GAS-J-/.test(sku)) return '자재'
+  if (/^GAS-I-/.test(sku) || /^GAS-IN-/.test(sku)) return '인건'
+  if (nm.includes('(자재)')) return '자재'
+  if (nm.includes('(인건)')) return '인건'
+  return ''
+}
+
 /**
  * 전체 상품 목록을 엑셀 파일로 다운로드 (관리자용)
  * 품목·규격별 한 행에 자재비/인건비 단가, 수량·금액은 0, 마지막에 계 행
@@ -46,13 +63,13 @@ export function downloadProductsAsExcel(products, fileLabel = '전체물량') {
       })
     }
     const row = keyToRow.get(key)
-    const cat = getCategory(p)
+    const kind = getExcelPriceKind(p)
     const price = p.price != null ? p.price : 0
-    if (cat === '도시가스-자재') {
+    if (kind === '자재') {
       if (String(p.sku || '').trim()) row.SKU = String(p.sku || '').trim()
       row.자재비단가 = price
     }
-    if (cat === '도시가스-인건') {
+    if (kind === '인건') {
       row.인건비단가 = price
     }
   }
