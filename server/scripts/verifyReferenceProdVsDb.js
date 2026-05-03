@@ -27,7 +27,8 @@ async function countInDb() {
     const ref002 = await Product.countDocuments({ category: '참조단가002' });
     const ref003 = await Product.countDocuments({ category: '참조단가003' });
     const ref004 = await Product.countDocuments({ category: '참조단가004' });
-    return { total, ref001, ref002, ref003, ref004 };
+    const ref005 = await Product.countDocuments({ category: '참조단가005' });
+    return { total, ref001, ref002, ref003, ref004, ref005 };
   } finally {
     await mongoose.disconnect();
   }
@@ -47,7 +48,8 @@ async function countFromApi() {
   const ref002 = arr.filter((p) => String((p && p.category) || '').trim() === '참조단가002').length;
   const ref003 = arr.filter((p) => String((p && p.category) || '').trim() === '참조단가003').length;
   const ref004 = arr.filter((p) => String((p && p.category) || '').trim() === '참조단가004').length;
-  return { status: res.status, total: arr.length, ref001, ref002, ref003, ref004 };
+  const ref005 = arr.filter((p) => String((p && p.category) || '').trim() === '참조단가005').length;
+  return { status: res.status, total: arr.length, ref001, ref002, ref003, ref004, ref005 };
 }
 
 function maskUri(uri) {
@@ -83,11 +85,13 @@ async function main() {
     db.ref002 !== api.ref002 ||
     db.ref003 !== api.ref003 ||
     db.ref004 !== api.ref004 ||
+    db.ref005 !== api.ref005 ||
     (api.ref001 === 0 &&
       api.ref002 === 0 &&
       api.ref003 === 0 &&
       api.ref004 === 0 &&
-      (db.ref001 > 0 || db.ref002 > 0 || db.ref003 > 0 || db.ref004 > 0));
+      api.ref005 === 0 &&
+      (db.ref001 > 0 || db.ref002 > 0 || db.ref003 > 0 || db.ref004 > 0 || db.ref005 > 0));
 
   if (mismatch) {
     console.log(

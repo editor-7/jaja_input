@@ -106,8 +106,9 @@ async function start() {
     const ref002 = await Product.countDocuments({ category: '참조단가002' })
     const ref003 = await Product.countDocuments({ category: '참조단가003' })
     const ref004 = await Product.countDocuments({ category: '참조단가004' })
+    const ref005 = await Product.countDocuments({ category: '참조단가005' })
     console.log(
-      `[상품 DB] database=${dbName} total=${total} 참조단가001=${ref001} 참조단가002=${ref002} 참조단가003=${ref003} 참조단가004=${ref004}`
+      `[상품 DB] database=${dbName} total=${total} 참조단가001=${ref001} 참조단가002=${ref002} 참조단가003=${ref003} 참조단가004=${ref004} 참조단가005=${ref005}`
     )
   } catch (e) {
     console.warn('[상품 DB] 부트 통계 실패:', e.message)
