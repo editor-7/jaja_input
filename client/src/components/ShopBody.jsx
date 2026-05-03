@@ -4,6 +4,8 @@ import {
   getDisplayItemName,
   getMainCategory,
   getRemarkDisplay,
+  findLaborPair,
+  findMaterialPair,
   getShopCategoryTabLabel,
   getShopSection,
   getSpecFromProduct,
@@ -167,36 +169,41 @@ function ShopBody({
 
   /**
    * 수량 동기화용 짝 품목 찾기
-   * - GAS-J-xxxx <-> GAS-IN-xxxx / GAS-I-xxxx 만 허용
-   * - 이름/규격 유사도 매칭은 사용하지 않음(오동기화 방지)
+   * 1) GAS-J-nnnn ↔ GAS-IN-nnnn / GAS-I-nnnn (번호 동일) — 카탈로그 대부분
+   * 2) 번호가 어긋난 행(예: 백강관 GAS-J-0282 ↔ GAS-IN-0047)은 findLaborPair / findMaterialPair 로 품명·규격 매칭
    */
-  const getStrictPairBySku = (product) => {
+  const getSyncPairProduct = (product) => {
     const sku = String(product?.sku || '').trim().toUpperCase()
-    if (!sku) return null
-    const sourceIsMaterial = /^GAS-J-/.test(sku)
-    const targetSkus = sourceIsMaterial
-      ? [sku.replace(/^GAS-J-/, 'GAS-IN-'), sku.replace(/^GAS-J-/, 'GAS-I-')]
-      : /^GAS-(IN|I)-/.test(sku)
-        ? [sku.replace(/^GAS-IN-/, 'GAS-J-').replace(/^GAS-I-/, 'GAS-J-')]
-        : []
-    if (targetSkus.length === 0) return null
-    const expectedCategory = sourceIsMaterial ? '도시가스-인건' : '도시가스-자재'
-    const sourceName = getDisplayItemName(product).trim()
-    const sourceSpec = (getSpecFromProduct(product) || '').replace(/\s+/g, '').toUpperCase()
-    return (
-      products.find((p) => {
-        const ps = String(p?.sku || '').trim().toUpperCase()
-        if (!targetSkus.includes(ps) || getCategory(p) !== expectedCategory) return false
-        // SKU 번호가 우연히 겹쳐도 품명/규격이 같은 진짜 짝만 동기화
-        const targetName = getDisplayItemName(p).trim()
-        const targetSpec = (getSpecFromProduct(p) || '').replace(/\s+/g, '').toUpperCase()
-        return sourceName === targetName && sourceSpec === targetSpec
-      }) || null
-    )
+    if (sku) {
+      const sourceIsMaterial = /^GAS-J-/.test(sku)
+      const targetSkus = sourceIsMaterial
+        ? [sku.replace(/^GAS-J-/, 'GAS-IN-'), sku.replace(/^GAS-J-/, 'GAS-I-')]
+        : /^GAS-(IN|I)-/.test(sku)
+          ? [sku.replace(/^GAS-IN-/, 'GAS-J-').replace(/^GAS-I-/, 'GAS-J-')]
+          : []
+      if (targetSkus.length > 0) {
+        const expectedCategory = sourceIsMaterial ? '도시가스-인건' : '도시가스-자재'
+        const sourceName = getDisplayItemName(product).trim()
+        const sourceSpec = (getSpecFromProduct(product) || '').replace(/\s+/g, '').toUpperCase()
+        const strict =
+          products.find((p) => {
+            const ps = String(p?.sku || '').trim().toUpperCase()
+            if (!targetSkus.includes(ps) || getCategory(p) !== expectedCategory) return false
+            const targetName = getDisplayItemName(p).trim()
+            const targetSpec = (getSpecFromProduct(p) || '').replace(/\s+/g, '').toUpperCase()
+            return sourceName === targetName && sourceSpec === targetSpec
+          }) || null
+        if (strict) return strict
+      }
+    }
+    const cat = getCategory(product)
+    if (cat === '도시가스-자재') return findLaborPair(product, products)
+    if (cat === '도시가스-인건') return findMaterialPair(product, products)
+    return null
   }
 
   const syncCartForProduct = (p, newQty) => {
-    const pair = getStrictPairBySku(p)
+    const pair = getSyncPairProduct(p)
     // 입력칸 수량도 자재/인건 짝으로 같이 동기화 (탭 이동 시에도 동일 수량 표시)
     setListQtys((prev) => {
       const next = { ...prev }
