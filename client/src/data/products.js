@@ -12,6 +12,7 @@ const GAS_CATEGORIES = [
   '참조단가',
   '참조단가001',
   '참조단가002',
+  '참조단가003',
   '신규단가입력',
   '신규단가',
 ]
@@ -173,6 +174,7 @@ export const MATERIAL_KIND_OPTIONS = [
   { value: '도시가스-인건', label: '도시가스 · 인건비' },
   { value: '참조단가001', label: '참조단가001' },
   { value: '참조단가002', label: '참조단가002' },
+  { value: '참조단가003', label: '참조단가003' },
   { value: '신규단가입력', label: '신규단가입력' },
 ]
 
