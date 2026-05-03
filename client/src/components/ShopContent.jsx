@@ -12,6 +12,7 @@ import {
   getPePipeKind,
   getExposedPipeKind,
   SHOP_SECTIONS,
+  MATERIAL_KIND_OPTIONS,
 } from '@/data/products'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
 import { isDuplicateOrder, validatePayment } from '@/utils/orderUtils'
@@ -232,6 +233,8 @@ function ShopContent({ user, onLogout }) {
   }, [user?._id, user?.name, groupedCart, totalPrice, deliveryInfo])
 
   const referenceCategories = useMemo(() => {
+    /** 카탈로그에 정의된 참조단가 배치(003 등)는 DB에 아직 행이 없어도 메뉴에 표시 */
+    const fromConfig = MATERIAL_KIND_OPTIONS.map((o) => o.value).filter((v) => /^참조단가\d+$/.test(v))
     const raws = (Array.isArray(products) ? products : [])
       .map((p) => {
         const raw = String(p?.category || '').trim()
@@ -241,7 +244,7 @@ function ShopContent({ user, onLogout }) {
       })
       .map((raw) => (raw === '참조단가' || raw === '견적제출완료' ? '참조단가001' : raw))
       .filter((raw) => /^참조단가\d+$/.test(raw))
-    const unique = Array.from(new Set(raws))
+    const unique = Array.from(new Set([...fromConfig, ...raws]))
     unique.sort((a, b) => Number(a.replace('참조단가', '')) - Number(b.replace('참조단가', '')))
     return unique
   }, [products])
