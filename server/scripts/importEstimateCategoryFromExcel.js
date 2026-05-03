@@ -36,7 +36,8 @@ function normalizeSpec(s) {
 }
 
 function toPrice(v) {
-  const n = Number(v);
+  if (v == null || v === '') return null;
+  const n = Number(String(v).replace(/,/g, '').trim());
   if (!Number.isFinite(n) || n <= 0) return null;
   return Math.round(n);
 }
@@ -70,20 +71,90 @@ function pickHeaderIndex(headerRow, keyRegex, fallback) {
   return idx >= 0 ? idx : fallback;
 }
 
+function normCell(c) {
+  return String(c || '').trim().replace(/\s/g, '');
+}
+
+/** excelToProductList.js 와 동일: 정확 헤더 문자열 매칭 */
+function findCol(headerRow, names) {
+  if (!Array.isArray(headerRow)) return -1;
+  for (const n of names) {
+    const key = String(n).trim().replace(/\s/g, '');
+    const idx = headerRow.findIndex((c) => normCell(c) === key);
+    if (idx >= 0) return idx;
+  }
+  return -1;
+}
+
+function findColByRegex(headerRow, re) {
+  if (!Array.isArray(headerRow)) return -1;
+  return headerRow.findIndex((c) => re.test(normCell(c)));
+}
+
+/** 헤더가 0행(앱 다운로드)인지 1행(구형 참조단가)인지 등 자동 선택 */
+function resolveHeaderAndColumns(rows) {
+  let bestIdx = -1;
+  let bestScore = -1;
+  const maxScan = Math.min(5, rows.length);
+  for (let h = 0; h < maxScan; h++) {
+    const row = rows[h] || [];
+    let s = 0;
+    if (findCol(row, ['품명', '품목']) >= 0) s += 2
+    if (findCol(row, ['규격']) >= 0) s += 1
+    if (findCol(row, ['단위']) >= 0) s += 1
+    if (findCol(row, ['자재비단가', '재료비단가']) >= 0 || findColByRegex(row, /자재비|재료비/) >= 0) s += 2
+    if (findCol(row, ['인건비단가', '노무비단가']) >= 0 || findColByRegex(row, /인건비|노무비/) >= 0) s += 2
+    if (s > bestScore) {
+      bestScore = s
+      bestIdx = h
+    }
+  }
+  if (bestIdx < 0 || bestScore < 3) {
+    const header = rows[1] || []
+    return {
+      header,
+      dataStart: 3,
+      iName: pickHeaderIndex(header, /품명|품목/, 0),
+      iSpec: pickHeaderIndex(header, /규격/, 1),
+      iUnit: pickHeaderIndex(header, /^단위$/, 2),
+      iMat: 4,
+      iLabor: 6,
+    }
+  }
+  const header = rows[bestIdx] || []
+  const iName = findCol(header, ['품명', '품목'])
+  const iSpec = findCol(header, ['규격'])
+  const iUnit = findCol(header, ['단위'])
+  let iMat =
+    findCol(header, ['자재비단가', '재료비단가', '재료비', '자재비']) >= 0
+      ? findCol(header, ['자재비단가', '재료비단가', '재료비', '자재비'])
+      : findColByRegex(header, /자재비단가|재료비단가|재료비|자재비/)
+  let iLabor =
+    findCol(header, ['인건비단가', '노무비단가', '인건비', '노무비']) >= 0
+      ? findCol(header, ['인건비단가', '노무비단가', '인건비', '노무비'])
+      : findColByRegex(header, /인건비단가|노무비단가|인건비|노무비/)
+  if (iMat < 0) iMat = 4
+  if (iLabor < 0) iLabor = 6
+  const dataStart = bestIdx === 1 ? bestIdx + 2 : bestIdx + 1
+  return {
+    header,
+    dataStart,
+    iName: iName >= 0 ? iName : 0,
+    iSpec: iSpec >= 0 ? iSpec : 1,
+    iUnit: iUnit >= 0 ? iUnit : 2,
+    iMat,
+    iLabor,
+  }
+}
+
 function parseExcel(filePath) {
   const wb = XLSX.readFile(filePath);
   const ws = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-  const header = rows[1] || [];
-
-  const iName = pickHeaderIndex(header, /품명/, 0);
-  const iSpec = pickHeaderIndex(header, /규격/, 1);
-  const iUnit = pickHeaderIndex(header, /^단위$/, 2);
-  const iMat = 4;
-  const iLabor = 6;
+  const { dataStart, iName, iSpec, iUnit, iMat, iLabor } = resolveHeaderAndColumns(rows)
 
   const items = [];
-  for (let i = 3; i < rows.length; i++) {
+  for (let i = dataStart; i < rows.length; i++) {
     const row = rows[i] || [];
     const name = normalizeName(row[iName]);
     if (!name) continue;
