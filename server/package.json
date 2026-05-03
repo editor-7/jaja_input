@@ -14,6 +14,7 @@
     "verify:reference": "node scripts/verifyReferenceProdVsDb.js",
     "import:reference": "node scripts/importReferenceBatches.js",
     "import:reference003": "node scripts/importEstimateCategoryFromExcel.js \"e:/computer_home/003.xlsx\" --target-category=참조단가003 --reset-target",
+    "import:reference004": "node scripts/importEstimateCategoryFromExcel.js \"e:/computer_home/004.xlsx\" --target-category=참조단가004 --reset-target",
     "dedupe:reference": "node scripts/dedupeReferenceCategoryDuplicates.js"
   },
   "keywords": [],
