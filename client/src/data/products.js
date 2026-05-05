@@ -487,11 +487,14 @@ export function getDisplayItemName(product) {
   return base.replace(new RegExp('\\s*' + escaped + '\\s*$'), '').trim() || base
 }
 
-/** 비고란에 쓸 텍스트 (도시가스 제외, "자재" / "인건"만) */
+/** 비고란에 쓸 텍스트 — 참조단가NNN 배치는 배치명 표시, 그 외 도시가스는 자재/인건 */
 export function getRemarkDisplay(product) {
+  if (!product) return '—'
+  const rawCat = String(product.category || '').trim()
+  const refBatch = /^참조단가\d+$/.test(rawCat) ? rawCat : ''
   const cat = getCategory(product)
-  if (cat === '도시가스-자재') return '자재'
-  if (cat === '도시가스-인건') return '인건'
+  if (cat === '도시가스-자재') return refBatch || '자재'
+  if (cat === '도시가스-인건') return refBatch || '인건'
   if (cat && cat !== product.name) return cat.replace(/^도시가스-/, '')
   return '—'
 }

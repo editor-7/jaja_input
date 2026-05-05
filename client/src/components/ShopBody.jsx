@@ -14,94 +14,12 @@ import { downloadCartAsExcel } from '@/utils/exportCartToExcel'
 import { downloadOrderListAsExcel } from '@/utils/exportOrderListToExcel'
 import { downloadProductsAsExcel } from '@/utils/exportProductsToExcel'
 import { getListQtysStorageKey } from '@/utils/constants'
+import {
+  parseReferenceBatchNumber,
+  isReferenceHopyoStyleBatch,
+  getShopListGroupColorIndex,
+} from '@/utils/referenceHopyoGroupColor'
 import './ShopBody.css'
-
-/** 참조단가006 이상: 통합갑지·호표형 배치(006, 007, …) */
-function isReferenceHopyoBatch(category) {
-  const m = /^참조단가(\d+)$/.exec(String(category || '').trim())
-  if (!m) return false
-  return Number(m[1]) >= 6
-}
-
-/** 호표 품명에서 말미 규격·단위만 반복 제거 */
-function stripHopyoTrailingSpecs(s0) {
-  let s = String(s0 || '').trim().replace(/\s+/g, ' ')
-  for (let loop = 0; loop < 12; loop += 1) {
-    const before = s
-    s = s
-      .replace(/\s*[ØøΦＯ]\s*\d+(\.\d+)?\s*(㎜|mm|MM)?\s*(×\s*[ØøΦＯ]?\s*\d+(\.\d+)?\s*(㎜|mm|MM)?)?\s*m?$/i, '')
-      .trim()
-    s = s.replace(/\s*\d+(\.\d+)?\s*(㎜|mm|MM)\s*(×\s*\d+(\.\d+)?\s*(㎜|mm|MM)?)?\s*m?$/i, '').trim()
-    s = s.replace(/\s*DN\s*\d+(\.\d+)?$/i, '').trim()
-    s = s.replace(/\s*\d+(\.\d+)?\s*A\s*m?$/i, '').trim()
-    s = s.replace(/\s+m$/i, '').trim()
-    if (s === before) break
-  }
-  return s
-}
-
-/**
- * 알려진 공정 시리즈(긴·구체적 접두 우선).
- * 강관 용접: 부설(인력시공) / 용접접합(아크) / 용접접합(알곤) 3분류 + 그 외 용접식·용접접합은 각각 기타 키.
- * 매칭 실패 시: 괄호 제거 후 앞쪽 토큰만으로 키(PE·가스설비 등 가변 문구 대응)
- */
-const REFERENCE_HOPYO_SERIES = [
-  { re: /^강관\s*용접식\s*부설\s*[\(（]\s*인력\s*시공\s*[\)）]/i, key: '강관용접식부설인력' },
-  { re: /^강관\s*용접접합\s*[\(（]\s*아크\s*용접\s*[\)）]/i, key: '강관용접접합아크' },
-  { re: /^강관\s*용접접합\s*[\(（]\s*(?:알곤|아르곤)\s*용접\s*[\)）]/i, key: '강관용접접합알곤' },
-  { re: /^강관\s*용접접합/i, key: '강관용접접합기타' },
-  { re: /^강관\s*용접식/i, key: '강관용접식기타' },
-  { re: /^강관\s*나사식\s*접합/i, key: '강관나사식접합' },
-  { re: /^강관\s*나사식접합/i, key: '강관나사식접합' },
-  { re: /^PE관\s*이중벽\s*버트\s*융착식/i, key: 'PE이중벽버트융착' },
-  { re: /^PE관\s*버트\s*융착식/i, key: 'PE버트융착' },
-  { re: /^PE관\s*전기\s*융착식/i, key: 'PE전기융착' },
-  { re: /^PE관\s*전기융착/i, key: 'PE전기융착' },
-  { re: /^PE관/i, key: 'PE관' },
-  { re: /^가스설비\s*분기\s*공/i, key: '가스설비분기공' },
-  { re: /^가스설비\s*밸브\s*설치/i, key: '가스설비밸브설치' },
-  { re: /^가스설비/i, key: '가스설비' },
-  { re: /^백강관/i, key: '백강관' },
-]
-
-function referenceHopyoSeriesKeyAfterStrip(sRaw) {
-  const s = String(sRaw || '').trim().replace(/\s+/g, ' ')
-  for (const { re, key } of REFERENCE_HOPYO_SERIES) {
-    if (re.test(s)) return `series:${key}`
-  }
-  let t = s.replace(/\[[^\]]*\]/g, ' ').replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim()
-  t = stripHopyoTrailingSpecs(t)
-  const parts = t.split(/\s+/).filter(Boolean)
-  const out = []
-  for (const p of parts) {
-    if (/^[ØøΦＯ]/i.test(p)) break
-    if (/^\d+(\.\d+)?(㎜|mm|MM)$/i.test(p)) break
-    out.push(p)
-    if (out.length >= 6) break
-  }
-  const fallback = out.join(' ').trim()
-  return fallback ? `head:${fallback}` : `raw:${s}`
-}
-
-/**
- * 카드 박스색 공정 묶음 — 동일 시리즈(강관 3종 용접·나사식·PE·가스설비 등)는 같은 group-color
- */
-function referenceHopyoBoxGroupKey(displayName) {
-  let s = String(displayName || '').trim().replace(/\s+/g, ' ')
-  s = s.replace(/^제\s*\d+\s*호표\s*/i, '').trim()
-  s = s.replace(/PE\s*관/gi, 'PE관')
-  s = stripHopyoTrailingSpecs(s)
-  return referenceHopyoSeriesKeyAfterStrip(s)
-}
-
-function hashReferenceHopyoBoxGroup(key) {
-  const k = String(key || '')
-  let h = 0
-  for (let i = 0; i < k.length; i += 1) {
-    h = (Math.imul(31, h) + k.charCodeAt(i)) | 0
-  }
-  return Math.abs(h)
-}
 
 function ShopBody({
   searchTerm,
@@ -181,6 +99,12 @@ function ShopBody({
     setSearchInput(searchTerm || '')
   }, [searchTerm])
 
+  /** 참조단가005·006: 미니 카드 그리드 유지 + 품명·규격 전체 표시 */
+  const isReferenceExpandedMinicard = useMemo(() => {
+    const n = parseReferenceBatchNumber(categoryFilter)
+    return n === 5 || n === 6
+  }, [categoryFilter])
+
   const applySearch = () => {
     onSearchChange?.(searchInput)
   }
@@ -239,11 +163,11 @@ function ShopBody({
   const getListQty = (id) => listQtys[id] ?? 0
   const setListQty = (id, n) => setListQtys((prev) => ({ ...prev, [id]: Math.max(0, Math.min(99, n)) }))
 
-  /* 품명 기준 카드 테두리색: 참조단가006+는 호표형 공정 묶음(같은 박스색), 그 외는 연속 동일 품명마다 구분 */
+  /* 품명 기준 테두리·글자색: 참조단가003+는 호표 시리즈 키로 동일 공정 동일 색, 그 외는 연속 동일 품명 구분 */
   const groupColorIndices = useMemo(() => {
     const list = Array.isArray(filteredProducts) ? filteredProducts : []
-    if (isReferenceHopyoBatch(categoryFilter)) {
-      return list.map((p) => hashReferenceHopyoBoxGroup(referenceHopyoBoxGroupKey(getDisplayItemName(p))) % 5)
+    if (isReferenceHopyoStyleBatch(categoryFilter)) {
+      return list.map((p) => getShopListGroupColorIndex(p, categoryFilter))
     }
     const arr = []
     let g = 0
@@ -956,8 +880,8 @@ function ShopBody({
               </div>
               <div
                 className={
-                  isReferenceHopyoBatch(categoryFilter)
-                    ? 'product-list-wrap product-list-wrap--ref006-fulltext'
+                  isReferenceExpandedMinicard
+                    ? 'product-list-wrap product-list-wrap--ref-expanded-minicard'
                     : 'product-list-wrap'
                 }
               >

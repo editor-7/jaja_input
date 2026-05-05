@@ -11,6 +11,7 @@ import {
   getShopSection,
   getPePipeKind,
   getExposedPipeKind,
+  getDisplayItemName,
   SHOP_SECTIONS,
   MATERIAL_KIND_OPTIONS,
 } from '@/data/products'
@@ -18,6 +19,11 @@ import { ORDER_STORAGE_KEY } from '@/utils/constants'
 import { HOME_QUICK_LINKS } from '@/data/homeQuickLinks'
 import { isDuplicateOrder, validatePayment } from '@/utils/orderUtils'
 import { skuSort } from '@/utils/productUtils'
+import {
+  isReferenceHopyoStyleBatch,
+  getShopListGroupColorIndex,
+  parseReferenceBatchNumber,
+} from '@/utils/referenceHopyoGroupColor'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import ShopNavbar from './ShopNavbar'
@@ -353,11 +359,22 @@ function ShopContent({ user, onLogout }) {
     if (categoryFilter !== '인건비만' && !isReferenceFilter(categoryFilter)) {
       result = result.filter((p) => getCategory(p) !== '도시가스-인건')
     }
-    // 자재 품목 먼저, 그 다음 인건 (자재 선택 시 인건이 따라오는 설계)
+    // 자재 먼저·인건 다음 → 호표 탭(003+·005…)은 그룹색 순으로 묶은 뒤 SKU
     return [...result].sort((a, b) => {
       const is자재A = getCategory(a) === '도시가스-자재' ? 0 : 1
       const is자재B = getCategory(b) === '도시가스-자재' ? 0 : 1
       if (is자재A !== is자재B) return is자재A - is자재B
+      if (isReferenceHopyoStyleBatch(categoryFilter)) {
+        const ca = getShopListGroupColorIndex(a, categoryFilter)
+        const cb = getShopListGroupColorIndex(b, categoryFilter)
+        if (ca !== cb) return ca - cb
+        if (parseReferenceBatchNumber(categoryFilter) === 5) {
+          const na = getDisplayItemName(a).trim()
+          const nb = getDisplayItemName(b).trim()
+          const cmp = na.localeCompare(nb, 'ko', { sensitivity: 'base' })
+          if (cmp !== 0) return cmp
+        }
+      }
       return skuSort(a, b)
     })
   }, [products, searchTerm, categoryFilter, referenceCategories, primaryReferenceCategory, is신규단가PanelOpen])
