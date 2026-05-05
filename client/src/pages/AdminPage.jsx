@@ -387,7 +387,16 @@ function AdminPage() {
       await loadProducts()
       setTimeout(() => setProductMsg(''), 3000)
     } catch (err) {
-      setProductMsg(err?.message || '삭제에 실패했습니다.')
+      const status = Number(err?.status || 0)
+      const detail = String(err?.message || '').trim()
+      const hint = status === 401
+        ? ' (로그인이 만료됐을 수 있어요. 다시 로그인 후 시도해 주세요.)'
+        : status === 403
+          ? ' (관리자 권한을 확인해 주세요.)'
+          : status === 404
+            ? ' (이미 삭제된 상품이거나 서버 경로 설정을 확인해 주세요.)'
+            : ''
+      setProductMsg(detail ? `삭제 실패(${status || 'ERR'}): ${detail}${hint}` : '삭제에 실패했습니다.')
     }
   }
 
