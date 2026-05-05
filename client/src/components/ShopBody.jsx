@@ -90,6 +90,12 @@ function ShopBody({
 
   const userId = user?._id ?? null
   const isReferenceCategory = (v) => /^참조단가\d+$/.test(String(v || '').trim())
+  const isReferenceLikeProduct = (product) => {
+    const raw = String(product?.category || '').trim()
+    if (raw === '견적제출완료') return true
+    if (/^참조단가(?:\d+)?$/.test(raw)) return true
+    return String(product?.desc || '').includes('참조단가 -')
+  }
 
   useEffect(() => {
     if (isReferenceCategory(categoryFilter)) setIsReferenceMenuOpen(true)
@@ -245,7 +251,19 @@ function ShopBody({
   const handleDownloadAllProductsExcel = () => {
     const list = Array.isArray(products) ? products : []
     if (list.length === 0) return
-    downloadProductsAsExcel(list, '전체물량')
+    // 요청사항: 전체엑셀(수량입력)에서는 참조단가를 제외
+    const nonReferenceList = list.filter((p) => !isReferenceLikeProduct(p))
+    if (nonReferenceList.length === 0) return
+    downloadProductsAsExcel(nonReferenceList, '전체물량')
+  }
+
+  /** 전체 기준: 참조단가 전용 수량 입력형 엑셀 다운로드 */
+  const handleDownloadReferenceProductsExcel = () => {
+    const list = Array.isArray(products) ? products : []
+    if (list.length === 0) return
+    const referenceList = list.filter((p) => isReferenceLikeProduct(p))
+    if (referenceList.length === 0) return
+    downloadProductsAsExcel(referenceList, '참조단가')
   }
 
   /** 현재 카테고리(필터) 기준 수량 입력형 엑셀 다운로드 */
@@ -851,15 +869,26 @@ function ShopBody({
                 <h2>자재 목록 {!productsLoading && !productsLoadError && allFilteredCount > 0 && `(${allFilteredCount}종)`}</h2>
                 <div className="section-banner-actions">
                   {(categoryFilter === '전체' || categoryFilter === 'all') ? (
-                    <button
-                      type="button"
-                      className="bulk-qty-one-btn"
-                      onClick={handleDownloadAllProductsExcel}
-                      disabled={!Array.isArray(products) || products.length === 0}
-                      title="전체 상품 수량 입력형 엑셀을 다운로드합니다"
-                    >
-                      전체 엑셀(수량입력)
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="bulk-qty-one-btn"
+                        onClick={handleDownloadAllProductsExcel}
+                        disabled={!Array.isArray(products) || products.every((p) => isReferenceLikeProduct(p))}
+                        title="전체 상품(참조단가 제외) 수량 입력형 엑셀을 다운로드합니다"
+                      >
+                        전체 엑셀(수량입력)
+                      </button>
+                      <button
+                        type="button"
+                        className="bulk-qty-one-btn"
+                        onClick={handleDownloadReferenceProductsExcel}
+                        disabled={!Array.isArray(products) || !products.some((p) => isReferenceLikeProduct(p))}
+                        title="참조단가 전용 수량 입력형 엑셀을 다운로드합니다"
+                      >
+                        참조단가 엑셀(수량입력)
+                      </button>
+                    </>
                   ) : (
                     <button
                       type="button"
