@@ -10,13 +10,6 @@ const STYLE_LEFT = { alignment: LEFT }
 const STYLE_LEFT_WRAP = { alignment: { horizontal: 'left', vertical: 'top', wrapText: true } }
 const COL_품목 = 1
 const NUM_COLUMNS = [5, 6, 7, 8, 9]
-const MAIN_CATEGORY_ORDER = ['지하관PLP', '지하관PEM', '노출관', 'GAS METER', '공통']
-
-function getMainCategoryRank(v) {
-  const idx = MAIN_CATEGORY_ORDER.indexOf(v)
-  return idx === -1 ? MAIN_CATEGORY_ORDER.length : idx
-}
-
 function isReferenceLikeProduct(product) {
   const raw = String(product?.category || '').trim()
   if (raw === '견적제출완료') return true
@@ -89,8 +82,10 @@ export function downloadProductsAsExcel(products, fileLabel = '전체물량') {
   }
   const dataRows = Array.from(keyToRow.values())
     .sort((a, b) => {
-      const rankDiff = getMainCategoryRank(a.mainCategory) - getMainCategoryRank(b.mainCategory)
-      if (rankDiff !== 0) return rankDiff
+      const skuA = String(a.SKU || '').trim().toUpperCase()
+      const skuB = String(b.SKU || '').trim().toUpperCase()
+      const skuDiff = skuA.localeCompare(skuB, 'en', { numeric: true, sensitivity: 'base' })
+      if (skuDiff !== 0) return skuDiff
       const nameDiff = String(a.품목 || '').localeCompare(String(b.품목 || ''), 'ko')
       if (nameDiff !== 0) return nameDiff
       return String(a.규격 || '').localeCompare(String(b.규격 || ''), 'ko')
