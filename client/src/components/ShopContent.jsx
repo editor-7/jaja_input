@@ -15,6 +15,7 @@ import {
   MATERIAL_KIND_OPTIONS,
 } from '@/data/products'
 import { ORDER_STORAGE_KEY } from '@/utils/constants'
+import { HOME_QUICK_LINKS } from '@/data/homeQuickLinks'
 import { isDuplicateOrder, validatePayment } from '@/utils/orderUtils'
 import { skuSort } from '@/utils/productUtils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -55,8 +56,25 @@ function ShopContent({ user, onLogout }) {
   const [productPage, setProductPage] = useState(1)
   /** 신규단가 패널이 열리면 자재 목록은 비움(신규 단가 입력용 빈 화면) */
   const [is신규단가PanelOpen, setIs신규단가PanelOpen] = useState(false)
+  const [sitesPanelOpen, setSitesPanelOpen] = useState(false)
 
   const ITEMS_PER_PAGE = 60
+
+  const resolvedQuickLinks = useMemo(() => {
+    const normalizeHref = (href) => {
+      const s = String(href ?? '').trim()
+      if (!s) return ''
+      if (/^https?:\/\//i.test(s)) return s
+      if (s.startsWith('//')) return `https:${s}`
+      return `https://${s.replace(/^\/+/, '')}`
+    }
+    return (Array.isArray(HOME_QUICK_LINKS) ? HOME_QUICK_LINKS : [])
+      .map((row) => ({
+        label: String(row?.label ?? '').trim() || '링크',
+        href: normalizeHref(row?.href),
+      }))
+      .filter((row) => row.href)
+  }, [])
 
   const toProductList = (data) => {
     if (Array.isArray(data)) return data
@@ -394,6 +412,40 @@ function ShopContent({ user, onLogout }) {
         />
       </aside>
       <div className="shop-main">
+        <div className="home-quick-sites">
+          <div className="home-quick-sites-inner">
+            <button
+              type="button"
+              className="home-quick-sites-toggle"
+              aria-expanded={sitesPanelOpen}
+              onClick={() => setSitesPanelOpen((v) => !v)}
+            >
+              사이트가기
+            </button>
+            {sitesPanelOpen && (
+              <div className="home-quick-sites-panel" role="region" aria-label="외부 사이트">
+                {resolvedQuickLinks.length > 0 ? (
+                  resolvedQuickLinks.map((row) => (
+                    <a
+                      key={`${row.href}\0${row.label}`}
+                      href={row.href}
+                      className="home-quick-sites-link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {row.label}
+                    </a>
+                  ))
+                ) : (
+                  <p className="home-quick-sites-empty">
+                    <code>client/src/data/homeQuickLinks.js</code>에서{' '}
+                    <code>label</code>과 <code>href</code>를 채운 뒤 새로고침하세요. 항목은 배열에 계속 추가하면 됩니다.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       <ShopBody
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}

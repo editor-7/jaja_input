@@ -99,6 +99,70 @@ textarea {
   flex-direction: column;
 }
 
+/* 홈: 사이트가기(외부 링크) */
+.home-quick-sites {
+  position: relative;
+  z-index: 20;
+  flex-shrink: 0;
+  padding: 0.5rem 1rem 0;
+  border-bottom: 1px solid rgba(183, 110, 121, 0.12);
+  background: rgba(255, 252, 250, 0.95);
+}
+.home-quick-sites-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.home-quick-sites-toggle {
+  padding: 0.45rem 0.95rem;
+  border-radius: 8px;
+  border: 1px solid rgba(183, 110, 121, 0.45);
+  background: #fff;
+  color: var(--color-rose-gold, #b76e79);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.home-quick-sites-toggle:hover {
+  background: rgba(183, 110, 121, 0.08);
+  border-color: var(--color-rose-gold, #b76e79);
+}
+.home-quick-sites-panel {
+  flex: 1;
+  min-width: min(100%, 280px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.55rem;
+  align-items: center;
+  padding: 0.15rem 0 0.25rem;
+}
+.home-quick-sites-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.38rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--color-charcoal, #2c2420);
+  background: #fff;
+  border: 1px solid var(--color-border, #e0d6cf);
+  max-width: 100%;
+  word-break: break-word;
+}
+.home-quick-sites-link:hover {
+  border-color: rgba(183, 110, 121, 0.55);
+  color: var(--color-rose-gold, #b76e79);
+}
+.home-quick-sites-empty {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-muted, #8a7a72);
+  line-height: 1.45;
+}
+
 @media (max-width: 900px) {
   .shop-page {
     flex-direction: column;
