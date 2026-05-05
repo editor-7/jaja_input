@@ -18,6 +18,13 @@ const API_BASE_RAW = import.meta.env.VITE_API_URL
   : ''
 const API_BASE = API_BASE_RAW ? `${API_BASE_RAW}/api` : '/api'
 
+function clearStoredAuth() {
+  try {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+  } catch (e) {}
+}
+
 function getAuthHeaders() {
   const token = localStorage.getItem('token')
   return token ? { Authorization: `Bearer ${token}` } : {}
@@ -71,9 +78,13 @@ async function request(endpoint, options = {}) {
   }
 
   if (!res.ok) {
+    // 보호 API에서 401이면 토큰을 비워 반복 실패를 막는다.
+    if (res.status === 401 && includeAuth) {
+      clearStoredAuth()
+    }
     const serverMessage = data.message || data.error || data.msg || (typeof text === 'string' && text.length < 200 ? text : null)
     const defaultMessage =
-      res.status === 401 ? '비밀번호가 올바르지 않습니다.' :
+      res.status === 401 ? '로그인이 만료되었거나 유효하지 않습니다. 다시 로그인해 주세요.' :
       res.status === 400 ? '입력 정보를 확인해 주세요.' :
       res.status === 500 ? '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' :
       `요청에 실패했습니다. (${res.status})`
