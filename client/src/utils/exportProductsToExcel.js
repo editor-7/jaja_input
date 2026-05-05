@@ -17,6 +17,13 @@ function getMainCategoryRank(v) {
   return idx === -1 ? MAIN_CATEGORY_ORDER.length : idx
 }
 
+function isReferenceLikeProduct(product) {
+  const raw = String(product?.category || '').trim()
+  if (raw === '견적제출완료') return true
+  if (/^참조단가(?:\d+)?$/.test(raw)) return true
+  return String(product?.desc || '').includes('참조단가 -')
+}
+
 /** 참조단가NNN은 DB category가 그대로일 수 있어, 엑셀 단가 열용으로 자재/인건 축만 판별 */
 function getExcelPriceKind(product) {
   const cat = getCategory(product)
@@ -39,12 +46,19 @@ function getExcelPriceKind(product) {
  * 품목·규격별 한 행에 자재비/인건비 단가, 수량·금액은 0, 마지막에 계 행
  */
 export function downloadProductsAsExcel(products, fileLabel = '전체물량') {
-  if (!products || products.length === 0) {
+  const isAllQtyExport = String(fileLabel || '').trim().startsWith('전체물량')
+  const sourceProducts = (Array.isArray(products) ? products : []).filter((p) => {
+    if (!isAllQtyExport) return true
+    // 안전장치: 전체엑셀(수량입력)에는 참조단가를 포함하지 않는다.
+    return !isReferenceLikeProduct(p)
+  })
+
+  if (sourceProducts.length === 0) {
     return
   }
   const headers = ['SKU', '품목', '규격', '수량', '단위', '자재비단가', '자재비금액', '인건비단가', '인건비금액', '합계', '비고1', '비고2']
   const keyToRow = new Map()
-  for (const p of products) {
+  for (const p of sourceProducts) {
     const displayName = getDisplayItemName(p)
     const spec = getSpecFromProduct(p) || ''
     const key = `${displayName}\t${spec}`

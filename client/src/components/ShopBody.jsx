@@ -268,12 +268,26 @@ function ShopBody({
 
   /** 현재 카테고리(필터) 기준 수량 입력형 엑셀 다운로드 */
   const handleDownloadCategoryProductsExcel = () => {
-    const list =
+    let list =
       Array.isArray(allFilteredProducts) && allFilteredProducts.length > 0
         ? allFilteredProducts
         : Array.isArray(filteredProducts)
           ? filteredProducts
           : []
+    if (isReferenceCategory(categoryFilter)) {
+      const selectedRef = String(categoryFilter || '').trim()
+      const isSelectedReferenceItem = (p) => {
+        const raw = String(p?.category || '').trim()
+        if (raw === selectedRef) return true
+        // 레거시 데이터: 참조단가/견적제출완료/desc 마커는 001로 취급
+        if (selectedRef === '참조단가001') {
+          if (raw === '참조단가' || raw === '견적제출완료') return true
+          if (String(p?.desc || '').includes('참조단가 -')) return true
+        }
+        return false
+      }
+      list = list.filter((p) => isSelectedReferenceItem(p))
+    }
     if (list.length === 0) return
     const label =
       categoryFilter === '전체' || categoryFilter === 'all'
