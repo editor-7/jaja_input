@@ -12,6 +12,10 @@
  * - --allow-update-existing: 기존 자재/인건 상품의 category를 대상값으로 이동 허용 (기본 비활성)
  * - --reset-target: 대상 category 기존 데이터를 먼저 비우고 적재(교체 적재)
  *
+ * 지원 형식(추가):
+ * - 1행 헤더가 「호표」「합계금액」(또는 2열에 '합계' 포함)인 통합갑지·합계만 시트:
+ *   각 행의 호표 문구를 품명으로 하고 합계금액을 (자재) 단가 1건으로만 등록(인건 행 없음).
+ *
  * 사용 예:
  *   node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx" --dry-run
  *   node scripts/importEstimateCategoryFromExcel.js "e:/computer_home/001.xlsx"
@@ -147,10 +151,41 @@ function resolveHeaderAndColumns(rows) {
   }
 }
 
+/** 통합갑지 등: 호표 + 합계금액만 있는 시트 → (자재) 단가만 생성 */
+function parseGabjiTotalsOnlySheet(rows) {
+  const r0 = rows[0] || [];
+  if (normCell(r0[0]) !== '호표') return null;
+  const totalHeader = String(r0[1] == null ? '' : r0[1]).trim();
+  if (!totalHeader || !String(totalHeader).replace(/\s/g, '').includes('합계')) return null;
+
+  const items = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i] || [];
+    const displayName = normalizeName(row[0]);
+    if (!displayName) continue;
+    const total = toPrice(row[1]);
+    if (total == null) continue;
+    const unit = /\bm\s*$/i.test(displayName) ? 'M' : 'EA';
+    const spec = '';
+    items.push({
+      kind: '자재',
+      name: `${displayName} (자재)`,
+      displayName,
+      spec,
+      price: total,
+      unit,
+    });
+  }
+  return items.length ? items : null;
+}
+
 function parseExcel(filePath) {
   const wb = XLSX.readFile(filePath);
   const ws = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+  const gabji = parseGabjiTotalsOnlySheet(rows);
+  if (gabji) return gabji;
+
   const { dataStart, iName, iSpec, iUnit, iMat, iLabor } = resolveHeaderAndColumns(rows)
 
   const items = [];

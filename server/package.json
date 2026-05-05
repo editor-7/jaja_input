@@ -16,6 +16,7 @@
     "import:reference003": "node scripts/importEstimateCategoryFromExcel.js \"e:/computer_home/003.xlsx\" --target-category=참조단가003 --reset-target",
     "import:reference004": "node scripts/importEstimateCategoryFromExcel.js \"e:/computer_home/004.xlsx\" --target-category=참조단가004 --reset-target",
     "import:reference005": "node scripts/importEstimateCategoryFromExcel.js \"e:/computer_home/005.xlsx\" --target-category=참조단가005 --reset-target",
+    "import:reference006": "node scripts/importEstimateCategoryFromExcel.js \"G:/다른 컴퓨터/내 컴퓨터 (3)/deasangas_20260202/참조/일위대가_20260124_정리중/건설연구원/merged_전체데이터_02_통합갑지_합계만.xlsx\" --target-category=참조단가006 --reset-target",
     "dedupe:reference": "node scripts/dedupeReferenceCategoryDuplicates.js"
   },
   "keywords": [],

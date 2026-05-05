@@ -771,6 +771,40 @@
     font-size: 1.05rem;
   }
 }
+
+/* 참조단가006 이상(호표형): 통합갑지 등 긴 품명 전체 표시 — 클래스명은 ref006-fulltext 유지 */
+@media (min-width: 521px) {
+  .product-list-wrap.product-list-wrap--ref006-fulltext .product-list-row {
+    aspect-ratio: unset;
+    min-height: auto;
+    overflow: visible;
+    align-items: start;
+    grid-template-rows: auto minmax(1.25em, auto) minmax(2em, auto) minmax(1.25em, auto);
+  }
+  .product-list-wrap.product-list-wrap--ref006-fulltext .product-list-row .col-name {
+    overflow: visible;
+    min-height: 0;
+  }
+  .product-list-wrap.product-list-wrap--ref006-fulltext .product-list-row .col-name .list-name {
+    display: block;
+    -webkit-line-clamp: unset;
+    -webkit-box-orient: unset;
+    overflow: visible;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+}
+@media (max-width: 520px) {
+  .product-list-wrap.product-list-wrap--ref006-fulltext .list-name {
+    font-size: 0.82rem;
+    line-height: 1.35;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+}
+
 /* 정사각형 카드 크기 약 60% (열 수 약 1/0.6 증가) */
 @media (min-width: 521px) and (max-width: 900px) {
   .product-list-wrap { grid-template-columns: repeat(5, minmax(0, 1fr)); }

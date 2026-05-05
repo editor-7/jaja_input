@@ -15,6 +15,7 @@ const GAS_CATEGORIES = [
   '참조단가003',
   '참조단가004',
   '참조단가005',
+  '참조단가006',
   '신규단가입력',
   '신규단가',
 ]
@@ -179,6 +180,7 @@ export const MATERIAL_KIND_OPTIONS = [
   { value: '참조단가003', label: '참조단가003' },
   { value: '참조단가004', label: '참조단가004' },
   { value: '참조단가005', label: '참조단가005' },
+  { value: '참조단가006', label: '참조단가006' },
   { value: '신규단가입력', label: '신규단가입력' },
 ]
 
