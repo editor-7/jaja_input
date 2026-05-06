@@ -8,7 +8,6 @@
 export const HOME_QUICK_LINKS = [
   { label: 'ilildaga', href: 'https://ilildaga.vercel.app/' },
   { label: 'EW2002', href: 'http://www.ew2002.com/' },
-  { label: 'Gas Industrial Engineer', href: 'https://sanupgisa.vercel.app/' },
   { label: 'yesco', href: 'https://biz.lsyesco.com/' },
   { label: '코원에너지', href: 'https://srm.skens.com/login.do' },
   { label: '콘엑스', href: 'https://ddusul.com/' },
